@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>終焉之境-無限掛機RPG</title>
+<link rel="stylesheet" href="styles.css">
+
+</head>
+<body>
+<div class="wrap">
+   <div class="topbar">
+  <!--  <div class="title">Stealth RPG KPI — Full Build</div>  -->
+     <div class="title">
+  <img src="title.png" class="title-img">
+</div>
+<!----------------------------------->
+    <div class="row">
+      <!-- 常用按鈕：手機也直接顯示 -->
+      <button class="btn small primary-btn" id="mapBtn">🗺️ 地圖</button>
+      <button class="btn small primary-btn" id="shopBtn">🛒 商店</button>
+      <button class="btn small primary-btn" id="skillBookBtn">📚 技能庫</button>
+      <button class="btn small primary-btn" id="questBtn">📜 任務</button>
+      <button class="btn small primary-btn" id="classBtn" disabled>🏷️ 轉職</button>
+      <button class="btn small primary-btn" id="afkBtn">🤖 掛機：關</button>
+
+      <!-- 👇 更多功能：排在掛機右邊 -->
+      <select id="moreMenu" class="more-menu">
+        <option value="">更多功能…</option>
+        <option value="rebirthBtn">♻️ 轉生</option>
+        <option value="helpBtn">❓ 說明</option>
+        <option value="introBtn">🎬 介紹</option>
+        <option value="stealthBtn">🕶️ 偽裝</option>
+        <option value="saveBtn">💾 存檔</option>
+        <option value="resetBtn">🗑️ 重開</option>
+      </select>
+
+      <!-- 次要按鈕：桌機顯示，手機會縮到「更多功能…」裡 -->
+      <button class="btn small secondary-btn" id="rebirthBtn">♻️ 轉生</button>
+      <button class="btn small secondary-btn" id="helpBtn">❓ 說明</button>
+      <button class="btn small secondary-btn" id="introBtn">🎬 介紹</button>
+      <button class="btn small secondary-btn" id="stealthBtn">🕶️ 偽裝 <span class="hint">(Esc)</span></button>
+      <button class="btn small secondary-btn" id="saveBtn">💾 存檔</button>
+      <button class="btn small secondary-btn" id="resetBtn">🗑️ 重開</button>
+    </div>
+  </div>
+
+
+
+  <div class="grid game">
+    <div class="card">
+      <h3>冒險日誌</h3>
+      <div id="log" class="log" aria-live="polite"></div>
+      <div class="sep"></div>
+      <div class="actions">
+        <button class="btn" id="exploreBtn">探索（<span id="zoneName">Lv1-10 新手草原</span>）</button>
+        <button class="btn" id="restBtn">休息</button>
+        <button class="btn" id="battleBtn">戰鬥</button>
+        <button class="btn" id="attackBtn">攻擊</button>
+        <button class="btn" id="skillBtn">技能（<span id="activeSkillName">破甲斬</span>）</button>
+        <button class="btn" id="invBtn">背包</button>
+        <button class="btn" id="runBtn" disabled>逃跑</button>
+      </div>
+      <p class="hint">熱鍵：<span class="kbd">1</span>探索 <span class="kbd">2</span>休息 <span class="kbd">3</span>戰鬥
+        <span class="kbd">4</span>攻擊 <span class="kbd">5</span>技能 <span class="kbd">6</span>背包 <span class="kbd">X</span>逃跑
+        ｜<span class="kbd">M</span>地圖 <span class="kbd">O</span>商店 <span class="kbd">K</span>技能庫 <span class="kbd">Q</span>任務 <span class="kbd">C</span>轉職 <span class="kbd">H</span>說明 <span class="kbd">Esc</span>偽裝</p>
+    </div>
+
+    <div class="card">
+      <h3>狀態</h3>
+      <div class="stats" id="stats"></div>
+      <div class="sep"></div>
+
+                 <h3>敵人情報</h3>
+      <div id="enemyBox" class="enemy">
+        <div class="stat">名稱：<span id="eName" class="lvl">—</span></div>
+        <div class="stat enemy-extra">等級：<span id="eLvl" class="lvl">—</span></div>
+        <div class="stat">攻擊：<span id="eAtk" class="atk">—</span></div>
+        <div class="stat enemy-extra">防禦：<span id="eDef" class="def">—</span></div>
+        <div class="stat">HP
+          <div class="bar hp"><span id="eHpBar" style="width:0%"></span></div>
+          <span id="eHpTxt" class="hp">0/0</span>
+        </div>
+        <div class="stat enemy-extra">MP
+          <div class="bar mp"><span id="eMpBar" style="width:0%"></span></div>
+          <span id="eMpTxt" class="mp">0/0</span>
+        </div>
+      </div>
+
+
+
+      <div class="sep"></div>
+      <h3>裝備</h3>
+      <div class="equip">
+        <div class="slot" id="slot-weapon"><b>武器</b><span id="equip-weapon">（空）</span></div>
+        <div class="slot" id="slot-armor"><b>防具</b><span id="equip-armor">（空）</span></div>
+        <div class="slot" id="slot-acc"><b>飾品</b><span id="equip-acc" >（空）</span></div>
+        <div class="slot" id="slot-mount"><b>坐騎</b><span id="equip-mount" >（無）</span></div>
+      </div>
+
+      <div class="sep"></div>
+      <h3>背包（快速預覽）</h3>
+      <div class="inv" id="inv"></div>
+    </div>
+  </div>
+
+  <!-- 偽裝報表 -->
+  <div class="sheet card">
+    <h3>Q3 Efficiency Summary</h3>
+    <table>
+      <thead><tr><th>Dept</th><th>KPI</th><th>Target</th><th>Actual</th><th>Δ</th></tr></thead>
+    <tbody id="fakeRows"></tbody>
+    </table>
+    <p class="hint">（按 <span class="kbd">Esc</span> 回到儀表板）</p>
+  </div>
+</div>
+
+<!-- 背包 -->
+<dialog id="invDlg">
+  <div class="dlg">
+    <h4>🎒 背包</h4>
+    <div class="row" id="invFilters"></div>
+    <!-- ⬇ 新增：裝備比較顯示區 ⬇ -->
+    <div id="equipCompare" class="hint" style="margin:4px 0 6px 0"></div>
+    <div class="list" id="invList"></div>
+    <div class="row" style="justify-content:flex-end;margin-top:8px">
+      <button class="btn small" id="closeInv">關閉</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- 坐騎資訊 -->
+<dialog id="mountDlg">
+  <div class="dlg">
+    <h4>🐎 坐騎資訊</h4>
+    <div id="mountInfo" class="list"></div>
+    <div class="row" style="justify-content:flex-end;margin-top:8px">
+      <button class="btn small" id="closeMount">關閉</button>
+    </div>
+  </div>
+</dialog>
+
+  
+<!-- 任務 -->
+<dialog id="questDlg">
+  <div class="dlg">
+    <h4>📜 任務</h4>
+    <div id="questList" class="list"></div>
+    <div class="row" style="justify-content:flex-end;margin-top:8px">
+      <button class="btn small" id="closeQuest">關閉</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- 轉職 -->
+<dialog id="classDlg">
+  <div class="dlg">
+    <h4>🏷️ 轉職</h4>
+    <p class="muted" id="classHint">完成條件後可轉職（Lv10/30/70/120）。</p>
+    <div class="list" id="classList"></div>
+    <div class="row" style="justify-content:flex-end;margin-top:8px">
+      <button class="btn small" id="closeClass">關閉</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- 商店 -->
+<dialog id="shopDlg">
+  <div class="dlg">
+    <h4>🛒 小鎮雜貨鋪</h4>
+    <div class="tabs">
+      <button class="tab active" data-tab="buy">購買</button>
+      <button class="tab" data-tab="sell">販售</button>
+      <span class="right" style="margin-left:auto">
+        <span class="gold">你的金幣：<b id="shopGold">0</b>G</span>
+      </span>
+    </div>
+
+    <!-- 購買分頁 -->
+    <div id="buyPanel">
+      <!-- 類別篩選 -->
+      <div class="row" style="gap:4px;margin:8px 0">
+        <span class="muted">篩選：</span>
+        <button class="btn small shopCatBtn active" data-cat="all">全部</button>
+        <button class="btn small shopCatBtn" data-cat="equip">武器/裝備</button>
+        <button class="btn small shopCatBtn" data-cat="consum">消耗品</button>
+        <button class="btn small shopCatBtn" data-cat="mount">坐騎</button>
+        <button class="btn small shopCatBtn" data-cat="enh">強化道具</button>
+      </div>
+
+      <div class="list" id="shopBuyList"></div>
+
+      <div class="row" style="justify-content:flex-end;margin-top:8px">
+        <!-- 補貨按鈕移除，只留關閉 -->
+        <button class="btn small" id="closeShop">關閉</button>
+      </div>
+    </div>
+
+    <!-- 販售分頁 -->
+    <div id="sellPanel" style="display:none">
+      <!-- 一鍵賣出設定 -->
+      <div class="row" style="gap:4px;margin:8px 0">
+        <span class="muted">一鍵賣出：</span>
+        <select id="bulkSellFilter" class="btn small" style="flex:1;max-width:220px">
+          <option value="none">（選擇條件）</option>
+          <option value="whiteEquip">所有白色裝備</option>
+          <option value="greenEquip">所有綠色裝備</option>
+          <option value="blueEquip">所有藍色裝備</option>
+          <option value="consum">所有消耗品</option>
+        </select>
+        <button class="btn small" id="bulkSellBtn">執行</button>
+      </div>
+
+      <div class="list" id="shopSellList"></div>
+      <div class="row" style="justify-content:flex-end;margin-top:8px">
+        <button class="btn small" id="closeShop2">關閉</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+
+<!-- 地圖 -->
+<dialog id="mapDlg">
+  <div class="dlg">
+    <h4>🗺️ 地圖</h4>
+    <div class="list" id="zoneList"></div>
+    <div class="row" style="justify-content:flex-end;margin-top:8px">
+      <button class="btn small" id="closeMap">關閉</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- 技能庫 -->
+<dialog id="skillDlg">
+  <div class="dlg">
+    <h4>📚 技能庫（學到的技能）</h4>
+    <div class="list" id="skillList"></div>
+    <p class="hint">主動技可設為「當前技能」。技能最高 25 等，滿級可升品質並重置需求；使用重複技能書升級（需求每級加倍）。</p>
+    <div class="row" style="justify-content:flex-end;margin-top:8px">
+      <button class="btn small" id="closeSkill">關閉</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- 裝備強化 -->
+<dialog id="enhDlg">
+  <div class="dlg">
+    <h4>🛠️ 裝備強化</h4>
+    <div id="enhInfo" class="list"></div>
+    <div class="row" style="justify-content:flex-end;margin-top:8px">
+      <button class="btn small" id="enhBtnDo">強化</button>
+            <!-- ⬇ 新增：合成升階按鈕 ⬇ -->
+      <button class="btn small" id="enhBtnCombine">合成升階</button>
+      <button class="btn small" id="closeEnh">關閉</button>
+    </div>
+  </div>
+</dialog>
+  
+<!-- 轉生 -->
+<dialog id="rebirthDlg">
+  <div class="dlg">
+    <h4>♻️ 轉生</h4>
+    <div class="list" style="padding:10px" id="rebirthInfo">
+      <p>達到 <b>Lv.200</b> 可進行轉生。</p>
+      <ul style="margin:0 0 0 1em">
+        <li>等級重置為 Lv.1，當前裝備與神器<b>保留</b>。</li>
+        <li>永久基礎素質：HP / MP / 攻擊 / 防禦 各 <b>+10</b>（可累積）。</li>
+        <li>金幣、技能、藥水與背包內容保留。</li>
+      </ul>
+    </div>
+    <div class="row" style="justify-content:flex-end;margin-top:8px">
+      <button class="btn small" id="doRebirthBtn">確認轉生</button>
+      <button class="btn small" id="closeRebirth">取消</button>
+    </div>
+  </div>
+</dialog>
+
+
+  
+<!-- 說明 -->
+<dialog id="helpDlg">
+  <div class="dlg">
+    <h4>❓ 遊戲說明</h4>
+    <div class="list" id="helpBox" style="padding:10px"></div>
+    <!-- === 更新日誌 === -->
+<div id="updateLog" class="card" style="margin-top:12px;">
+  <div class="log-header" onclick="toggleUpdateLog()">
+    📜 更新日誌 <span id="logToggle">(點擊展開)</span>
+  </div>
+  <div class="log-body" hidden> 
+
+<!--可複製格式如下-------------------------------------------------------------
+  <div class="log-entry">
+  <div class="log-date">YYYY/MM/DD</div>
+  <div class="log-content">
+    ・這裡是第一條更新內容<br>
+    ・這裡是第二條更新內容<br>
+    ・這裡是第三條更新內容<br>
+  </div>
+</div>
+--------------------------------------------------------------------可複製格式-->
+ <!-- ⬇⬇⬇ 之後每一筆更新就放在這裡 ⬇⬇⬇ -->
+ <!-- ⬇⬇⬇ 待處理項目如下 ⬇⬇⬇ -->
+  <div class="log-entry">
+  <div class="log-date">待處理項目</div>
+  <div class="log-content">
+    ・職業系統重作。<br>
+    ・玩家素質(戰力)合理化。<br>
+    ・地圖重新調整。<br>
+    ・坐騎強度待調整。<br>
+    ・怪物強度待調整。<br>
+  </div>
+</div>
+  <!-- ⬇⬇⬇ 11/17更新如下 ⬇⬇⬇ -->
+   <div class="log-entry">
+  <div class="log-date">2025/11/17</div>
+  <div class="log-content">
+    ・修復破甲斬技能書掉落。<br>
+    ・新增裝備處顏色顯示。<br>
+    ・新增背包預覽處排序。<br>
+  </div>
+</div>
+     <!-- ⬇⬇⬇ 11/16更新如下 ⬇⬇⬇ -->
+   <div class="log-entry">
+  <div class="log-date">2025/11/16</div>
+  <div class="log-content">
+    ・商店系統重新製作。<br>
+    ・新增背包預覽處可以點擊使用。<br>
+    ・新增手機介面可以遊玩。<br>
+    ・新增批量使用、購買、合成等功能。<br>
+    ・新增素質差異有顏色比較。<br>
+    ・修復神器強化失敗，素質不會回落問題。<br>
+  </div>
+</div>
+   <!-- ⬇⬇⬇ 11/15更新如下 ⬇⬇⬇ -->
+   <div class="log-entry">
+  <div class="log-date">2025/11/15</div>
+  <div class="log-content">
+    ・神器系統上線。<br>
+    ・任務系統重新製作。<br>
+    ・新增背包處可進行身上裝備比較差異。<br>
+    ・新增怪物掉落高品質藥水。<br>
+    ・修復[ㄅㄅㄐ之槌]誤植永久加成。<br>
+    ・修復碎片、錢袋等物品多使用1次問題。<br>
+    ・修復掛機-怪物連動2次問題、掛機沒魔不會普攻問題。<br>
+    ・修改怪物掉落金錢量。<br>
+    ・優化裝備欄可以直接點擊合成。<br>
+    ・優化背包物品排序。<br>
+  </div>
+</div>
+  <!-- ⬇⬇⬇ 11/14更新如下 ⬇⬇⬇ -->
+    <div class="log-entry">
+  <div class="log-date">2025/11/14</div>
+  <div class="log-content">
+    ・技能升級，需求技能書數量及升階調整。<br>
+    ・修復技能升級傷害未提升。<br>
+    ・移除戰士技能[猛擊]。<br>
+    ・修復隱藏道具掉落[xxx之槌]。<br>
+    ・四轉[聖光裁決]可學習全職業技能。<br>
+    ・微調轉職後素質加成。<br>
+    ・調整坐騎、萬斬掉落率。<br>
+  </div>
+</div>
+     <!-- ⬇⬇⬇ 11/13更新如下 ⬇⬇⬇ -->
+    <div class="log-entry">
+  <div class="log-date">2025/11/13</div>
+  <div class="log-content">
+    ・修復背包物品前綴顯示。<br>
+    ・裝備詞綴位置移至第二排。<br>
+    ・修復裝備強化失敗，素質沒有回落問題。<br>
+    ・修改裝備強化成功率。<br>
+    ・調整裝備基礎強度，強化素質。<br>
+    ・修改強化詞條強度。<br>
+    ・新增初心者技能[頭槌]，修改火球、連擊、破甲強度並綁定職業。<br>
+  </div>
+</div>
+    <!-- ⬇⬇⬇ 11/12更新如下 ⬇⬇⬇ -->
+    <div class="log-entry">
+  <div class="log-date">2025/11/12</div>
+  <div class="log-content">
+    ・裝備品階重修制定:白&gt;綠&gt;藍&gt;黃&gt;橘&gt;紫。獨立品階-神器(紅色)。<br>
+    ・裝備強化機制重新調整，紫品與神器新增升☆機制<br>
+    ・神器掉落調整，BOSS掉落神器碎片，5片可合成神器，新增神器強化成功率道具<br>
+  </div>
+</div>
+<!-- ⬇⬇⬇ 11/11更新如下 ⬇⬇⬇ -->
+    <div class="log-entry">
+      <div class="log-date">2025/11/11</div>
+      <div class="log-content">
+        ・新增 Boss 專屬坐騎素質（火龍、暴雪巨靈、深淵之眼、星墜魔像、終末領主）。<br>
+        ・點擊裝備欄的坐騎可查看素質。<br>
+        ・背包顯示坐騎 ATK/DEF/HP/MP/SPD。<br>
+        ・修復轉職後不能穿裝。<br>
+        ・神器修正掉落。<br>
+        ・自動吃藥水優化。<br>
+        ・玩家基礎素質調整。<br>
+      </div>
+    </div>
+    <!-- ⬇⬇⬇ 11/10更新如下 ⬇⬇⬇ -->
+    <div class="log-entry">
+      <div class="log-date">2025/11/10</div>
+      <div class="log-content">
+        ・顯示血量/魔力百分比%數。<br>
+        ・修復掛機無限釋放技能。<br>
+        ・新增存檔提示。<br>
+        ・修改休息回復量為20~80%。<br>
+      </div>
+    </div>
+      <!-- ⬇⬇⬇ 11/9更新如下 ⬇⬇⬇ -->
+    <div class="log-entry">
+      <div class="log-date">2025/11/09</div>
+      <div class="log-content">
+        ・創建遊戲。<br>
+        ・新增200等轉生功能。<br>
+        ・修復掛機沒MP不會普攻。<br>
+        ・修正強化機率。<br>
+        ・修改技能書需求量，合理化。<br>
+        ・修復逃跑成功=勝利。<br>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="row" style="justify-content:flex-end;margin-top:8px">
+      <button class="btn small" id="closeHelp">關閉</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- 開場介紹 -->
+<dialog id="introDlg">
+  <div class="dlg">
+    <h4>🎬 開場介紹</h4>
+    <div class="list" style="padding:10px">
+      <p>歡迎來到 <b>Stealth RPG KPI</b>！</p>
+      <p>探索地圖、挑戰 Boss、一路轉職升至200等、挑戰無限轉生。</p>
+      <p>基礎介紹：<br>
+      • 開局善用新手資金，先去商店購買武器、防具。<br>
+      • 藥水可合成，2合1。(內建自動批量合成)。<br>
+      • 裝備：白級裝備可3合1升品階，藍級開始享受衝裝快樂。<br>
+      • 裝備最高可衝刺紫級5☆、神器5☆。<br>
+      • BOSS掉落神器、坐騎等您來發現。</p>
+    </div>
+    <div class="row" style="justify-content:flex-end;margin-top:8px">
+      <label class="hint" style="margin-right:auto;display:flex;gap:6px;align-items:center">
+        <input type="checkbox" id="introDontShow"> 不再顯示
+      </label>
+      <button class="btn small" id="introStartBtn">開始遊戲</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- =============================== -->
+<!-- [ADD] 對話框 polyfill（需在主腳本前載入，以支援開場對話框） -->
+<!-- =============================== -->
+<script src="main.js" defer></script>
+</body>
+</html>
+
