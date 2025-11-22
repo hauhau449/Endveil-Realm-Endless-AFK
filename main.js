@@ -225,17 +225,83 @@ function ensureUniqueName(name){
   
   const JOB_TREE=[
     {tier:0,key:"Novice", name:"初心者"},
-    {tier:1,key:"Warrior", name:"狂刃戰將", weapon:"blade", passive:"武勇", start:["armorbreak"]},
-    {tier:2,key:"Mage",    name:"星紋術士", weapon:"staff", passive:"星識", start:["fireball"]},
-    {tier:3,key:"Rogue",   name:"影襲行者", weapon:"dagger", passive:"潛匿", start:["flurry"]},
-    {tier:4,key:"Paladin", name:"聖光裁決", weapon:"blade", passive:"祈護", start:["smite"]},
+
+    // 1 轉
+    {tier:1,key:"Warrior", name:"戰士", parent:"Novice", weapon:"blade", passive:"武勇", start:["armorbreak"]},
+    {tier:1,key:"Mage",    name:"法師", parent:"Novice", weapon:"staff", passive:"星識", start:["fireball"]},
+    {tier:1,key:"Assassin",name:"刺客", parent:"Novice", weapon:"dagger", passive:"潛匿", start:["flurry"]},
+    {tier:1,key:"Ranger",  name:"弓手", parent:"Novice", weapon:"blade", passive:"野獵", start:["armorbreak"]},
+
+    // 戰士系
+    {tier:2,key:"Berserker",        name:"狂血戰士", parent:"Warrior", weapon:"blade", passive:"武勇", start:["armorbreak"]},
+    {tier:3,key:"BloodflameReaver", name:"血焰狂刃", parent:"Berserker", weapon:"blade", passive:"武勇", start:["armorbreak"]},
+    {tier:4,key:"Warshura",         name:"嗜戰修羅", parent:"BloodflameReaver", weapon:"blade", passive:"武勇", start:["armorbreak"]},
+
+    {tier:2,key:"Steelheart",       name:"鋼心戰士", parent:"Warrior", weapon:"blade", passive:"武勇", start:["armorbreak"]},
+    {tier:3,key:"EdgewallKnight",   name:"鋒壁騎士", parent:"Steelheart", weapon:"blade", passive:"武勇", start:["armorbreak"]},
+    {tier:4,key:"BulwarkWarlord",   name:"破陣戰君", parent:"EdgewallKnight", weapon:"blade", passive:"武勇", start:["armorbreak"]},
+
+    // 法師系
+    {tier:2,key:"ElementWeaver",    name:"元素編織者", parent:"Mage", weapon:"staff", passive:"星識", start:["fireball"]},
+    {tier:3,key:"ArcaneConductor",  name:"秘法咒導師", parent:"ElementWeaver", weapon:"staff", passive:"星識", start:["fireball"]},
+    {tier:4,key:"AstralArchmage",   name:"天紋魔導師", parent:"ArcaneConductor", weapon:"staff", passive:"星識", start:["fireball"]},
+
+    {tier:2,key:"StarshadeCaster",  name:"星影咒師", parent:"Mage", weapon:"staff", passive:"星識", start:["fireball"]},
+    {tier:3,key:"LunarisArcanist",  name:"月寂導法者", parent:"StarshadeCaster", weapon:"staff", passive:"星識", start:["fireball"]},
+    {tier:4,key:"NoxAbyssEmperor",  name:"夜墟星淵帝", parent:"LunarisArcanist", weapon:"staff", passive:"星識", start:["fireball"]},
+
+    // 刺客系
+    {tier:2,key:"Shadowblade",      name:"影刃者", parent:"Assassin", weapon:"dagger", passive:"潛匿", start:["flurry"]},
+    {tier:3,key:"NightReaver",      name:"夜影斬", parent:"Shadowblade", weapon:"dagger", passive:"潛匿", start:["flurry"]},
+    {tier:4,key:"AbyssShadereaver", name:"闇刃修羅", parent:"NightReaver", weapon:"dagger", passive:"潛匿", start:["flurry"]},
+
+    {tier:2,key:"ShadeMark",        name:"暗印者", parent:"Assassin", weapon:"dagger", passive:"潛匿", start:["flurry"]},
+    {tier:3,key:"ShadowDevourer",   name:"影噬者", parent:"ShadeMark", weapon:"dagger", passive:"潛匿", start:["flurry"]},
+    {tier:4,key:"UmbralAshura",     name:"幽噬修羅", parent:"ShadowDevourer", weapon:"dagger", passive:"潛匿", start:["flurry"]},
+
+    // 弓手系
+    {tier:2,key:"WindHunter",       name:"獵風者", parent:"Ranger", weapon:"blade", passive:"野獵", start:["armorbreak"]},
+    {tier:3,key:"Chaser",           name:"追獵者", parent:"WindHunter", weapon:"blade", passive:"野獵", start:["armorbreak"]},
+    {tier:4,key:"DeicideRanger",    name:"獵神者", parent:"Chaser", weapon:"blade", passive:"野獵", start:["armorbreak"]},
+
+    {tier:2,key:"UmbralCrossbowman",name:"冥弩使", parent:"Ranger", weapon:"blade", passive:"野獵", start:["armorbreak"]},
+    {tier:3,key:"UmbralBoltReaver", name:"冥矢獵者", parent:"UmbralCrossbowman", weapon:"blade", passive:"野獵", start:["armorbreak"]},
+    {tier:4,key:"UmbralHuntshura",  name:"冥狩修羅", parent:"UmbralBoltReaver", weapon:"blade", passive:"野獵", start:["armorbreak"]},
   ];
   const JOB_WEAPON={
-  Novice:["blade","staff","dagger"],
-  Warrior:["blade"], 
-  Mage:["staff"], 
-  Rogue:["dagger"], 
-  Paladin:["blade","staff","dagger"] // ✅ 最終職全武器相容
+    Novice:["blade","staff","dagger"],
+
+    Warrior:["blade"],
+    Berserker:["blade"],
+    BloodflameReaver:["blade"],
+    Warshura:["blade"],
+    Steelheart:["blade"],
+    EdgewallKnight:["blade"],
+    BulwarkWarlord:["blade"],
+
+    Mage:["staff"],
+    ElementWeaver:["staff"],
+    ArcaneConductor:["staff"],
+    AstralArchmage:["staff"],
+    StarshadeCaster:["staff"],
+    LunarisArcanist:["staff"],
+    NoxAbyssEmperor:["staff"],
+
+    Assassin:["dagger"],
+    Shadowblade:["dagger"],
+    NightReaver:["dagger"],
+    AbyssShadereaver:["dagger"],
+    ShadeMark:["dagger"],
+    ShadowDevourer:["dagger"],
+    UmbralAshura:["dagger"],
+
+    Ranger:["blade","dagger"],
+    WindHunter:["blade","dagger"],
+    Chaser:["blade","dagger"],
+    DeicideRanger:["blade","dagger"],
+    UmbralCrossbowman:["blade","dagger"],
+    UmbralBoltReaver:["blade","dagger"],
+    UmbralHuntshura:["blade","dagger"],
 };
 
 
@@ -3605,9 +3671,10 @@ function refreshQuestsIfAllRewarded(){
     classDlg.showModal();
   }
   function classCandidatesForTier(tier){
-    if(tier===1) return JOB_TREE.filter(j=>j.tier===1||j.tier===2||j.tier===3);
-    if(tier===4) return JOB_TREE.filter(j=>j.key==="Paladin");
-    return JOB_TREE.filter(j=>j.key===game.player.job);
+    if(tier===1) return JOB_TREE.filter(j=>j.parent==="Novice");
+    const cur = JOB_TREE.find(j=>j.key===game.player.job);
+    if(!cur) return [];
+    return JOB_TREE.filter(j=>j.parent===cur.key);
   }
   function chooseClass(key){
   const p=game.player, t=p.tier||0, need=CLASS_REQ[t];
