@@ -29,6 +29,16 @@
   .card h3{margin:0 0 8px 0;font-size:13px;color:var(--muted);font-weight:700}
   .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:6px}
   .stat{background:var(--panel);border:1px solid #0005;border-radius:8px;padding:8px;font-feature-settings:"tnum";font-variant-numeric:tabular-nums}
+  .stat.span2{grid-column:1/-1}
+  .attr-panel{display:flex;flex-direction:column;gap:8px}
+  .attr-head{font-weight:700;color:var(--muted)}
+  .attr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px}
+  .attr-row{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px dashed var(--dash);border-radius:8px;padding:8px}
+  .attr-meta{display:flex;flex-direction:column;gap:4px}
+  .attr-name{font-weight:700}
+  .attr-controls{display:flex;align-items:center;gap:8px}
+  .attr-buttons{display:flex;gap:4px}
+  .attr-value{font-weight:700;min-width:32px;text-align:right}
     .hp{color:#22c55e}.mp{color:#60a5fa}.atk{color:#f472b6}.def{color:#fbbf24}.lvl{color:#a78bfa}.gold{color:var(--gold)}
 .diff-up{color:var(--bad);}      /* 數值上升 → 紅色 */
 .diff-down{color:var(--good);}  /* 數值下降 → 綠色 */
