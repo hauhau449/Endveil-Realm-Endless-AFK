@@ -70,7 +70,7 @@
   .meta-label{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.5px}
   .meta-value{font-weight:700;font-feature-settings:"tnum";font-variant-numeric:tabular-nums;font-size:15px}
   .avatar{width:46px;height:46px;aspect-ratio:1;border-radius:12px;background:linear-gradient(135deg,rgba(125,211,252,.22),rgba(124,58,237,.25));display:grid;place-items:center;font-size:26px;line-height:1;text-align:center;border:1px solid #334155;box-shadow:0 4px 12px rgba(0,0,0,.25)}
-  .avatar img{width:100%;height:100%;object-fit:contain;display:block}
+  .avatar img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
   .avatar.enemy{background:linear-gradient(135deg,rgba(248,113,113,.18),rgba(59,130,246,.18));}
   .enemy-side{border-color:#4b5563;background:linear-gradient(90deg,rgba(148,163,184,.15),rgba(17,24,39,.7))}
   .sep{height:1px;background:#0005;margin:10px 0}
