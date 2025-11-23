@@ -411,36 +411,6 @@ function ensureUniqueName(name){
       desc:"敏銳觀察怪物行動與氣息，獲得額外情報。",
     },
 
- // ===== 基礎技能：頭槌 =====
-headbutt:{
-    id:"headbutt",
-    name:"頭槌",
-    type:"主動",
-    baseMp:2,
-    desc:"基礎衝撞攻擊，造成略高於普通攻擊的傷害（每級提升約 4%）。",
-    use(p,e,lv){
-      if(!e) return false;
-      const cost = this.baseMp;
-      if(p.mp < cost){ say("MP 不足。"); return false; }
-      p.mp -= cost;
-
-      const effDef = effectiveEnemyDef(e,p);
-      let dmg = Math.max(1, rnd(p.atk-2, p.atk+2) - effDef);
-
-      // 等級倍率：Lv1 稍微比普攻強，之後每級再多一點
-      const scale = 1.10 + 0.04 * (lv-1);   // Lv1=1.10, Lv25≈2.06
-      dmg = Math.floor(dmg * scale);
-
-      dmg = critMaybe(p, dmg);
-      e.hp = clamp(e.hp - dmg, 0, e.maxhp);
-      affixOnHit(p, e, dmg);
-      say(`🤕 你使出<b>頭槌</b>（Lv.${lv}），造成 <span class="hp">-${dmg}</span>！`);
-      return true;
-    }
-  },
-
-
-
   // ===== 戰士系：破甲斬 =====
  armorbreak:{
     id:"armorbreak",
@@ -810,9 +780,9 @@ const MOUNTS={
       hp:32, mp:12, atk:6, def:5, maxhp:32, maxmp:12,
       gold:200, afk:false, lastTick:0,
       equip:{weapon:null,armor:null,acc:null,mount:null},
-      learned:{"headbutt":1, basicSlash:0, manaSpark:0, powerFundamentals:0, agilityFundamentals:0, accuracyFundamentals:0, arcaneFundamentals:0, insight:0},   // 初始技能庫
+      learned:{basicSlash:1, manaSpark:0, powerFundamentals:0, agilityFundamentals:0, accuracyFundamentals:0, arcaneFundamentals:0, insight:0},   // 初始技能庫
       skillPoints:1,
-      activeSkill:"headbutt",
+      activeSkill:"basicSlash",
       skillQual:{},
       passiveKills:{},
       rebirths: 0   // ← 新增：已轉生次數
@@ -1052,15 +1022,17 @@ function qualWithStars(inst){
     }catch(e){}
   }
 
-  function ensureNoviceSkillDefaults(){
+function ensureNoviceSkillDefaults(){
     const p = game.player;
     if(!p.learned) p.learned = {};
-    if(typeof p.learned.headbutt !== "number") p.learned.headbutt = 1;
     ["basicSlash","manaSpark","powerFundamentals","agilityFundamentals","accuracyFundamentals","arcaneFundamentals","insight"].forEach(id=>{
-      if(typeof p.learned[id] !== "number") p.learned[id] = 0;
+      if(typeof p.learned[id] !== "number") p.learned[id] = id==="basicSlash" ? 1 : 0;
     });
     if(typeof p.skillPoints !== "number"){
       p.skillPoints = Math.min(10, p.lvl || 1);
+    }
+    if(!p.activeSkill || !SKILL[p.activeSkill]){
+      p.activeSkill = "basicSlash";
     }
   }
 
@@ -2372,7 +2344,6 @@ function calcSkillBooksNeeded(totalLv){
   const cur = p.learned[id] || 0;
 
   // 🔒 進階技能職業限制（依你前面設定）
-  // headbutt：頭槌（基礎技，不鎖）
   // flurry：連擊 → 盜賊系
   // fireball：火球術 → 法師系
   // armorbreak：破甲斬 → 戰士系
