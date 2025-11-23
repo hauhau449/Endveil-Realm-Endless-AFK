@@ -318,8 +318,9 @@ function ensureUniqueName(name){
       desc:"運用基礎戰鬥技巧，以武器施展穩定的物理斬擊。",
       use(p,e,lv){
         if(!e) return false;
-        if(p.mp < this.baseMp){ say("MP 不足。"); return false; }
-        p.mp -= this.baseMp;
+        const cost = calcSkillCost(p, this.baseMp);
+        if(p.mp < cost){ say("MP 不足。"); return false; }
+        p.mp -= cost;
 
         const effDef = effectiveEnemyDef(e,p);
         let dmg = Math.max(1, rnd(p.atk-1, p.atk+3) - effDef);
@@ -327,10 +328,12 @@ function ensureUniqueName(name){
         const scale = 1.05 + 0.08 * (lv-1); // Lv1 稍強於普攻，逐級微幅提升
         dmg = Math.floor(dmg * scale);
 
-        dmg = critMaybe(p, dmg);
+        dmg = critMaybe(p, dmg, "physical");
+        dmg = applySpeedBonus(p, dmg);
         e.hp = clamp(e.hp - dmg, 0, e.maxhp);
         affixOnHit(p, e, dmg);
         say(`🗡️ 你施展<b>斬擊基礎</b>（Lv.${lv}），造成 <span class="hp">-${dmg}</span>。`);
+        recoverManaOnAction(p);
         return true;
       }
     },
@@ -345,21 +348,23 @@ function ensureUniqueName(name){
       desc:"釋放低階魔力火花，造成單體魔法傷害。",
       use(p,e,lv){
         if(!e) return false;
-        const cost = this.baseMp;
+        const cost = calcSkillCost(p, this.baseMp);
         if(p.mp < cost){ say("MP 不足。"); return false; }
         p.mp -= cost;
 
         const effDef = effectiveEnemyDef(e,p);
-        const magicBase = Math.max(1, rnd(p.atk-3, p.atk-1) + Math.floor(p.maxmp * 0.03));
+        const magicBase = Math.max(1, rnd(p.magicAtk-3, p.magicAtk-1) + Math.floor(p.maxmp * 0.03));
         let dmg = Math.max(1, magicBase - Math.floor(effDef * 0.7));
 
         const scale = 1.00 + 0.12 * (lv-1); // 提升倍率，留待後續平衡
         dmg = Math.floor(dmg * scale);
 
-        dmg = critMaybe(p, dmg);
+        dmg = critMaybe(p, dmg, "magic");
+        dmg = applySpeedBonus(p, dmg);
         e.hp = clamp(e.hp - dmg, 0, e.maxhp);
         affixOnHit(p, e, dmg);
         say(`✨ 你釋放<b>魔能火花</b>（Lv.${lv}），造成 <span class="hp">-${dmg}</span> 魔法傷害。`);
+        recoverManaOnAction(p);
         return true;
       }
     },
@@ -417,33 +422,35 @@ function ensureUniqueName(name){
     name:"破甲斬",
     type:"主動",
     baseMp:4,
-    desc:"強力斬擊，造成約 140% 傷害，並使敵人防禦 -50% 持續 2 回合（傷害隨等級上升）。",
-    use(p,e,lv){
-      if(!e) return false;
-      const cost=this.baseMp + lv;        // 等級越高耗魔略升
-      if(p.mp < cost){ say("MP 不足。"); return false; }
-      p.mp -= cost;
+  desc:"強力斬擊，造成約 140% 傷害，並使敵人防禦 -50% 持續 2 回合（傷害隨等級上升）。",
+  use(p,e,lv){
+    if(!e) return false;
+    const cost=calcSkillCost(p, this.baseMp + lv);        // 等級越高耗魔略升
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
 
-      const effDef = effectiveEnemyDef(e,p);
-      const base = Math.max(1, rnd(p.atk-1, p.atk+3) - effDef);
-      let dmg = Math.floor(base * 1.4);   // 基礎 140% 傷害
+    const effDef = effectiveEnemyDef(e,p);
+    const base = Math.max(1, rnd(p.atk-1, p.atk+3) - effDef);
+    let dmg = Math.floor(base * 1.4);   // 基礎 140% 傷害
 
-      // 等級倍率：每級額外 +2% 傷害
-      const scale = 1 + 0.02 * (lv-1);
-      dmg = Math.floor(dmg * scale);
+    // 等級倍率：每級額外 +2% 傷害
+    const scale = 1 + 0.02 * (lv-1);
+    dmg = Math.floor(dmg * scale);
 
-      dmg = critMaybe(p, dmg);
-      e.hp = clamp(e.hp - dmg, 0, e.maxhp);
+    dmg = critMaybe(p, dmg, "physical");
+    dmg = applySpeedBonus(p, dmg);
+    e.hp = clamp(e.hp - dmg, 0, e.maxhp);
 
-      // 🔻 防禦 -50%，持續 2 回合（比原本溫和一點）
-      e.defDown = 0.5;
-      e.defDownTurns = 2;
+    // 🔻 防禦 -50%，持續 2 回合（比原本溫和一點）
+    e.defDown = 0.5;
+    e.defDownTurns = 2;
 
-      affixOnHit(p, e, dmg);
-      say(`🪓 你使出<b>破甲斬</b>（Lv.${lv}），造成 <span class="hp">-${dmg}</span>，並大幅削弱敵人防禦（-50%，2 回合）。`);
-      return true;
-    }
-  },
+    affixOnHit(p, e, dmg);
+    say(`🪓 你使出<b>破甲斬</b>（Lv.${lv}），造成 <span class="hp">-${dmg}</span>，並大幅削弱敵人防禦（-50%，2 回合）。`);
+    recoverManaOnAction(p);
+    return true;
+  }
+},
 
 
   // ===== 戰士系：猛擊（如果你還要留著可以保留原本的） =====
@@ -477,48 +484,50 @@ function ensureUniqueName(name){
     id:"fireball",
     name:"火球術",
     type:"主動",
-    baseMp:6,
-    desc:"投擲火球造成約 130% 傷害，並點燃敵人 3 回合（等級越高主傷與燃燒都會變強）。",
-    use(p,e,lv){
-      if(!e) return false;
-      const cost = this.baseMp + lv;
-      if(p.mp < cost){ say("MP 不足。"); return false; }
-      p.mp -= cost;
+  baseMp:6,
+  desc:"投擲火球造成約 130% 傷害，並點燃敵人 3 回合（等級越高主傷與燃燒都會變強）。",
+  use(p,e,lv){
+    if(!e) return false;
+    const cost = calcSkillCost(p, this.baseMp + lv);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
 
-      const effDef = effectiveEnemyDef(e,p);
-      const base = Math.max(1, rnd(p.atk-1, p.atk+3) - effDef);
-      let main = Math.floor(base * 1.3);  // 130% 主傷害
+    const effDef = effectiveEnemyDef(e,p);
+    const base = Math.max(1, rnd(p.magicAtk-1, p.magicAtk+3) - effDef);
+    let main = Math.floor(base * 1.3);  // 130% 主傷害
 
-      // 等級倍率：每級 +2% 主傷與 DOT
-      const scale = 1 + 0.02 * (lv-1);
-      main = Math.floor(main * scale);
+    // 等級倍率：每級 +2% 主傷與 DOT
+    const scale = 1 + 0.02 * (lv-1);
+    main = Math.floor(main * scale);
 
-      main = critMaybe(p, main);
-      e.hp = clamp(e.hp - main, 0, e.maxhp);
+    main = critMaybe(p, main, "magic");
+    main = applySpeedBonus(p, main);
+    e.hp = clamp(e.hp - main, 0, e.maxhp);
 
-      // 🔥 燃燒 DOT：3 回合，每回合 main 的 10~20%
-      const dot = Math.max(1, Math.floor(main * rnd(10,20) / 100));
-      e.dot = dot;
+    // 🔥 燃燒 DOT：3 回合，每回合 main 的 10~20%
+    const dot = Math.max(1, Math.floor(main * rnd(10,20) / 100));
+    e.dot = dot;
       e.dotTurns = 3;
 
-      affixOnHit(p, e, main);
-      say(`🔥 你施放<b>火球術</b>（Lv.${lv}），造成 <span class="hp">-${main}</span>，並點燃敵人（3 回合，每回合 -${dot} HP）。`);
-      return true;
-    }
-  },
+    affixOnHit(p, e, main);
+    say(`🔥 你施放<b>火球術</b>（Lv.${lv}），造成 <span class="hp">-${main}</span>，並點燃敵人（3 回合，每回合 -${dot} HP）。`);
+    recoverManaOnAction(p);
+    return true;
+  }
+},
 
   // ===== 盜賊系：連擊 =====
   flurry:{
     id:"flurry",
     name:"連擊",
     type:"主動",
-    baseMp:5,
-    desc:"三段連擊：第一段必定命中，後兩段有機率追加（每級提升總傷害約 3%）。",
-    use(p,e,lv){
-      if(!e) return false;
-      const cost=this.baseMp + lv;
-      if(p.mp < cost){ say("MP 不足。"); return false; }
-      p.mp -= cost;
+  baseMp:5,
+  desc:"三段連擊：第一段必定命中，後兩段有機率追加（每級提升總傷害約 3%）。",
+  use(p,e,lv){
+    if(!e) return false;
+    const cost=calcSkillCost(p, this.baseMp + lv);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
 
       const effDef = effectiveEnemyDef(e,p);
       const baseRaw = Math.max(1, rnd(p.atk-2, p.atk+2) - effDef);
@@ -557,11 +566,13 @@ function ensureUniqueName(name){
 
       // 等級倍率：總傷害再乘上一層
       const scale = 1 + 0.02 * (lv-1);
-      const finalTotal = Math.max(1, Math.floor(baseTotal * scale));
+      let finalTotal = Math.max(1, Math.floor(baseTotal * scale));
+      finalTotal = applySpeedBonus(p, finalTotal);
 
       e.hp = clamp(e.hp - finalTotal, 0, e.maxhp);
       affixOnHit(p, e, finalTotal);
       say(`🔺 你施展<b>連擊</b>（Lv.${lv}）！${logs.join("，")}（合計 <span class="hp">-${finalTotal}</span>）。`);
+      recoverManaOnAction(p);
       return true;
     }
   },
@@ -569,9 +580,9 @@ function ensureUniqueName(name){
     
     smite:{ id:"smite", name:"聖光制裁", type:"主動", baseMp:6, desc:"聖光重擊，對黑暗系額外傷害。",
       use:(p,e,lv)=>{if (!e) return false;  // 沒敵人就直接跳出，不要繼續執行
- const mp=6; if(p.mp<mp) return say("魔力不足。"), false;
-        p.mp-=mp; const scale=1+lv*0.06; const effDef=effectiveEnemyDef(e,p); let out=Math.max(5, Math.floor((p.atk+8 - Math.floor(effDef*0.5))*scale)); if(e.tag==="dark") out=Math.floor(out*1.25);
-        out=critMaybe(p,out); e.hp=clamp(e.hp-out,0,e.maxhp); affixOnHit(p,e,out); tryCombo(p,e); say(`你釋放 <b>聖光制裁</b> Lv.${lv}！<span class="hp">-${out}</span>。`); return true; } },
+ const mp=calcSkillCost(p, 6); if(p.mp<mp) return say("魔力不足。"), false;
+        p.mp-=mp; const scale=1+lv*0.06; const effDef=effectiveEnemyDef(e,p); let out=Math.max(5, Math.floor((p.magicAtk+8 - Math.floor(effDef*0.5))*scale)); if(e.tag==="dark") out=Math.floor(out*1.25);
+        out=critMaybe(p,out,"magic"); out = applySpeedBonus(p, out); e.hp=clamp(e.hp-out,0,e.maxhp); affixOnHit(p,e,out); tryCombo(p,e); say(`你釋放 <b>聖光制裁</b> Lv.${lv}！<span class="hp">-${out}</span>。`); recoverManaOnAction(p); return true; } },
     
     vitality:{ id:"vitality", name:"活力", type:"被動", desc:"最大HP +10 / 等",
       passive:(p,lv)=>{ p.maxhp+=10*lv; p.hp=Math.min(p.hp+10*lv,p.maxhp);} },
@@ -580,11 +591,47 @@ function ensureUniqueName(name){
       passive:(p,lv)=>{ p.maxmp+=6*lv; p.mp=Math.min(p.mp+6*lv,p.maxmp);} },
     
     omnislash:{ id:"omnislash", name:"奧義：萬斬", type:"奧義", baseMp:8, desc:"爆發 4~6 段大傷。",
-      use:(p,e,lv)=>{if (!e) return false;  // 沒敵人就直接跳出，不要繼續執行
- const mp=8; if(p.mp<mp) return say("魔力不足。"), false;
-        p.mp-=mp; let h=rnd(4,6), tot=0, scale=1+lv*0.04; for(let i=0;i<h;i++){ const effDef=effectiveEnemyDef(e,p); const d=Math.max(2,rnd(p.atk+3,p.atk+8)-Math.floor(effDef*0.6)); tot+=critMaybe(p,d); }
-        tot=Math.floor(tot*scale); e.hp=clamp(e.hp-tot,0,e.maxhp); affixOnHit(p,e,tot); tryCombo(p,e); say(`你使出 <b>奧義·萬斬</b> Lv.${lv}！合計 <span class="hp">-${tot}</span>！`); return true; } }
+  use:(p,e,lv)=>{if (!e) return false;  // 沒敵人就直接跳出，不要繼續執行
+ const mp=calcSkillCost(p, 8); if(p.mp<mp) return say("魔力不足。"), false;
+        p.mp-=mp; let h=rnd(4,6), tot=0, scale=1+lv*0.04; for(let i=0;i<h;i++){ const effDef=effectiveEnemyDef(e,p); const d=Math.max(2,rnd(p.atk+3,p.atk+8)-Math.floor(effDef*0.6)); tot+=critMaybe(p,d,"physical"); }
+        tot=Math.floor(tot*scale); tot = applySpeedBonus(p, tot); e.hp=clamp(e.hp-tot,0,e.maxhp); affixOnHit(p,e,tot); tryCombo(p,e); say(`你使出 <b>奧義·萬斬</b> Lv.${lv}！合計 <span class="hp">-${tot}</span>！`); recoverManaOnAction(p); return true; } }
   };
+
+const SKILL_TIERS = {
+  basicSlash:0,
+  manaSpark:0,
+  powerFundamentals:0,
+  agilityFundamentals:0,
+  accuracyFundamentals:0,
+  arcaneFundamentals:0,
+  insight:0,
+  vitality:0,
+  focus:0,
+  armorbreak:1,
+  fireball:1,
+  flurry:1,
+  smite:1,
+  omnislash:2
+};
+
+  function skillTier(id){ return SKILL_TIERS[id] ?? 0; }
+  function allowedSkillTiersForPlayer(){
+    const tier = game.player?.tier || 0;
+    if(tier >= 4) return [4,3,2,1,0];
+    if(tier >= 3) return [3,2,1,0];
+    if(tier >= 2) return [2,1,0];
+    if(tier >= 1) return [1,0];
+    return [0];
+  }
+  function checkSkillTierAllowed(id){
+    const tier = skillTier(id);
+    const allowed = allowedSkillTiersForPlayer();
+    if(!allowed.includes(tier)){
+      say("🔒 目前轉職階段無法強化這個技能（需符合職業解鎖規則）。");
+      return false;
+    }
+    return true;
+  }
 
   function skillLevel(id, fallback=0){
     const lv = game.player?.learned?.[id];
@@ -782,6 +829,8 @@ const MOUNTS={
       equip:{weapon:null,armor:null,acc:null,mount:null},
       learned:{basicSlash:1, manaSpark:0, powerFundamentals:0, agilityFundamentals:0, accuracyFundamentals:0, arcaneFundamentals:0, insight:0},   // 初始技能庫
       skillPoints:1,
+      attributes:{ str:5, agi:5, int:5, spi:5 },
+      attrPoints:0,
       activeSkill:"basicSlash",
       skillQual:{},
       passiveKills:{},
@@ -944,6 +993,24 @@ function nextPotionName(name){
   }
 
   const say=html=> appendLog(html);
+  const pct=(v,max)=> max>0 ? Math.max(0, Math.min(100, Math.round((v/max)*100))) : 0;
+
+  function formatStateLine(label, name, hp, maxhp, mp, maxmp, lvl){
+    const hpPct = pct(hp, maxhp);
+    const mpPct = maxmp>0 ? pct(mp, maxmp) : null;
+    const mpText = mpPct===null ? "MP —" : `MP ${mpPct}%`;
+    const title = name ? `${label} ${name}` : label;
+    return `${title} Lv.${lvl}｜HP ${hpPct}%｜${mpText}`;
+  }
+
+  function logBattleStatus(reason="狀態同步"){
+    if(!game.state.inBattle) return;
+    const p = game.player;
+    const e = game.state.enemy;
+    const selfLine = formatStateLine("我方", "你", p.hp, p.maxhp, p.mp, p.maxmp, p.lvl);
+    const enemyLine = e ? formatStateLine("敵方", e.name, e.hp, e.maxhp, e.mp, e.maxmp, e.lvl) : "敵方 —";
+    appendLog(`📊 ${reason}<br><span class="muted">${selfLine}</span><br><span class="muted">${enemyLine}</span><div class="log-divider">---------------</div>`, {save:false});
+  }
 /* ================2合1藥水鏈=============== */
   /* =============================== */
   /* [ADD] 全域錯誤寫入冒險日誌（排錯用） */
@@ -1029,10 +1096,25 @@ function ensureNoviceSkillDefaults(){
       if(typeof p.learned[id] !== "number") p.learned[id] = id==="basicSlash" ? 1 : 0;
     });
     if(typeof p.skillPoints !== "number"){
-      p.skillPoints = Math.min(10, p.lvl || 1);
+      const lvl = p.lvl || 1;
+      p.skillPoints = Math.max(1, lvl);
     }
     if(!p.activeSkill || !SKILL[p.activeSkill]){
       p.activeSkill = "basicSlash";
+    }
+
+    ensureAttributeDefaults();
+  }
+
+  function ensureAttributeDefaults(){
+    const p = game.player;
+    if(!p.attributes) p.attributes = { str:5, agi:5, int:5, spi:5 };
+    ["str","agi","int","spi"].forEach(k=>{
+      if(typeof p.attributes[k] !== "number") p.attributes[k] = 0;
+    });
+    if(typeof p.attrPoints !== "number"){
+      const lvl = p.lvl || 1;
+      p.attrPoints = Math.max(0, (lvl - 1) * 5);
     }
   }
 
@@ -1192,6 +1274,39 @@ function levelGrowth(lvl){
   };
 }
 
+function attributesToStats(attr={}){
+  const str = Math.max(0, attr.str || 0);
+  const agi = Math.max(0, attr.agi || 0);
+  const intl = Math.max(0, attr.int || 0);
+  const spi = Math.max(0, attr.spi || 0);
+
+  const atk = str * 1.2 + agi * 0.4;
+  const hp  = str * 4;
+  const mp  = intl * 3 + spi * 2;
+  const magicAtk = intl * 1.5 + str * 0.3;
+
+  return {
+    atk,
+    hp,
+    mp,
+    magicAtk,
+    physCritRate: agi * 0.3,        // %
+    physCritDmg:  agi * 0.005,      // 乘數增量
+    magicCritRate: spi * 0.3,
+    magicCritDmg:  spi * 0.005,
+    haste: agi * 0.003,             // 行動速度／傷害加成
+    manaRegen: spi * 0.6,           // 行動後回魔
+    skillCostReduce: Math.min(0.40, intl * 0.003) // 技能耗魔減免（最多 -40%）
+  };
+}
+
+const ATTR_META = {
+  str:{ label:"STR 力量", desc:"物理攻擊／少量HP" },
+  agi:{ label:"AGI 敏捷", desc:"物爆／爆傷／攻速" },
+  int:{ label:"INT 智力", desc:"魔傷／魔力／技能效率" },
+  spi:{ label:"SPI 精神", desc:"魔爆／魔爆傷／回魔" }
+};
+
 // 3) 轉職/轉生倍率：只吃白板（不要乘到裝備）
 function tierMultiplier(tier){ return 1 + 0.005 * (tier||0); }   // 每轉 +2%
 function rebirthMultiplier(r){ return 1 + 0.20 * (r||0); }       // 每轉生 +10%
@@ -1227,12 +1342,14 @@ function recomputeStats(applyPassives=false){
   // （A）白板：職業底值 + 等級成長
   const jb = JOB_BASE[p.job] || JOB_BASE.Novice;
   const lg = levelGrowth(p.lvl||1);
+  const attrStats = attributesToStats(p.attributes || {});
   let core = {
-    atk: (jb.atk||0) + lg.atk,
+    atk: (jb.atk||0) + lg.atk + attrStats.atk,
     def: (jb.def||0) + lg.def,
-    hp:  (jb.hp ||0) + lg.hp,
-    mp:  (jb.mp ||0) + lg.mp
+    hp:  (jb.hp ||0) + lg.hp + attrStats.hp,
+    mp:  (jb.mp ||0) + lg.mp + attrStats.mp
   };
+  let magicCore = core.atk + attrStats.magicAtk;
 
   // （B）轉職/轉生：只吃白板
   const mulTier = tierMultiplier(p.tier||0);
@@ -1241,6 +1358,7 @@ function recomputeStats(applyPassives=false){
   core.def = Math.floor(core.def * mulTier * mulReb);
   core.hp  = Math.floor(core.hp  * mulTier * mulReb);
   core.mp  = Math.floor(core.mp  * mulTier * mulReb);
+  magicCore = Math.floor(magicCore * mulTier * mulReb);
 
   // （C）職業獎勵（你原本的 p.jobBonus 參數）——也只乘在白板
   if (game.player.jobBonus){
@@ -1249,6 +1367,7 @@ function recomputeStats(applyPassives=false){
     core.mp  = Math.floor(core.mp  * (1 + (jbMul.mp  || 0)));
     core.atk = Math.floor(core.atk * (1 + (jbMul.atk || 0)));
     core.def = Math.floor(core.def * (1 + (jbMul.def || 0)));
+    magicCore = Math.floor(magicCore * (1 + (jbMul.atk || 0)));
   }
 
   // （D）被動技能（白板層）
@@ -1257,10 +1376,11 @@ function recomputeStats(applyPassives=false){
   core.def = Math.floor( (core.def + (pas.add.def||0)) * (1 + (pas.mul.def||0)) );
   core.hp  = Math.floor( (core.hp  + (pas.add.hp ||0)) * (1 + (pas.mul.hp ||0)) );
   core.mp  = Math.floor( (core.mp  + (pas.add.mp ||0)) * (1 + (pas.mul.mp ||0)) );
+  magicCore = Math.floor( (magicCore + (pas.add.atk||0)) * (1 + (pas.mul.atk||0)) );
   p.bonusCritRate = pas.misc?.critRate || 0;
   p.defPierce = pas.misc?.defPierce || 0;
   p.insightLv = pas.misc?.insight || 0;
-  p.actionSpeedBonus = pas.misc?.actionSpeed || 0;
+  p.actionSpeedBonus = (pas.misc?.actionSpeed || 0) + (attrStats.haste || 0);
 
   // （E）最後才把裝備/坐騎的屬性疊上去
   let addHp=0, addMp=0, addAtk=0, addDef=0;
@@ -1281,10 +1401,13 @@ function recomputeStats(applyPassives=false){
   const hpRate = Math.max(0, Math.min(1, (p.hp||prevMaxHp) / prevMaxHp ));
   const mpRate = Math.max(0, Math.min(1, (p.mp||prevMaxMp) / prevMaxMp ));
 
-   p.maxhp = Math.max(1, core.hp + addHp);
+  const baseAtk = core.atk + addAtk;
+  const baseMagic = magicCore + addAtk;
+  p.maxhp = Math.max(1, core.hp + addHp);
   p.maxmp = Math.max(0, core.mp + addMp);
-  p.atk   = Math.max(0, core.atk + addAtk);
+  p.atk   = Math.max(0, baseAtk);
   p.def   = Math.max(0, core.def + addDef);
+  p.magicAtk = Math.max(0, baseMagic);
 
   // 數值上限：避免攻擊、防禦、HP/MP 膨脹到失控
   const CAP_ATK = 50000, CAP_DEF = 50000, CAP_HP = 80000, CAP_MP = 50000;
@@ -1292,9 +1415,17 @@ function recomputeStats(applyPassives=false){
   p.def   = Math.min(p.def,   CAP_DEF);
   p.maxhp = Math.min(p.maxhp, CAP_HP);
   p.maxmp = Math.min(p.maxmp, CAP_MP);
+  p.magicAtk = Math.min(p.magicAtk, CAP_ATK);
 
   p.hp = clamp(Math.floor(p.maxhp * hpRate), 1, p.maxhp);
   p.mp = clamp(Math.floor(p.maxmp * mpRate), 0, p.maxmp);
+
+  p.physCritRate = 5 + (attrStats.physCritRate || 0) + (p.bonusCritRate || 0);
+  p.magicCritRate = 5 + (attrStats.magicCritRate || 0);
+  p.physCritDmg = 1.8 + (attrStats.physCritDmg || 0);
+  p.magicCritDmg = 1.8 + (attrStats.magicCritDmg || 0);
+  p.manaRegen = attrStats.manaRegen || 0;
+  p.skillCostReduce = attrStats.skillCostReduce || 0;
 
   // （F）如需把坐騎移速記到玩家上（未來可用）
   p.spdFromMount = 0; // 先不計算移速（你的移速邏輯可之後接）
@@ -1309,23 +1440,82 @@ function recomputeStats(applyPassives=false){
     return base;
   }
 
+  function renderCritPanel(p){
+    const physRate = (p.physCritRate || 0).toFixed(1);
+    const magicRate = (p.magicCritRate || 0).toFixed(1);
+    const physDmg = Math.round((p.physCritDmg || 1) * 100);
+    const magicDmg = Math.round((p.magicCritDmg || 1) * 100);
+    const manaRegen = Math.floor(p.manaRegen || 0);
+    const costReduce = Math.round((p.skillCostReduce || 0) * 100);
+    return `<div class="stat span2">物爆：${physRate}%｜爆傷：${physDmg}%<br>魔爆：${magicRate}%｜爆傷：${magicDmg}%<br>魔力恢復：+${manaRegen} MP/行動｜技能耗魔：-${costReduce}%</div>`;
+  }
+
+  function renderAttributePanel(p){
+    const attrs = p.attributes || {};
+    const remain = p.attrPoints || 0;
+    const rows = ["str","agi","int","spi"].map(k=>{
+      const meta = ATTR_META[k];
+      const val = attrs[k] || 0;
+      const dis1 = remain<=0 ? "disabled" : "";
+      const dis5 = remain<5 ? "disabled" : "";
+      return `<div class="attr-row"><div class="attr-meta"><div class="attr-name">${meta.label}</div><div class="hint">${meta.desc}</div></div><div class="attr-controls"><span class="attr-value">${val}</span><div class="attr-buttons"><button class="btn small attr-btn" data-attr="${k}" data-add="1" ${dis1}>+1</button><button class="btn small attr-btn" data-attr="${k}" data-add="5" ${dis5}>+5</button></div></div></div>`;
+    }).join("");
+    return `<div class="stat span2 attr-panel"><div class="attr-head">可用屬性點：${remain}</div><div class="attr-grid">${rows}</div></div>`;
+  }
+
+  function bindAttributeButtons(){
+    if(!statsBox) return;
+    statsBox.querySelectorAll('.attr-btn').forEach(btn=>{
+      btn.onclick=()=>{
+        const attr = btn.dataset.attr;
+        const add = Number(btn.dataset.add||1);
+        allocateAttribute(attr, add);
+      };
+    });
+  }
+
+  function allocateAttribute(attr, amount=1){
+    if(!ATTR_META[attr]) return;
+    const p = game.player;
+    ensureAttributeDefaults();
+    const remain = p.attrPoints || 0;
+    if(remain < amount){
+      say("屬性點不足。");
+      return;
+    }
+    p.attrPoints = Math.max(0, remain - amount);
+    p.attributes[attr] = (p.attributes[attr]||0) + amount;
+    say(`📈 ${ATTR_META[attr].label} +${amount}（剩餘 ${p.attrPoints} 點）`);
+    recomputeStats(true);
+    render();
+    autosave();
+  }
+
   /* ========= Render ========= */
   function render(){
     const p=game.player, z=currentZone();
-    const hpPct = Math.round((p.hp / p.maxhp) * 100);
-    const mpPct = Math.round((p.mp / p.maxmp) * 100);
+    const hpPct = pct(p.hp, p.maxhp);
+    const mpPct = pct(p.mp, p.maxmp);
     $("#shopGold").textContent=p.gold;
     $("#zoneName").textContent = `${z.name}`;
     $("#activeSkillName").textContent = skillNameWithLv(p.activeSkill);
+    const critPanel = renderCritPanel(p);
+    const attrPanel = renderAttributePanel(p);
+    const hpCls = hpPct<=35?'low':hpPct<=60?'mid':'';
+    const mpCls = mpPct<=25?'low':mpPct<=60?'mid':'';
+    const hpChunk = `<span class="pct ${hpCls}">HP：${p.hp} / ${p.maxhp}（${hpPct}%）</span>`;
+    const mpChunk = p.maxmp>0 ? `<span class="pct ${mpCls}">MP：${p.mp} / ${p.maxmp}（${mpPct}%）</span>` : `<span class="pct">MP：—</span>`;
+    const mainStatus = `Lv.${p.lvl}｜EXP ${p.exp}/${expNeedForLevel(p.lvl)}｜${hpChunk}｜${mpChunk}`;
     statsBox.innerHTML=`
-    <div class="stat hp">HP：${p.hp} / ${p.maxhp} <span class="pct ${hpPct<=35?'low':hpPct<=60?'mid':''}">（${hpPct}%）</span></div>
-    <div class="stat mp">MP：${p.mp} / ${p.maxmp} <span class="pct ${mpPct<=25?'low':mpPct<=60?'mid':''}">（${mpPct}%）</span></div>
-      <div class="stat atk">攻擊：${p.atk}</div>
+      <div class="stat span2 primary-status">${mainStatus}</div>
+      <div class="stat atk">攻擊：${p.atk}｜魔傷：${p.magicAtk||p.atk}</div>
       <div class="stat def">防禦：${p.def}</div>
-      <div class="stat lvl">等級：${p.lvl}（EXP ${p.exp}/${expNeedForLevel(p.lvl)}）</div>
-      <div class="stat">技能點：${p.skillPoints||0}</div>
+      <div class="stat">技能點：${p.skillPoints||0}｜屬性點：${p.attrPoints||0}</div>
+      ${critPanel}
+      ${attrPanel}
       <div class="stat gold">金幣：${p.gold}｜職業：${jobName(p.job)}（${p.tier}轉）｜轉生：${p.rebirths||0} 次｜日數：${game.state.day}｜經驗加倍層數：${activeXpBuffs()}</div>
     `;
+    bindAttributeButtons();
     // 背包（快速預覽）
     if(invBox){
       const keys = Object.keys(game.inv).filter(k => (game.inv[k]||0) > 0);
@@ -1544,6 +1734,7 @@ function displayEquipName(id){
         say(`👀 洞察 Lv.${insLv}：可能掉落 <b>${names.join("、")}</b>。`);
       }
     }
+    logBattleStatus("開戰狀態");
     render();
   }
   function playerAttack(){
@@ -1551,9 +1742,12 @@ function displayEquipName(id){
     const p=game.player, e=game.state.enemy;
     const effDef=effectiveEnemyDef(e,p);
     let out=Math.max(1, rnd(p.atk-2,p.atk+2)-effDef);
-    out=critMaybe(p,out);
+    out=critMaybe(p,out,"physical");
+    out=applySpeedBonus(p,out);
     e.hp=clamp(e.hp-out,0,e.maxhp); affixOnHit(p,e,out);
     say(`你進行普通攻擊，造成 <span class="hp">-${out}</span>。`);
+    recoverManaOnAction(p);
+    logBattleStatus("你的攻擊後");
     if(e.hp<=0) return endBattle(true);
     // 中毒DOT在回合終結時生效
     enemyTurn();
@@ -1582,6 +1776,8 @@ function displayEquipName(id){
 
   // 技能本身回傳 false（多半是 MP 不足）→ 視為施放失敗
   if(!ok) return false;
+
+  logBattleStatus(`技能：${sk.name}`);
 
   if(game.state.enemy.hp <= 0){
     endBattle(true);
@@ -1621,6 +1817,7 @@ function displayEquipName(id){
     const dmg=Math.max(1, rnd(e.atk-1,e.atk+3)-p.def);
     p.hp=clamp(p.hp-dmg,0,p.maxhp);
     say(`<b>${e.name}</b> 攻擊了你，<span class="bad">-${dmg}</span>。`);
+    logBattleStatus(`${e.name} 的回合`);
     if(p.hp<=0) return endBattle(false);
     render();
   }
@@ -1664,9 +1861,8 @@ function displayEquipName(id){
       };
 
       p.lvl++;
-      if(p.lvl <= 10){
-        p.skillPoints = (p.skillPoints||0) + 1;
-      }
+      p.skillPoints = (p.skillPoints||0) + 1;
+      p.attrPoints = (p.attrPoints||0) + 5;
       recomputeStats(false);
 
       const dhp  = p.maxhp - before.maxhp;
@@ -1684,7 +1880,8 @@ function displayEquipName(id){
         `MP ${dmp>=0?"+":""}${dmp}, ` +
         `攻 ${datk>=0?"+":""}${datk}, ` +
         `防 ${ddef>=0?"+":""}${ddef}` +
-        `${p.lvl<=10?`｜技能點 +1（共 ${p.skillPoints}）`:""}。`
+        `｜技能點 +1（共 ${p.skillPoints}）` +
+        `｜屬性點 +5（共 ${p.attrPoints}）。`
       );
 
       checkUnlocks();
@@ -2367,6 +2564,8 @@ const jobLock = {
     }
   }
 
+  if(!checkSkillTierAllowed(id)) return;
+
    // 需要的書本數（由設定決定）
   const qual = (p.skillQual && p.skillQual[id]) || 0;  // 技能目前品質階級
   const totalLv = cur + qual * maxLv;                  // 總等級 = 當前等級 + 品質階 * 上限
@@ -2419,6 +2618,7 @@ function upgradeSkillByPoint(id){
   const cur = skillLevel(id,0);
   const max = skillMaxLv(id);
   if(cur >= max){ say(`🔒 <b>${sk.name}</b> 已達 Lv.${max}。`); return; }
+  if(!checkSkillTierAllowed(id)) return;
   if((game.player.skillPoints||0) <= 0){ say("技能點數不足。"); return; }
 
   game.player.skillPoints = Math.max(0, (game.player.skillPoints||0) - 1);
@@ -3167,13 +3367,28 @@ function addRandomAffixN(inst, n){
     for(const id of ids){ const inst=getEquipInstance(id); if(inst && inst.affix && inst.affix.length) return inst; }
     return null;
   }
-  function critMaybe(p,base){
+  function calcSkillCost(p, base){
+    const reduce = Math.min(0.5, p?.skillCostReduce || 0);
+    return Math.max(1, Math.floor(base * (1 - reduce)));
+  }
+  function applySpeedBonus(p, base){
+    const haste = p?.actionSpeedBonus || 0;
+    return Math.max(1, Math.floor(base * (1 + haste)));
+  }
+  function recoverManaOnAction(p){
+    const regen = Math.floor(p?.manaRegen || 0);
+    if(regen>0){
+      p.mp = clamp(p.mp + regen, 0, p.maxmp);
+    }
+  }
+  function critMaybe(p,base,type="physical"){
     const w = getEquippedWithAffix(p);
-    let critRate=5; // 基礎 5%
+    const baseRate = type === "magic" ? (p?.magicCritRate || 0) : (p?.physCritRate || 0);
+    let critRate=baseRate;
     if(w?.affix?.some(a=>a.key==="crit")) critRate+=5;
-    if(p?.bonusCritRate){ critRate += p.bonusCritRate; }
+    const critDmg = type === "magic" ? (p?.magicCritDmg || 1.8) : (p?.physCritDmg || 1.8);
     const isCrit = Math.random()*100 < critRate;
-    return isCrit ? Math.floor(base*1.8) : base;
+    return isCrit ? Math.floor(base*critDmg) : base;
   }
   function tryCombo(p,e){
     const w = getEquippedWithAffix(p);
@@ -4194,7 +4409,8 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
   // 20%～80% 隨機回復（依上限）
 const pct = 0.2 + Math.random() * 0.6;               // 0.2~0.8
 const h = Math.max(1, Math.floor(game.player.maxhp * pct));
-const m = Math.max(1, Math.floor(game.player.maxmp * pct));
+const regen = Math.floor(game.player.manaRegen || 0);
+const m = Math.max(1, Math.floor(game.player.maxmp * pct) + regen);
 
   game.player.hp=clamp(game.player.hp+h,0,game.player.maxhp); game.player.mp=clamp(game.player.mp+m,0,game.player.maxmp); say(`你在 ${currentZone().name} 小憩，回復 <b>${h} HP</b> 與 <b>${m} MP</b>。`); if(Math.random()<0.2) advanceDay(1); render(); }
   function tryRun(){ 
