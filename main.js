@@ -55,8 +55,18 @@ function toggleUpdateLog(){
   const log=$("#log"), statsBox=$("#stats"), invBox=$("#inv");
   const enemyUI={name:$("#eName"),lvl:$("#eLvl"),atk:$("#eAtk"),def:$("#eDef"),hpTxt:$("#eHpTxt"),mpTxt:$("#eMpTxt"),hpBar:$("#eHpBar"),mpBar:$("#eMpBar")};
   const battleStatusUI={
-    ally:{ lvl:$("#battleAllyLvl"), hp:$("#battleAllyHp"), mp:$("#battleAllyMp") },
-    enemy:{ name:$("#battleEnemyName"), lvl:$("#battleEnemyLvl"), hp:$("#battleEnemyHp"), mp:$("#battleEnemyMp") }
+    ally:{
+      lvl:$("#battleAllyLvl"),
+      atk:$("#battleAllyAtk"),
+      magic:$("#battleAllyMagic"),
+      hpPct:$("#battleAllyHpPct"), hpVal:$("#battleAllyHpVal"), hpBar:$("#battleAllyHpBar"),
+      mpPct:$("#battleAllyMpPct"), mpVal:$("#battleAllyMpVal"), mpBar:$("#battleAllyMpBar")
+    },
+    enemy:{
+      name:$("#battleEnemyName"), lvl:$("#battleEnemyLvl"),
+      hpPct:$("#battleEnemyHpPct"), hpVal:$("#battleEnemyHpVal"), hpBar:$("#battleEnemyHpBar"),
+      mpPct:$("#battleEnemyMpPct"), mpVal:$("#battleEnemyMpVal"), mpBar:$("#battleEnemyMpBar")
+    }
   };
 
     // 「更多功能…」：選項選到後，幫忙觸發對應按鈕
@@ -1485,20 +1495,42 @@ function recomputeStats(applyPassives=false){
     const p = game.player || {};
     const e = game.state.enemy;
     const pct = (v, max)=>{
+      if(!max || max<=0) return { text:"—", pct:0 };
+      const rate = Math.max(0, Math.min(100, Math.round((v / max) * 100)));
+      return { text:`${rate}%`, pct:rate };
+    };
+    const fmtVal = v => (v || v===0) ? Math.round(v) : "—";
+    const valTxt = (v, max)=>{
       if(!max || max<=0) return "—";
-      const rate = Math.round((v / max) * 100);
-      return `${Math.max(0, Math.min(100, rate))}%`;
+      const safeMax = Math.max(0, Math.round(max));
+      const safeVal = Math.max(0, Math.round(v||0));
+      return `${safeVal}/${safeMax}`;
     };
     const fmtLvl = lvl=> lvl ? `Lv.${lvl}` : "—";
+    const updateSide = (side, data)=>{
+      const hpInfo = pct(data.hp, data.maxhp);
+      side.hpPct.textContent = hpInfo.text;
+      if(side.hpBar) side.hpBar.style.width = `${hpInfo.pct}%`;
+      side.hpVal.textContent = valTxt(data.hp, data.maxhp);
+
+      const mpInfo = pct(data.mp, data.maxmp);
+      side.mpPct.textContent = mpInfo.text;
+      if(side.mpBar) side.mpBar.style.width = `${mpInfo.pct}%`;
+      side.mpVal.textContent = valTxt(data.mp, data.maxmp);
+    };
 
     ui.ally.lvl.textContent = fmtLvl(p.lvl);
-    ui.ally.hp.textContent = pct(p.hp, p.maxhp);
-    ui.ally.mp.textContent = pct(p.mp, p.maxmp);
+    ui.ally.atk.textContent = fmtVal(p.atk);
+    ui.ally.magic.textContent = fmtVal(p.magicAtk || p.atk);
+    updateSide(ui.ally, { hp:p.hp, maxhp:p.maxhp, mp:p.mp, maxmp:p.maxmp });
 
     ui.enemy.name.textContent = e ? e.name : "—";
     ui.enemy.lvl.textContent = e ? fmtLvl(e.lvl) : "—";
-    ui.enemy.hp.textContent = e ? pct(e.hp, e.maxhp) : "—";
-    ui.enemy.mp.textContent = e ? pct(e.mp, e.maxmp) : "—";
+    if(e){
+      updateSide(ui.enemy, { hp:e.hp, maxhp:e.maxhp, mp:e.mp, maxmp:e.maxmp });
+    }else{
+      updateSide(ui.enemy, { hp:0, maxhp:0, mp:0, maxmp:0 });
+    }
   }
 
   function render(){

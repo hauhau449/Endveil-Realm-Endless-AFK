@@ -52,16 +52,58 @@
       <h3>冒險日誌</h3>
       <div class="battle-status" id="battleStatus">
         <div class="battle-side">
-          <div class="status-head">🛡️ 我方</div>
-          <div class="status-row">等級：<span id="battleAllyLvl">—</span></div>
-          <div class="status-row">血量：<span id="battleAllyHp">—</span></div>
-          <div class="status-row">MP：<span id="battleAllyMp">—</span></div>
+          <div class="side-header">
+            <div class="avatar ally">🛡️</div>
+            <div class="side-meta">
+              <div class="status-head">🛡️ 我方</div>
+              <div class="status-row status-sub">等級：<span id="battleAllyLvl">—</span></div>
+              <div class="status-row">
+                <div>攻擊：<span id="battleAllyAtk">—</span></div>
+                <div>魔傷：<span id="battleAllyMagic">—</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="status-bar">
+            <div class="label">HP</div>
+            <div class="bar hp"><span id="battleAllyHpBar" style="width:0%"></span></div>
+            <div class="bar-meta">
+              <span id="battleAllyHpPct">—</span>
+              <span id="battleAllyHpVal" class="muted">—</span>
+            </div>
+          </div>
+          <div class="status-bar">
+            <div class="label">MP</div>
+            <div class="bar mp"><span id="battleAllyMpBar" style="width:0%"></span></div>
+            <div class="bar-meta">
+              <span id="battleAllyMpPct">—</span>
+              <span id="battleAllyMpVal" class="muted">—</span>
+            </div>
+          </div>
         </div>
         <div class="battle-side enemy-side">
-          <div class="status-head">⚔️ 敵方 <span id="battleEnemyName" class="muted">—</span></div>
-          <div class="status-row">等級：<span id="battleEnemyLvl">—</span></div>
-          <div class="status-row">血量：<span id="battleEnemyHp">—</span></div>
-          <div class="status-row">MP：<span id="battleEnemyMp">—</span></div>
+          <div class="side-header">
+            <div class="avatar enemy">👾</div>
+            <div class="side-meta">
+              <div class="status-head">⚔️ 敵方 <span id="battleEnemyName" class="muted">—</span></div>
+              <div class="status-row status-sub">等級：<span id="battleEnemyLvl">—</span></div>
+            </div>
+          </div>
+          <div class="status-bar">
+            <div class="label">HP</div>
+            <div class="bar hp"><span id="battleEnemyHpBar" style="width:0%"></span></div>
+            <div class="bar-meta">
+              <span id="battleEnemyHpPct">—</span>
+              <span id="battleEnemyHpVal" class="muted">—</span>
+            </div>
+          </div>
+          <div class="status-bar">
+            <div class="label">MP</div>
+            <div class="bar mp"><span id="battleEnemyMpBar" style="width:0%"></span></div>
+            <div class="bar-meta">
+              <span id="battleEnemyMpPct">—</span>
+              <span id="battleEnemyMpVal" class="muted">—</span>
+            </div>
+          </div>
         </div>
       </div>
       <div id="log" class="log" aria-live="polite"></div>
