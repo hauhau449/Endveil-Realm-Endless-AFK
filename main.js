@@ -225,22 +225,199 @@ function ensureUniqueName(name){
   
   const JOB_TREE=[
     {tier:0,key:"Novice", name:"初心者"},
-    {tier:1,key:"Warrior", name:"狂刃戰將", weapon:"blade", passive:"武勇", start:["armorbreak"]},
-    {tier:2,key:"Mage",    name:"星紋術士", weapon:"staff", passive:"星識", start:["fireball"]},
-    {tier:3,key:"Rogue",   name:"影襲行者", weapon:"dagger", passive:"潛匿", start:["flurry"]},
-    {tier:4,key:"Paladin", name:"聖光裁決", weapon:"blade", passive:"祈護", start:["smite"]},
+
+    // 1 轉
+    {tier:1,key:"Warrior", name:"戰士", parent:"Novice", weapon:"blade", passive:"武勇", start:["armorbreak"]},
+    {tier:1,key:"Mage",    name:"法師", parent:"Novice", weapon:"staff", passive:"星識", start:["fireball"]},
+    {tier:1,key:"Assassin",name:"刺客", parent:"Novice", weapon:"dagger", passive:"潛匿", start:["flurry"]},
+    {tier:1,key:"Ranger",  name:"弓手", parent:"Novice", weapon:"blade", passive:"野獵", start:["armorbreak"]},
+
+    // 戰士系
+    {tier:2,key:"Berserker",        name:"狂血戰士", parent:"Warrior", weapon:"blade", passive:"武勇", start:["armorbreak"]},
+    {tier:3,key:"BloodflameReaver", name:"血焰狂刃", parent:"Berserker", weapon:"blade", passive:"武勇", start:["armorbreak"]},
+    {tier:4,key:"Warshura",         name:"嗜戰修羅", parent:"BloodflameReaver", weapon:"blade", passive:"武勇", start:["armorbreak"]},
+
+    {tier:2,key:"Steelheart",       name:"鋼心戰士", parent:"Warrior", weapon:"blade", passive:"武勇", start:["armorbreak"]},
+    {tier:3,key:"EdgewallKnight",   name:"鋒壁騎士", parent:"Steelheart", weapon:"blade", passive:"武勇", start:["armorbreak"]},
+    {tier:4,key:"BulwarkWarlord",   name:"破陣戰君", parent:"EdgewallKnight", weapon:"blade", passive:"武勇", start:["armorbreak"]},
+
+    // 法師系
+    {tier:2,key:"ElementWeaver",    name:"元素編織者", parent:"Mage", weapon:"staff", passive:"星識", start:["fireball"]},
+    {tier:3,key:"ArcaneConductor",  name:"秘法咒導師", parent:"ElementWeaver", weapon:"staff", passive:"星識", start:["fireball"]},
+    {tier:4,key:"AstralArchmage",   name:"天紋魔導師", parent:"ArcaneConductor", weapon:"staff", passive:"星識", start:["fireball"]},
+
+    {tier:2,key:"StarshadeCaster",  name:"星影咒師", parent:"Mage", weapon:"staff", passive:"星識", start:["fireball"]},
+    {tier:3,key:"LunarisArcanist",  name:"月寂導法者", parent:"StarshadeCaster", weapon:"staff", passive:"星識", start:["fireball"]},
+    {tier:4,key:"NoxAbyssEmperor",  name:"夜墟星淵帝", parent:"LunarisArcanist", weapon:"staff", passive:"星識", start:["fireball"]},
+
+    // 刺客系
+    {tier:2,key:"Shadowblade",      name:"影刃者", parent:"Assassin", weapon:"dagger", passive:"潛匿", start:["flurry"]},
+    {tier:3,key:"NightReaver",      name:"夜影斬", parent:"Shadowblade", weapon:"dagger", passive:"潛匿", start:["flurry"]},
+    {tier:4,key:"AbyssShadereaver", name:"闇刃修羅", parent:"NightReaver", weapon:"dagger", passive:"潛匿", start:["flurry"]},
+
+    {tier:2,key:"ShadeMark",        name:"暗印者", parent:"Assassin", weapon:"dagger", passive:"潛匿", start:["flurry"]},
+    {tier:3,key:"ShadowDevourer",   name:"影噬者", parent:"ShadeMark", weapon:"dagger", passive:"潛匿", start:["flurry"]},
+    {tier:4,key:"UmbralAshura",     name:"幽噬修羅", parent:"ShadowDevourer", weapon:"dagger", passive:"潛匿", start:["flurry"]},
+
+    // 弓手系
+    {tier:2,key:"WindHunter",       name:"獵風者", parent:"Ranger", weapon:"blade", passive:"野獵", start:["armorbreak"]},
+    {tier:3,key:"Chaser",           name:"追獵者", parent:"WindHunter", weapon:"blade", passive:"野獵", start:["armorbreak"]},
+    {tier:4,key:"DeicideRanger",    name:"獵神者", parent:"Chaser", weapon:"blade", passive:"野獵", start:["armorbreak"]},
+
+    {tier:2,key:"UmbralCrossbowman",name:"冥弩使", parent:"Ranger", weapon:"blade", passive:"野獵", start:["armorbreak"]},
+    {tier:3,key:"UmbralBoltReaver", name:"冥矢獵者", parent:"UmbralCrossbowman", weapon:"blade", passive:"野獵", start:["armorbreak"]},
+    {tier:4,key:"UmbralHuntshura",  name:"冥狩修羅", parent:"UmbralBoltReaver", weapon:"blade", passive:"野獵", start:["armorbreak"]},
   ];
   const JOB_WEAPON={
-  Novice:["blade","staff","dagger"],
-  Warrior:["blade"], 
-  Mage:["staff"], 
-  Rogue:["dagger"], 
-  Paladin:["blade","staff","dagger"] // ✅ 最終職全武器相容
+    Novice:["blade","staff","dagger"],
+
+    Warrior:["blade"],
+    Berserker:["blade"],
+    BloodflameReaver:["blade"],
+    Warshura:["blade"],
+    Steelheart:["blade"],
+    EdgewallKnight:["blade"],
+    BulwarkWarlord:["blade"],
+
+    Mage:["staff"],
+    ElementWeaver:["staff"],
+    ArcaneConductor:["staff"],
+    AstralArchmage:["staff"],
+    StarshadeCaster:["staff"],
+    LunarisArcanist:["staff"],
+    NoxAbyssEmperor:["staff"],
+
+    Assassin:["dagger"],
+    Shadowblade:["dagger"],
+    NightReaver:["dagger"],
+    AbyssShadereaver:["dagger"],
+    ShadeMark:["dagger"],
+    ShadowDevourer:["dagger"],
+    UmbralAshura:["dagger"],
+
+    Ranger:["blade","dagger"],
+    WindHunter:["blade","dagger"],
+    Chaser:["blade","dagger"],
+    DeicideRanger:["blade","dagger"],
+    UmbralCrossbowman:["blade","dagger"],
+    UmbralBoltReaver:["blade","dagger"],
+    UmbralHuntshura:["blade","dagger"],
 };
 
 
   // 技能
   const SKILL={
+ // ===== 初心者：主動技能 =====
+    basicSlash:{
+      id:"basicSlash",
+      name:"斬擊基礎（Basic Slash）",
+      type:"主動",
+      acquisition:"point",
+      tier:0,
+      maxLv:3,
+      baseMp:3,
+      desc:"運用基礎戰鬥技巧，以武器施展穩定的物理斬擊。",
+      use(p,e,lv){
+        if(!e) return false;
+        if(p.mp < this.baseMp){ say("MP 不足。"); return false; }
+        p.mp -= this.baseMp;
+
+        const effDef = effectiveEnemyDef(e,p);
+        let dmg = Math.max(1, rnd(p.atk-1, p.atk+3) - effDef);
+
+        const scale = 1.05 + 0.08 * (lv-1); // Lv1 稍強於普攻，逐級微幅提升
+        dmg = Math.floor(dmg * scale);
+
+        dmg = critMaybe(p, dmg);
+        e.hp = clamp(e.hp - dmg, 0, e.maxhp);
+        affixOnHit(p, e, dmg);
+        say(`🗡️ 你施展<b>斬擊基礎</b>（Lv.${lv}），造成 <span class="hp">-${dmg}</span>。`);
+        return true;
+      }
+    },
+
+    manaSpark:{
+      id:"manaSpark",
+      name:"魔能火花（Mana Spark）",
+      type:"主動",
+      acquisition:"point",
+      tier:0,
+      maxLv:3,
+      baseMp:4,
+      desc:"釋放低階魔力火花，造成單體魔法傷害。",
+      use(p,e,lv){
+        if(!e) return false;
+        const cost = Math.max(1, Math.ceil(this.baseMp * (1 - (p.skillCostCut||0))));
+        if(p.mp < cost){ say("MP 不足。"); return false; }
+        p.mp -= cost;
+
+        const effDef = effectiveEnemyDef(e,p);
+        const magicBase = Math.max(1, rnd(p.atk-3, p.atk-1) + Math.floor(p.maxmp * 0.03));
+        let dmg = Math.max(1, magicBase - Math.floor(effDef * 0.7));
+
+        const scale = 1.00 + 0.12 * (lv-1); // 提升倍率，留待後續平衡
+        dmg = Math.floor(dmg * scale * (p.magicAmp || 1));
+
+        dmg = critMaybe(p, dmg, "magic");
+        e.hp = clamp(e.hp - dmg, 0, e.maxhp);
+        affixOnHit(p, e, dmg);
+        say(`✨ 你釋放<b>魔能火花</b>（Lv.${lv}），造成 <span class="hp">-${dmg}</span> 魔法傷害。`);
+        return true;
+      }
+    },
+
+ // ===== 初心者：預備心法（被動） =====
+    powerFundamentals:{
+      id:"powerFundamentals",
+      name:"力量入門（Power Fundamentals）",
+      type:"被動",
+      acquisition:"point",
+      tier:0,
+      maxLv:3,
+      desc:"學習基本運力技巧，微幅提升物理穩定度。",
+    },
+
+    agilityFundamentals:{
+      id:"agilityFundamentals",
+      name:"敏捷入門（Agility Fundamentals）",
+      type:"被動",
+      acquisition:"point",
+      tier:0,
+      maxLv:3,
+      desc:"敏捷訓練，讓身體反應更迅速輕盈。",
+    },
+
+    accuracyFundamentals:{
+      id:"accuracyFundamentals",
+      name:"精準入門（Accuracy Fundamentals）",
+      type:"被動",
+      acquisition:"point",
+      tier:0,
+      maxLv:3,
+      desc:"基礎準心鍛鍊，使遠程攻擊更穩定。",
+    },
+
+    arcaneFundamentals:{
+      id:"arcaneFundamentals",
+      name:"魔導入門（Arcane Fundamentals）",
+      type:"被動",
+      acquisition:"point",
+      tier:0,
+      maxLv:3,
+      desc:"基礎魔導訓練，提升魔力操控順暢度。",
+    },
+
+ // ===== 初心者：特殊技能 =====
+    insight:{
+      id:"insight",
+      name:"洞察（Insight）",
+      type:"特殊",
+      acquisition:"point",
+      tier:0,
+      maxLv:3,
+      desc:"敏銳觀察怪物行動與氣息，獲得額外情報。",
+    },
+
  // ===== 基礎技能：頭槌 =====
 headbutt:{
     id:"headbutt",
@@ -341,7 +518,8 @@ headbutt:{
     desc:"投擲火球造成約 130% 傷害，並點燃敵人 3 回合（等級越高主傷與燃燒都會變強）。",
     use(p,e,lv){
       if(!e) return false;
-      const cost = this.baseMp + lv;
+      const rawCost = this.baseMp + lv;
+      const cost = Math.max(1, Math.ceil(rawCost * (1 - (p.skillCostCut||0))));
       if(p.mp < cost){ say("MP 不足。"); return false; }
       p.mp -= cost;
 
@@ -351,9 +529,9 @@ headbutt:{
 
       // 等級倍率：每級 +2% 主傷與 DOT
       const scale = 1 + 0.02 * (lv-1);
-      main = Math.floor(main * scale);
+      main = Math.floor(main * scale * (p.magicAmp || 1));
 
-      main = critMaybe(p, main);
+      main = critMaybe(p, main, "magic");
       e.hp = clamp(e.hp - main, 0, e.maxhp);
 
       // 🔥 燃燒 DOT：3 回合，每回合 main 的 10~20%
@@ -429,9 +607,9 @@ headbutt:{
     
     smite:{ id:"smite", name:"聖光制裁", type:"主動", baseMp:6, desc:"聖光重擊，對黑暗系額外傷害。",
       use:(p,e,lv)=>{if (!e) return false;  // 沒敵人就直接跳出，不要繼續執行
- const mp=6; if(p.mp<mp) return say("魔力不足。"), false;
-        p.mp-=mp; const scale=1+lv*0.06; const effDef=effectiveEnemyDef(e,p); let out=Math.max(5, Math.floor((p.atk+8 - Math.floor(effDef*0.5))*scale)); if(e.tag==="dark") out=Math.floor(out*1.25);
-        out=critMaybe(p,out); e.hp=clamp(e.hp-out,0,e.maxhp); affixOnHit(p,e,out); tryCombo(p,e); say(`你釋放 <b>聖光制裁</b> Lv.${lv}！<span class="hp">-${out}</span>。`); return true; } },
+ const mp=6; const cost=Math.max(1, Math.ceil(mp*(1 - (p.skillCostCut||0)))); if(p.mp<cost) return say("魔力不足。"), false;
+        p.mp-=cost; const scale=1+lv*0.06; const effDef=effectiveEnemyDef(e,p); let out=Math.max(5, Math.floor((p.atk+8 - Math.floor(effDef*0.5))*scale)); if(e.tag==="dark") out=Math.floor(out*1.25);
+        out=critMaybe(p,out,"magic"); e.hp=clamp(e.hp-out,0,e.maxhp); affixOnHit(p,e,out); tryCombo(p,e); say(`你釋放 <b>聖光制裁</b> Lv.${lv}！<span class="hp">-${out}</span>。`); return true; } },
     
     vitality:{ id:"vitality", name:"活力", type:"被動", desc:"最大HP +10 / 等",
       passive:(p,lv)=>{ p.maxhp+=10*lv; p.hp=Math.min(p.hp+10*lv,p.maxhp);} },
@@ -445,6 +623,15 @@ headbutt:{
         p.mp-=mp; let h=rnd(4,6), tot=0, scale=1+lv*0.04; for(let i=0;i<h;i++){ const effDef=effectiveEnemyDef(e,p); const d=Math.max(2,rnd(p.atk+3,p.atk+8)-Math.floor(effDef*0.6)); tot+=critMaybe(p,d); }
         tot=Math.floor(tot*scale); e.hp=clamp(e.hp-tot,0,e.maxhp); affixOnHit(p,e,tot); tryCombo(p,e); say(`你使出 <b>奧義·萬斬</b> Lv.${lv}！合計 <span class="hp">-${tot}</span>！`); return true; } }
   };
+
+  function skillLevel(id, fallback=0){
+    const lv = game.player?.learned?.[id];
+    return typeof lv === "number" ? lv : fallback;
+  }
+  function skillMaxLv(id){
+    const sk = SKILL[id];
+    return sk?.maxLv || SKILL_MAX_LV;
+  }
 // ===【經驗加倍捲倍率】===
 // 1.00 = 每層 +100%（原本行為）
 // 0.50 = 每層 +50%（建議）
@@ -627,23 +814,25 @@ const MOUNTS={
 
   const game = {
     player:{
-  name:"你", job:"Novice", tier:0, lvl:1, exp:0,
-  hp:32, mp:12, atk:6, def:5, maxhp:32, maxmp:12,
-  gold:200, afk:false, lastTick:0,
-    equip:{weapon:null,armor:null,acc:null,mount:null},
-    learned:{"headbutt":1},   // 初始只會頭槌
-    activeSkill:"headbutt",
-    skillQual:{},
-    passiveKills:{}
-,
-  rebirths: 0   // ← 新增：已轉生次數
-},
+      name:"你", job:"Novice", tier:0, lvl:1, exp:0,
+      hp:32, mp:12, atk:6, def:5, maxhp:32, maxmp:12,
+      gold:200, afk:false, lastTick:0,
+      equip:{weapon:null,armor:null,acc:null,mount:null},
+      learned:{"headbutt":1, basicSlash:0, manaSpark:0, powerFundamentals:0, agilityFundamentals:0, accuracyFundamentals:0, arcaneFundamentals:0, insight:0},   // 初始技能庫
+      attributes:{ str:0, agi:0, int:0, spi:0 },
+      attrPoints:5,
+      skillPoints:1,
+      activeSkill:"headbutt",
+      skillQual:{},
+      passiveKills:{},
+      rebirths: 0   // ← 新增：已轉生次數
+    },
 
-      inv:{ 
-    "小治療藥水":10, 
-    "小魔力藥水":10, 
-    "煙霧彈":1,
-   },
+    inv:{
+      "小治療藥水":10,
+      "小魔力藥水":10,
+      "煙霧彈":1,
+    },
     state:{ inBattle:false, enemy:null, kills:{}, zoneId:"z-01", day:1 },
     quests:[], shop:{stock:[]},
     buffs:{ xpLayers:[] } // 多層加倍，每層為剩餘日數
@@ -865,11 +1054,29 @@ function qualWithStars(inst){
         // 反序列化 DB
         Object.assign(EQUIP_DB, data._eqdb||{});
         Object.assign(MOUNT_DB, data._mddb||{});
+        ensureNoviceSkillDefaults();
         recomputeStats(true);
       } else {
         seedQuests();
       }
     }catch(e){}
+  }
+
+  function ensureNoviceSkillDefaults(){
+    const p = game.player;
+    if(!p.learned) p.learned = {};
+    if(typeof p.learned.headbutt !== "number") p.learned.headbutt = 1;
+    ["basicSlash","manaSpark","powerFundamentals","agilityFundamentals","accuracyFundamentals","arcaneFundamentals","insight"].forEach(id=>{
+      if(typeof p.learned[id] !== "number") p.learned[id] = 0;
+    });
+    if(typeof p.skillPoints !== "number"){
+      p.skillPoints = p.lvl || 1;
+    }
+    if(!p.attributes){ p.attributes = {str:0,agi:0,int:0,spi:0}; }
+    if(typeof p.attrPoints !== "number"){
+      const spent = (p.attributes.str||0)+(p.attributes.agi||0)+(p.attributes.int||0)+(p.attributes.spi||0);
+      p.attrPoints = Math.max(0, (p.lvl || 1)*5 - spent);
+    }
   }
 
   /* ========= 任務資料表 ========= */
@@ -1034,7 +1241,27 @@ function rebirthMultiplier(r){ return 1 + 0.20 * (r||0); }       // 每轉生 +1
 
 // 4) 被動（白板層）——如需更強可在此讀 p.learned 決定加法/乘法
 function passiveFromSkills(p){
-  return { add:{atk:0,def:0,hp:0,mp:0}, mul:{atk:0,def:0,hp:0,mp:0} };
+  const add={atk:0,def:0,hp:0,mp:0};
+  const mul={atk:0,def:0,hp:0,mp:0};
+  const misc={critRate:0, defPierce:0, insight:0, actionSpeed:0};
+
+  const powerLv = skillLevel("powerFundamentals",0);
+  add.atk += powerLv; // 極小幅攻擊加成
+
+  const agiLv = skillLevel("agilityFundamentals",0);
+  misc.critRate += agiLv * 2; // 每級 +2% 暴擊率
+
+  const accLv = skillLevel("accuracyFundamentals",0);
+  misc.defPierce += accLv * 2; // 輕度降低敵方防禦
+
+  const arcLv = skillLevel("arcaneFundamentals",0);
+  add.mp += arcLv * 3; // 小幅提升 MP 上限
+
+  const insightLv = skillLevel("insight",0);
+  misc.insight = insightLv;
+  misc.actionSpeed = insightLv * 0.02;
+
+  return { add, mul, misc };
 }
   
 function recomputeStats(applyPassives=false){
@@ -1050,7 +1277,13 @@ function recomputeStats(applyPassives=false){
     mp:  (jb.mp ||0) + lg.mp
   };
 
-  // （B）轉職/轉生：只吃白板
+  // （B）屬性點（白板層）
+  const attrs = p.attributes || {};
+  core.atk += Math.floor((attrs.str || 0) * 1.2);
+  core.hp  += Math.floor((attrs.str || 0) * 2);
+  core.mp  += Math.floor((attrs.int || 0) * 4 + (attrs.spi || 0) * 2);
+
+  // （C）轉職/轉生：只吃白板
   const mulTier = tierMultiplier(p.tier||0);
   const mulReb  = rebirthMultiplier(p.rebirths||0);
   core.atk = Math.floor(core.atk * mulTier * mulReb);
@@ -1058,7 +1291,7 @@ function recomputeStats(applyPassives=false){
   core.hp  = Math.floor(core.hp  * mulTier * mulReb);
   core.mp  = Math.floor(core.mp  * mulTier * mulReb);
 
-  // （C）職業獎勵（你原本的 p.jobBonus 參數）——也只乘在白板
+  // （D）職業獎勵（你原本的 p.jobBonus 參數）——也只乘在白板
   if (game.player.jobBonus){
     const jbMul = game.player.jobBonus; // 內容是「加多少倍率」，如 1.10 表「+110%」→ 這裡當作 1.10 使用
     core.hp  = Math.floor(core.hp  * (1 + (jbMul.hp  || 0)));
@@ -1067,12 +1300,25 @@ function recomputeStats(applyPassives=false){
     core.def = Math.floor(core.def * (1 + (jbMul.def || 0)));
   }
 
-  // （D）被動技能（白板層）
+  // （E）被動技能（白板層）
   const pas = passiveFromSkills(p);
   core.atk = Math.floor( (core.atk + (pas.add.atk||0)) * (1 + (pas.mul.atk||0)) );
   core.def = Math.floor( (core.def + (pas.add.def||0)) * (1 + (pas.mul.def||0)) );
   core.hp  = Math.floor( (core.hp  + (pas.add.hp ||0)) * (1 + (pas.mul.hp ||0)) );
   core.mp  = Math.floor( (core.mp  + (pas.add.mp ||0)) * (1 + (pas.mul.mp ||0)) );
+  p.bonusCritRate = pas.misc?.critRate || 0;
+  p.defPierce = pas.misc?.defPierce || 0;
+  p.insightLv = pas.misc?.insight || 0;
+  p.actionSpeedBonus = pas.misc?.actionSpeed || 0;
+
+  // （E-1）屬性衍伸效果（暴擊、回魔、技能效率）
+  p.physCritBonus = (p.bonusCritRate || 0) + (attrs.agi || 0) * 0.4;
+  p.magicCritBonus = (attrs.spi || 0) * 0.5;
+  p.physCritMult = 1.8 + (attrs.agi || 0) * 0.01;
+  p.magicCritMult = 1.8 + (attrs.spi || 0) * 0.012;
+  p.magicAmp = 1 + (attrs.int || 0) * 0.01;
+  p.skillCostCut = Math.min(0.40, (attrs.int || 0) * 0.003);
+  p.manaRegenBonus = (attrs.spi || 0) * 0.5;
 
   // （E）最後才把裝備/坐騎的屬性疊上去
   let addHp=0, addMp=0, addAtk=0, addDef=0;
@@ -1126,15 +1372,23 @@ function recomputeStats(applyPassives=false){
     const p=game.player, z=currentZone();
     const hpPct = Math.round((p.hp / p.maxhp) * 100);
     const mpPct = Math.round((p.mp / p.maxmp) * 100);
+    const attr = p.attributes || {};
     $("#shopGold").textContent=p.gold;
     $("#zoneName").textContent = `${z.name}`;
     $("#activeSkillName").textContent = skillNameWithLv(p.activeSkill);
+    const attrBtns=(key)=>`<span class="attr-buttons"><button class="btn small attr-btn" data-attr="${key}" data-amt="1" ${(p.attrPoints||0)<=0?"disabled":""}>+1</button><button class="btn small attr-btn" data-attr="${key}" data-amt="5" ${(p.attrPoints||0)<5?"disabled":""}>+5</button></span>`;
     statsBox.innerHTML=`
     <div class="stat hp">HP：${p.hp} / ${p.maxhp} <span class="pct ${hpPct<=35?'low':hpPct<=60?'mid':''}">（${hpPct}%）</span></div>
     <div class="stat mp">MP：${p.mp} / ${p.maxmp} <span class="pct ${mpPct<=25?'low':mpPct<=60?'mid':''}">（${mpPct}%）</span></div>
       <div class="stat atk">攻擊：${p.atk}</div>
       <div class="stat def">防禦：${p.def}</div>
       <div class="stat lvl">等級：${p.lvl}（EXP ${p.exp}/${expNeedForLevel(p.lvl)}）</div>
+      <div class="stat">屬性點：${p.attrPoints||0}</div>
+      <div class="stat">STR（力量）：<b>${attr.str||0}</b>｜物理攻擊＋少量 HP ${attrBtns('str')}</div>
+      <div class="stat">AGI（敏捷）：<b>${attr.agi||0}</b>｜物爆率／爆傷／攻速 ${attrBtns('agi')}</div>
+      <div class="stat">INT（智力）：<b>${attr.int||0}</b>｜魔傷／魔力／技能效率 ${attrBtns('int')}</div>
+      <div class="stat">SPI（精神）：<b>${attr.spi||0}</b>｜魔爆率／魔爆傷／回魔 ${attrBtns('spi')}</div>
+      <div class="stat">技能點：${p.skillPoints||0}</div>
       <div class="stat gold">金幣：${p.gold}｜職業：${jobName(p.job)}（${p.tier}轉）｜轉生：${p.rebirths||0} 次｜日數：${game.state.day}｜經驗加倍層數：${activeXpBuffs()}</div>
     `;
     // 背包（快速預覽）
@@ -1284,10 +1538,11 @@ function displayEquipName(id){
     return tags;
   }
   function skillNameWithLv(id){
-    const lv = game.player.learned[id]||1;
-    const qual = game.player.skillQual[id]||0;
+    const lv = skillLevel(id, 0);
+    const qual = (game.player.skillQual||{})[id]||0;
     const tag = qual>=1? `（${QUALS[qual]}）`:"";
-    return `${SKILL[id]?.name||"—"} Lv.${lv}${tag}`;
+    const max = skillMaxLv(id);
+    return `${SKILL[id]?.name||"—"} Lv.${lv}/${max}${tag}`;
   }
   function jobName(key){ const j=JOB_TREE.find(j=>j.key===key); return j?j.name:key; }
 
@@ -1346,6 +1601,14 @@ function displayEquipName(id){
     const z=currentZone();
     const e=randomEnemy(); game.state.enemy=e; game.state.inBattle=true;
     say(`⚔️ 在「${z.name}」遭遇 <b>${e.name}</b>（Lv.${e.lvl}｜HP ${e.hp}｜攻 ${e.atk}｜防 ${e.def}）。`);
+    const insLv = game.player.insightLv || 0;
+    if(insLv>0 && Array.isArray(e.drops)){
+      const peek = e.drops.slice(0, Math.min(e.drops.length, 2 + insLv));
+      const names = [...new Set(peek.map(d=> d.item || d.equip || d.mount || d.skill || ""))].filter(Boolean);
+      if(names.length>0){
+        say(`👀 洞察 Lv.${insLv}：可能掉落 <b>${names.join("、")}</b>。`);
+      }
+    }
     render();
   }
   function playerAttack(){
@@ -1369,12 +1632,16 @@ function displayEquipName(id){
 
   const id = game.player.activeSkill;
   const sk = SKILL[id];
-  if(!sk || sk.type === "被動"){
+  if(!sk || sk.type !== "主動"){
     say("沒有可施放的主動技能。");
     return false;
   }
 
-  const lv = game.player.learned[id] || 1;
+  const lv = skillLevel(id, 1);
+  if(lv <= 0){
+    say("尚未習得此技能。");
+    return false;
+  }
   const ok = sk.use(game.player, game.state.enemy, lv);
   render();
 
@@ -1462,6 +1729,8 @@ function displayEquipName(id){
       };
 
       p.lvl++;
+      p.skillPoints = (p.skillPoints||0) + 1;
+      p.attrPoints = (p.attrPoints||0) + 5;
       recomputeStats(false);
 
       const dhp  = p.maxhp - before.maxhp;
@@ -1478,12 +1747,33 @@ function displayEquipName(id){
         `HP ${dhp>=0?"+":""}${dhp}, ` +
         `MP ${dmp>=0?"+":""}${dmp}, ` +
         `攻 ${datk>=0?"+":""}${datk}, ` +
-        `防 ${ddef>=0?"+":""}${ddef}。`
+        `防 ${ddef>=0?"+":""}${ddef}` +
+        `｜屬性點 +5（共 ${p.attrPoints}）｜技能點 +1（共 ${p.skillPoints}）。`
       );
 
       checkUnlocks();
       if(p.lvl % 10 === 0) refreshQuestsForLevel(p.lvl);
     }
+  }
+
+  function attrLabel(key){
+    return key==="str"?"STR（力量）":
+           key==="agi"?"AGI（敏捷）":
+           key==="int"?"INT（智力）":
+           key==="spi"?"SPI（精神）": key;
+  }
+  function investAttribute(key, amt){
+    if(!["str","agi","int","spi"].includes(key)) return;
+    const p = game.player;
+    if(!p.attributes) p.attributes={str:0,agi:0,int:0,spi:0};
+    const spend = Math.max(1, amt||1);
+    if((p.attrPoints||0) < spend){ say("屬性點不足。"); return; }
+    p.attrPoints = Math.max(0, (p.attrPoints||0) - spend);
+    p.attributes[key] = (p.attributes[key]||0) + spend;
+    say(`📌 ${attrLabel(key)} +${spend}（剩餘屬性點 ${p.attrPoints}）。`);
+    recomputeStats(true);
+    render();
+    autosave();
   }
 
   function updatePassivesOnKill(){
@@ -2132,9 +2422,9 @@ function calcSkillBooksNeeded(totalLv){
 }
 
 
-function learnOrUpgradeSkill(id, bookName){
+  function learnOrUpgradeSkill(id, bookName){
   const p = game.player;
-  const maxLv = SKILL_MAX_LV;
+  const maxLv = skillMaxLv(id);
   const cur = p.learned[id] || 0;
 
   // 🔒 進階技能職業限制（依你前面設定）
@@ -2207,6 +2497,33 @@ const jobLock = {
   // 主動技能：升級後自動設為當前技能（維持原行為）
   if(SKILL[id].type!=="被動"){ p.activeSkill = id; }
   render(); autosave();
+}
+function upgradeSkillByPoint(id){
+  const sk = SKILL[id];
+  if(!sk || sk.acquisition !== "point") return;
+  if(!canInvestSkillTier(sk)){ say("尚未解鎖對應轉職階段，無法投入技能點。"); return; }
+  const cur = skillLevel(id,0);
+  const max = skillMaxLv(id);
+  if(cur >= max){ say(`🔒 <b>${sk.name}</b> 已達 Lv.${max}。`); return; }
+  if((game.player.skillPoints||0) <= 0){ say("技能點數不足。"); return; }
+
+  game.player.skillPoints = Math.max(0, (game.player.skillPoints||0) - 1);
+  game.player.learned[id] = cur + 1;
+  if(sk.type === "主動" && (cur===0 || !game.player.activeSkill)){ game.player.activeSkill = id; }
+  say(`📘 <b>${sk.name}</b> 升至 Lv.${game.player.learned[id]}（剩餘技能點 ${game.player.skillPoints}）。`);
+  recomputeStats(true);
+  render(); autosave();
+}
+function allowedSkillTiers(tier){
+  if(tier>=4) return [0,2,3,4];
+  if(tier>=3) return [0,2,3];
+  if(tier>=2) return [0,2];
+  return [0];
+}
+function canInvestSkillTier(sk){
+  const required = typeof sk?.tier === "number" ? sk.tier : 0;
+  const allow = allowedSkillTiers(game.player?.tier || 0);
+  return allow.includes(required);
 }
   function addInv(name,c=1){ game.inv[name]=(game.inv[name]||0)+c; autosave(); }
   function decInv(name,c=1){ if(!game.inv[name]) return; game.inv[name]-=c; if(game.inv[name]<=0) delete game.inv[name]; autosave(); }
@@ -2935,6 +3252,10 @@ function addRandomAffixN(inst, n){
     def = Math.floor(def * 0.8);
   }
 
+  if(p?.defPierce){
+    def = Math.max(0, def - Math.floor(p.defPierce));
+  }
+
   return Math.max(0, def);
 }
 
@@ -2943,12 +3264,15 @@ function addRandomAffixN(inst, n){
     for(const id of ids){ const inst=getEquipInstance(id); if(inst && inst.affix && inst.affix.length) return inst; }
     return null;
   }
-  function critMaybe(p,base){
+  function critMaybe(p,base,kind="physical"){
     const w = getEquippedWithAffix(p);
     let critRate=5; // 基礎 5%
     if(w?.affix?.some(a=>a.key==="crit")) critRate+=5;
+    if(kind==="magic"){ critRate += p?.magicCritBonus || 0; }
+    else{ critRate += p?.physCritBonus || 0; }
+    const mult = kind==="magic" ? (p?.magicCritMult || 1.8) : (p?.physCritMult || 1.8);
     const isCrit = Math.random()*100 < critRate;
-    return isCrit ? Math.floor(base*1.8) : base;
+    return isCrit ? Math.floor(base*mult) : base;
   }
   function tryCombo(p,e){
     const w = getEquippedWithAffix(p);
@@ -3605,9 +3929,10 @@ function refreshQuestsIfAllRewarded(){
     classDlg.showModal();
   }
   function classCandidatesForTier(tier){
-    if(tier===1) return JOB_TREE.filter(j=>j.tier===1||j.tier===2||j.tier===3);
-    if(tier===4) return JOB_TREE.filter(j=>j.key==="Paladin");
-    return JOB_TREE.filter(j=>j.key===game.player.job);
+    if(tier===1) return JOB_TREE.filter(j=>j.parent==="Novice");
+    const cur = JOB_TREE.find(j=>j.key===game.player.job);
+    if(!cur) return [];
+    return JOB_TREE.filter(j=>j.parent===cur.key);
   }
   function chooseClass(key){
   const p=game.player, t=p.tier||0, need=CLASS_REQ[t];
@@ -3785,6 +4110,15 @@ function doRebirth(){
   $("#skillBtn").onclick=useActiveSkill;
   $("#invBtn").onclick=()=>openInventory();
   $("#runBtn").onclick=tryRun;
+  if(statsBox){
+    statsBox.addEventListener('click', (e)=>{
+      const btn = e.target.closest('.attr-btn');
+      if(!btn) return;
+      const key = btn.getAttribute('data-attr');
+      const amt = parseInt(btn.getAttribute('data-amt')||'1',10);
+      investAttribute(key, amt);
+    });
+  }
 
 $("#saveBtn").onclick = ()=>{
   autosave();
@@ -3897,18 +4231,43 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
   function renderSkillList(){
     const box=$("#skillList"); box.innerHTML="";
     const entries = Object.keys(game.player.learned||{});
-    if(entries.length===0){ box.innerHTML=`<div class="row"><span class="muted">尚未學習任何技能。</span></div>`; return; }
+    const points = game.player.skillPoints || 0;
+    const tip=document.createElement("div");
+    tip.className="row";
+    tip.innerHTML = `<span class="muted">技能點數：<b>${points}</b>（每級 +1｜依轉職階段解鎖對應技能線）</span>`;
+    box.appendChild(tip);
+
+    if(entries.length===0){
+      const empty=document.createElement("div");
+      empty.className="row";
+      empty.innerHTML = `<span class="muted">尚未學習任何技能。</span>`;
+      box.appendChild(empty);
+      return;
+    }
     entries.forEach(id=>{
-      const lv=game.player.learned[id]||1; const qual=game.player.skillQual[id]||0; const sk=SKILL[id];
+      const sk=SKILL[id]; if(!sk) return;
+      const lv=skillLevel(id,0); const qual=(game.player.skillQual||{})[id]||0; const max=skillMaxLv(id);
       const row=document.createElement("div"); row.className="row";
-      row.innerHTML=`<div><b>${sk.name}</b> <span class="tag">【${sk.type}】Lv.${lv}${qual>=1?`｜${QUALS[qual]}`:""}</span><br><span class="muted">${sk.desc}</span></div>`;
+      row.innerHTML=`<div><b>${sk.name}</b> <span class="tag">【${sk.type}】Lv.${lv}/${max}${qual>=1?`｜${QUALS[qual]}`:""}</span><br><span class="muted">${sk.desc}</span></div>`;
       const right=document.createElement("div"); right.className="right";
-      if(sk.type!=="被動"){
+      if(sk.type==="主動"){
         const setBtn=btn( game.player.activeSkill===id?"當前技能✓":"設為當前", ()=>{ game.player.activeSkill=id; say(`📚 已將當前技能設為 <b>${sk.name}</b>。`); $("#activeSkillName").textContent=skillNameWithLv(id); autosave(); renderSkillList(); });
+        if(lv<=0) setBtn.disabled=true;
         right.append(setBtn);
       }else{
-        const pass=btn("被動生效", ()=>{}); pass.disabled=true; right.append(pass);
+        const pass=btn(sk.type==="特殊"?"特殊效果":"被動生效", ()=>{}); pass.disabled=true; right.append(pass);
       }
+
+      if(sk.acquisition==="point"){
+        const tierOk = canInvestSkillTier(sk);
+        const canUp = lv < max && points > 0 && tierOk;
+        const upLab = lv>0 ? "升級 +1（消耗 1 點）" : "習得 Lv.1（消耗 1 點）";
+        const upBtn = btn(upLab, ()=> upgradeSkillByPoint(id));
+        upBtn.disabled = !canUp;
+        if(!tierOk){ upBtn.title = "尚未達到對應轉職階段"; }
+        right.append(upBtn);
+      }
+
       row.append(right); box.appendChild(row);
     });
   }
@@ -3946,8 +4305,9 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
 const pct = 0.2 + Math.random() * 0.6;               // 0.2~0.8
 const h = Math.max(1, Math.floor(game.player.maxhp * pct));
 const m = Math.max(1, Math.floor(game.player.maxmp * pct));
+const bonusMp = Math.floor(game.player.manaRegenBonus || 0);
 
-  game.player.hp=clamp(game.player.hp+h,0,game.player.maxhp); game.player.mp=clamp(game.player.mp+m,0,game.player.maxmp); say(`你在 ${currentZone().name} 小憩，回復 <b>${h} HP</b> 與 <b>${m} MP</b>。`); if(Math.random()<0.2) advanceDay(1); render(); }
+  game.player.hp=clamp(game.player.hp+h,0,game.player.maxhp); game.player.mp=clamp(game.player.mp+m+bonusMp,0,game.player.maxmp); say(`你在 ${currentZone().name} 小憩，回復 <b>${h} HP</b> 與 <b>${m + bonusMp} MP</b>。`); if(Math.random()<0.2) advanceDay(1); render(); }
   function tryRun(){ 
   if(!game.state.inBattle) return say("現在沒有在戰鬥。"); 
   const ok = Math.random() < 0.6; 
