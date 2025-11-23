@@ -51,9 +51,28 @@ function toggleUpdateLog(){
 }
 
 (function(){
-    const $=s=>document.querySelector(s), LKEY="stealth_rpg_full_v4";
+  const $=s=>document.querySelector(s), LKEY="stealth_rpg_full_v4";
   const log=$("#log"), statsBox=$("#stats"), invBox=$("#inv");
   const enemyUI={name:$("#eName"),lvl:$("#eLvl"),atk:$("#eAtk"),def:$("#eDef"),hpTxt:$("#eHpTxt"),mpTxt:$("#eMpTxt"),hpBar:$("#eHpBar"),mpBar:$("#eMpBar")};
+  const battleStatusUI={
+    ally:{
+      lvl:$("#battleAllyLvl"),
+      hp:$("#battleAllyHp"),
+      mp:$("#battleAllyMp"),
+      hpBar:$("#battleAllyHpBar"),
+      mpBar:$("#battleAllyMpBar"),
+      portrait:$("#battleAllyPortrait")
+    },
+    enemy:{
+      name:$("#battleEnemyName"),
+      lvl:$("#battleEnemyLvl"),
+      hp:$("#battleEnemyHp"),
+      mp:$("#battleEnemyMp"),
+      hpBar:$("#battleEnemyHpBar"),
+      mpBar:$("#battleEnemyMpBar"),
+      portrait:$("#battleEnemyPortrait")
+    }
+  };
 
     // 「更多功能…」：選項選到後，幫忙觸發對應按鈕
   const moreMenu = $("#moreMenu");
@@ -1474,6 +1493,40 @@ function recomputeStats(applyPassives=false){
   }
 
   /* ========= Render ========= */
+  function renderBattleStatus(){
+    const ui = battleStatusUI;
+    if(!ui.ally.lvl || !ui.enemy.name) return;
+
+    const p = game.player || {};
+    const e = game.state.enemy;
+    const pctValue = (v, max)=>{
+      if(!max || max<=0) return 0;
+      const rate = Math.round((v / max) * 100);
+      return Math.max(0, Math.min(100, rate));
+    };
+    const pctText = (v, max)=>{
+      if(!max || max<=0) return "—";
+      const pct = pctValue(v, max);
+      return `${pct}%（${Math.max(0,v)}/${Math.max(0,max)}）`;
+    };
+    const fmtLvl = lvl=> lvl ? `Lv.${lvl}` : "—";
+
+    ui.ally.lvl.textContent = fmtLvl(p.lvl);
+    ui.ally.hp.textContent = pctText(p.hp, p.maxhp);
+    ui.ally.mp.textContent = pctText(p.mp, p.maxmp);
+    if(ui.ally.hpBar) ui.ally.hpBar.style.width = `${pctValue(p.hp, p.maxhp)}%`;
+    if(ui.ally.mpBar) ui.ally.mpBar.style.width = `${pctValue(p.mp, p.maxmp)}%`;
+    if(ui.ally.portrait) ui.ally.portrait.textContent = p.avatar || "🛡️";
+
+    ui.enemy.name.textContent = e ? e.name : "—";
+    ui.enemy.lvl.textContent = e ? fmtLvl(e.lvl) : "—";
+    ui.enemy.hp.textContent = e ? pctText(e.hp, e.maxhp) : "—";
+    ui.enemy.mp.textContent = e ? pctText(e.mp, e.maxmp) : "—";
+    if(ui.enemy.hpBar) ui.enemy.hpBar.style.width = `${pctValue(e?.hp, e?.maxhp)}%`;
+    if(ui.enemy.mpBar) ui.enemy.mpBar.style.width = `${pctValue(e?.mp, e?.maxmp)}%`;
+    if(ui.enemy.portrait) ui.enemy.portrait.textContent = (e && e.icon) ? e.icon : (e && e.name ? e.name[0] : "⚔️");
+  }
+
   function render(){
     const p=game.player, z=currentZone();
     const hpPct = Math.round((p.hp / p.maxhp) * 100);
@@ -1481,6 +1534,7 @@ function recomputeStats(applyPassives=false){
     $("#shopGold").textContent=p.gold;
     $("#zoneName").textContent = `${z.name}`;
     $("#activeSkillName").textContent = skillNameWithLv(p.activeSkill);
+    renderBattleStatus();
     const critPanel = renderCritPanel(p);
     const attrPanel = renderAttributePanel(p);
     statsBox.innerHTML=`

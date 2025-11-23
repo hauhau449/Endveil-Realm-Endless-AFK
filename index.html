@@ -50,6 +50,46 @@
   <div class="grid game">
     <div class="card">
       <h3>冒險日誌</h3>
+      <div class="battle-status" id="battleStatus">
+        <div class="battle-side">
+          <div class="status-head">
+            <div class="battle-portrait player" id="battleAllyPortrait" aria-hidden="true">🛡️</div>
+            <div class="status-head-meta">
+              <div class="status-title">🛡️ 我方</div>
+              <div class="status-sub">等級：<span id="battleAllyLvl">—</span></div>
+            </div>
+          </div>
+          <div class="status-row bar-row">
+            <span class="label">HP</span>
+            <div class="bar mini hp"><span id="battleAllyHpBar" style="width:0%"></span></div>
+            <span class="value" id="battleAllyHp">—</span>
+          </div>
+          <div class="status-row bar-row">
+            <span class="label">MP</span>
+            <div class="bar mini mp"><span id="battleAllyMpBar" style="width:0%"></span></div>
+            <span class="value" id="battleAllyMp">—</span>
+          </div>
+        </div>
+        <div class="battle-side enemy-side">
+          <div class="status-head">
+            <div class="battle-portrait enemy" id="battleEnemyPortrait" aria-hidden="true">⚔️</div>
+            <div class="status-head-meta">
+              <div class="status-title">⚔️ 敵方 <span id="battleEnemyName" class="muted">—</span></div>
+              <div class="status-sub">等級：<span id="battleEnemyLvl">—</span></div>
+            </div>
+          </div>
+          <div class="status-row bar-row">
+            <span class="label">HP</span>
+            <div class="bar mini hp"><span id="battleEnemyHpBar" style="width:0%"></span></div>
+            <span class="value" id="battleEnemyHp">—</span>
+          </div>
+          <div class="status-row bar-row">
+            <span class="label">MP</span>
+            <div class="bar mini mp"><span id="battleEnemyMpBar" style="width:0%"></span></div>
+            <span class="value" id="battleEnemyMp">—</span>
+          </div>
+        </div>
+      </div>
       <div id="log" class="log" aria-live="polite"></div>
       <div class="sep"></div>
       <div class="actions">
