@@ -51,9 +51,13 @@ function toggleUpdateLog(){
 }
 
 (function(){
-    const $=s=>document.querySelector(s), LKEY="stealth_rpg_full_v4";
+  const $=s=>document.querySelector(s), LKEY="stealth_rpg_full_v4";
   const log=$("#log"), statsBox=$("#stats"), invBox=$("#inv");
   const enemyUI={name:$("#eName"),lvl:$("#eLvl"),atk:$("#eAtk"),def:$("#eDef"),hpTxt:$("#eHpTxt"),mpTxt:$("#eMpTxt"),hpBar:$("#eHpBar"),mpBar:$("#eMpBar")};
+  const battleStatusUI={
+    ally:{ lvl:$("#battleAllyLvl"), hp:$("#battleAllyHp"), mp:$("#battleAllyMp") },
+    enemy:{ name:$("#battleEnemyName"), lvl:$("#battleEnemyLvl"), hp:$("#battleEnemyHp"), mp:$("#battleEnemyMp") }
+  };
 
     // 「更多功能…」：選項選到後，幫忙觸發對應按鈕
   const moreMenu = $("#moreMenu");
@@ -1474,6 +1478,29 @@ function recomputeStats(applyPassives=false){
   }
 
   /* ========= Render ========= */
+  function renderBattleStatus(){
+    const ui = battleStatusUI;
+    if(!ui.ally.lvl || !ui.enemy.name) return;
+
+    const p = game.player || {};
+    const e = game.state.enemy;
+    const pct = (v, max)=>{
+      if(!max || max<=0) return "—";
+      const rate = Math.round((v / max) * 100);
+      return `${Math.max(0, Math.min(100, rate))}%`;
+    };
+    const fmtLvl = lvl=> lvl ? `Lv.${lvl}` : "—";
+
+    ui.ally.lvl.textContent = fmtLvl(p.lvl);
+    ui.ally.hp.textContent = pct(p.hp, p.maxhp);
+    ui.ally.mp.textContent = pct(p.mp, p.maxmp);
+
+    ui.enemy.name.textContent = e ? e.name : "—";
+    ui.enemy.lvl.textContent = e ? fmtLvl(e.lvl) : "—";
+    ui.enemy.hp.textContent = e ? pct(e.hp, e.maxhp) : "—";
+    ui.enemy.mp.textContent = e ? pct(e.mp, e.maxmp) : "—";
+  }
+
   function render(){
     const p=game.player, z=currentZone();
     const hpPct = Math.round((p.hp / p.maxhp) * 100);
@@ -1481,6 +1508,7 @@ function recomputeStats(applyPassives=false){
     $("#shopGold").textContent=p.gold;
     $("#zoneName").textContent = `${z.name}`;
     $("#activeSkillName").textContent = skillNameWithLv(p.activeSkill);
+    renderBattleStatus();
     const critPanel = renderCritPanel(p);
     const attrPanel = renderAttributePanel(p);
     statsBox.innerHTML=`

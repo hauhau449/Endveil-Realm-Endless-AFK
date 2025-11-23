@@ -50,6 +50,20 @@
   <div class="grid game">
     <div class="card">
       <h3>冒險日誌</h3>
+      <div class="battle-status" id="battleStatus">
+        <div class="battle-side">
+          <div class="status-head">🛡️ 我方</div>
+          <div class="status-row">等級：<span id="battleAllyLvl">—</span></div>
+          <div class="status-row">血量：<span id="battleAllyHp">—</span></div>
+          <div class="status-row">MP：<span id="battleAllyMp">—</span></div>
+        </div>
+        <div class="battle-side enemy-side">
+          <div class="status-head">⚔️ 敵方 <span id="battleEnemyName" class="muted">—</span></div>
+          <div class="status-row">等級：<span id="battleEnemyLvl">—</span></div>
+          <div class="status-row">血量：<span id="battleEnemyHp">—</span></div>
+          <div class="status-row">MP：<span id="battleEnemyMp">—</span></div>
+        </div>
+      </div>
       <div id="log" class="log" aria-live="polite"></div>
       <div class="sep"></div>
       <div class="actions">
