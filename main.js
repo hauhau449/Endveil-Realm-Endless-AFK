@@ -68,6 +68,7 @@ function toggleUpdateLog(){
       mpPct:$("#battleEnemyMpPct"), mpVal:$("#battleEnemyMpVal"), mpBar:$("#battleEnemyMpBar")
     }
   };
+  const enemyAvatar = document.getElementById("enemyAvatar");
 
     // 「更多功能…」：選項選到後，幫忙觸發對應按鈕
   const moreMenu = $("#moreMenu");
@@ -1494,6 +1495,10 @@ function recomputeStats(applyPassives=false){
 
     const p = game.player || {};
     const e = game.state.enemy;
+    if(enemyAvatar){
+      enemyAvatar.classList.toggle('is-hidden', !e);
+      enemyAvatar.setAttribute('aria-hidden', e ? 'false' : 'true');
+    }
     const pct = (v, max)=>{
       if(!max || max<=0) return { text:"—", pct:0 };
       const rate = Math.max(0, Math.min(100, Math.round((v / max) * 100)));
