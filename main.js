@@ -63,7 +63,8 @@ function toggleUpdateLog(){
       mpPct:$("#battleAllyMpPct"), mpVal:$("#battleAllyMpVal"), mpBar:$("#battleAllyMpBar")
     },
     enemy:{
-      name:$("#battleEnemyName"), lvl:$("#battleEnemyLvl"),
+      name:$("#battleEnemyName"), lvl:$("#battleEnemyLvl"),atk:$("#battleEnemyAtk"),// 🆕 敵方攻擊
+      def:$("#battleEnemyDef"),          // 🆕 敵方防禦
       hpPct:$("#battleEnemyHpPct"), hpVal:$("#battleEnemyHpVal"), hpBar:$("#battleEnemyHpBar"),
       mpPct:$("#battleEnemyMpPct"), mpVal:$("#battleEnemyMpVal"), mpBar:$("#battleEnemyMpBar")
     }
@@ -1526,6 +1527,8 @@ function recomputeStats(applyPassives=false){
 
     ui.enemy.name.textContent = e ? e.name : "—";
     ui.enemy.lvl.textContent = e ? fmtLvl(e.lvl) : "—";
+    ui.enemy.atk.textContent  = e ? fmtVal(e.atk) : "—";   // 🆕 攻擊
+    ui.enemy.def.textContent  = e ? fmtVal(e.def) : "—";   // 🆕 防禦
     if(e){
       updateSide(ui.enemy, { hp:e.hp, maxhp:e.maxhp, mp:e.mp, maxmp:e.maxmp });
     }else{
@@ -2182,21 +2185,7 @@ function handleDrops(e){
 
 
   
-  // ===========================================
-// 🟣 相容層：讓 handleDrops() 呼叫到的接口存在
-// 內部直接沿用你現有的 rollArtifactAffix() 結果
-// ===========================================
-function rollArtifactStatsForSlot() {
-  // 你原本已定義的產生器：回傳 { slot, weapon, stats:{atk,def,hp,mp} }
-  if (typeof rollArtifactAffix === "function") {
-    return rollArtifactAffix();
-  }
-  // 防呆：萬一未載入，給一組安全的預設
-  const slots = ["weapon","armor","acc"];
-  const slot = slots[Math.floor(Math.random()*slots.length)];
-  const weapon = slot==="weapon" ? ["blade","staff","dagger"][Math.floor(Math.random()*3)] : null;
-  return { slot, weapon, stats:{ atk:5, def:3, hp:20, mp:12 } };
-}
+
 
   function rollArtifactAffix(){
     const slots=["weapon","armor","acc"]; const slot=slots[rnd(0,slots.length-1)];

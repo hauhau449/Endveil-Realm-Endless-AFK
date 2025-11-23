@@ -92,16 +92,22 @@
             </div>
           </div>
         </div>
-        <div class="battle-side enemy-side">
-          <div class="side-header">
-            <div class="side-id">
-              <div class="avatar enemy"><img src="slim.png" alt="史萊姆" /></div>
-              <div class="side-meta">
-                <div class="status-head">⚔️ 敵方 <span id="battleEnemyName" class="muted">—</span></div>
-                <div class="status-row status-sub">等級：<span id="battleEnemyLvl">—</span></div>
-              </div>
-            </div>
-          </div>
+<div class="battle-side enemy-side">
+  <div class="side-header">
+    <div class="side-id">
+      <div class="avatar enemy"><img src="slim.png" alt="史萊姆" /></div>
+      <div class="side-meta">
+        <div class="status-head">⚔️ 敵方 <span id="battleEnemyName" class="muted">—</span></div>
+        <div class="status-row status-sub">等級：<span id="battleEnemyLvl">—</span></div>
+      </div>
+    </div>
+
+    <!-- 🆕 敵方右上角：攻擊、防禦 -->
+    <div class="battle-meta compact">
+      <div class="meta-line">攻擊：<span class="meta-number" id="battleEnemyAtk">—</span></div>
+      <div class="meta-line">防禦：<span class="meta-number" id="battleEnemyDef">—</span></div>
+    </div>
+  </div>
           <div class="status-bar">
             <div class="label">HP</div>
             <div class="bar-wrap">
