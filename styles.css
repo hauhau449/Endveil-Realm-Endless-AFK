@@ -48,6 +48,11 @@
   .actions{display:flex;flex-wrap:wrap;gap:8px}
   .log{height:260px;overflow:auto;background:#0b0f16;border:1px dashed var(--dash);padding:10px;border-radius:8px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
   .log p{margin:.35em 0}
+  .battle-status{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:10px 0}
+  .battle-side{background:var(--panel);border:1px dashed var(--dash);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px}
+  .battle-side .status-head{font-weight:700;display:flex;align-items:center;gap:6px;color:var(--muted)}
+  .battle-side .status-row{display:flex;justify-content:space-between;font-feature-settings:"tnum";font-variant-numeric:tabular-nums}
+  .enemy-side{border-color:#4b5563;background:linear-gradient(90deg,rgba(148,163,184,.15),rgba(17,24,39,.7))}
   .sep{height:1px;background:#0005;margin:10px 0}
   .inv{display:flex;flex-wrap:wrap;gap:8px}
   .pill{border:1px solid #0006;background:var(--panel);padding:6px 8px;border-radius:999px}
