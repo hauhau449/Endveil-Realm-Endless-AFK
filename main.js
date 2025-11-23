@@ -1312,13 +1312,16 @@ function recomputeStats(applyPassives=false){
   p.actionSpeedBonus = pas.misc?.actionSpeed || 0;
 
   // （E-1）屬性衍伸效果（暴擊、回魔、技能效率）
-  p.physCritBonus = (p.bonusCritRate || 0) + (attrs.agi || 0) * 0.4;
-  p.magicCritBonus = (attrs.spi || 0) * 0.5;
-  p.physCritMult = 1.8 + (attrs.agi || 0) * 0.01;
-  p.magicCritMult = 1.8 + (attrs.spi || 0) * 0.012;
+  const agi = attrs.agi || 0;
+  const spi = attrs.spi || 0;
+  p.physCritBonus = (p.bonusCritRate || 0) + agi;            // 物爆率直接隨 AGI 提升
+  p.magicCritBonus = spi;                                     // 魔爆率直接隨 SPI 提升
+  p.physCritMult = 1.50 + agi * 0.005;                        // 爆傷基礎 150%，輕量隨 AGI 提升
+  p.magicCritMult = 1.50 + spi * 0.006;                       // 魔爆傷輕量隨 SPI 提升
   p.magicAmp = 1 + (attrs.int || 0) * 0.01;
   p.skillCostCut = Math.min(0.40, (attrs.int || 0) * 0.003);
-  p.manaRegenBonus = (attrs.spi || 0) * 0.5;
+  p.manaRegenBonus = spi * 0.5;
+  p.attackSpeedBonus = Math.min(0.30, agi * 0.003);            // 攻速概念，提供追擊機率上限 30%
 
   // （E）最後才把裝備/坐騎的屬性疊上去
   let addHp=0, addMp=0, addAtk=0, addDef=0;
@@ -1620,6 +1623,15 @@ function displayEquipName(id){
     e.hp=clamp(e.hp-out,0,e.maxhp); affixOnHit(p,e,out);
     say(`你進行普通攻擊，造成 <span class="hp">-${out}</span>。`);
     if(e.hp<=0) return endBattle(true);
+
+    const speedChance = Math.max(0, Math.min(0.30, p.attackSpeedBonus || 0));
+    if(speedChance > 0 && Math.random() < speedChance){
+      const follow = critMaybe(p, Math.max(1, rnd(p.atk-3, p.atk+1) - effDef));
+      e.hp = clamp(e.hp - follow, 0, e.maxhp);
+      affixOnHit(p, e, follow);
+      say(`⚡ 敏捷追擊觸發，追加一擊 <span class="hp">-${follow}</span>！`);
+      if(e.hp<=0) return endBattle(true);
+    }
     // 中毒DOT在回合終結時生效
     enemyTurn();
   }
