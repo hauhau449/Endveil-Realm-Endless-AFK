@@ -1,0 +1,36 @@
+<svg width="220" height="170" viewBox="0 0 220 170" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="slimeBody" x1="30" y1="30" x2="190" y2="150" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C7E2E1"/>
+      <stop offset="1" stop-color="#78A7AD"/>
+    </linearGradient>
+    <radialGradient id="slimeGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(120 90) rotate(90) scale(90 120)">
+      <stop stop-color="#E7F7F8" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#7BA7AA" stop-opacity="0.6"/>
+    </radialGradient>
+  </defs>
+
+  <ellipse cx="110" cy="120" rx="90" ry="35" fill="#4B6B70" opacity="0.45"/>
+  <path d="M32 92C38 62 78 28 120 36C142 40 158 22 175 20C196 18 207 36 205 62C204 75 207 94 193 111C174 136 140 148 105 148C69 148 34 129 32 92Z" fill="url(#slimeBody)" stroke="#587E83" stroke-width="3"/>
+  <path d="M145 25C156 13 177 10 191 26C201 38 199 61 182 66C166 70 152 58 147 43C144 35 141 31 145 25Z" fill="#C6E6E6" stroke="#6D9396" stroke-width="3"/>
+  <path d="M119 35C127 28 144 27 154 38C163 47 161 62 149 71C137 79 118 77 108 66C99 56 105 43 119 35Z" fill="#BEDFE0" stroke="#6D9396" stroke-width="3"/>
+  <path d="M170 74C181 66 205 70 207 92C209 109 193 121 173 118C157 115 152 98 170 74Z" fill="#9CC5C7" stroke="#61868B" stroke-width="3"/>
+  <circle cx="95" cy="90" r="14" fill="#E3F5F6"/>
+  <circle cx="136" cy="78" r="12" fill="#E3F5F6"/>
+  <circle cx="175" cy="96" r="16" fill="#E3F5F6"/>
+  <circle cx="64" cy="112" r="10" fill="#E3F5F6"/>
+  <circle cx="198" cy="118" r="10" fill="#E3F5F6"/>
+
+  <circle cx="62" cy="78" r="10" fill="white" fill-opacity="0.65"/>
+  <circle cx="112" cy="52" r="12" fill="white" fill-opacity="0.6"/>
+  <circle cx="144" cy="64" r="12" fill="white" fill-opacity="0.6"/>
+  <circle cx="176" cy="80" r="10" fill="white" fill-opacity="0.55"/>
+  <circle cx="92" cy="124" r="8" fill="white" fill-opacity="0.6"/>
+  <circle cx="196" cy="142" r="8" fill="white" fill-opacity="0.55"/>
+
+  <path d="M46 104C52 87 70 80 86 82" stroke="#5F8A8D" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+  <path d="M150 110C160 100 177 99 192 106" stroke="#5F8A8D" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+  <path d="M118 120C134 118 146 123 156 132" stroke="#4F7578" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+
+  <path d="M20 90C22 60 62 22 118 30C142 33 153 13 172 12C193 12 211 31 209 62" fill="url(#slimeGlow)" opacity="0.5"/>
+</svg>
