@@ -1712,7 +1712,43 @@ function renderEnemy(){
       if(d < 0) return `<span class="diff-down">${STAT_LABELS[k]} ${d} 🟩</span>`;
       return `<span class="diff-zero">${STAT_LABELS[k]} 0</span>`;
     });
-    return parts.join("／");
+
+    const critDiffHtml = formatCritDiff(newStats, oldStats);
+    return [parts.join("／"), critDiffHtml].filter(Boolean).join("｜");
+  }
+
+  function formatCritDiff(newStats={}, oldStats={}){
+    const pickAttrs = stats=>({
+      str: stats.str || 0,
+      agi: stats.agi || 0,
+      int: stats.int || 0,
+      spi: stats.spi || 0
+    });
+
+    const derive = stats => attributesToStats(pickAttrs(stats));
+    const a = derive(newStats);
+    const b = derive(oldStats);
+
+    const physRateDiff = (a.physCritRate || 0) - (b.physCritRate || 0);
+    const magicRateDiff = (a.magicCritRate || 0) - (b.magicCritRate || 0);
+    const physDmgDiff = ((a.physCritDmg || 0) - (b.physCritDmg || 0)) * 100;
+    const magicDmgDiff = ((a.magicCritDmg || 0) - (b.magicCritDmg || 0)) * 100;
+
+    const fmt = (label, diff)=>{
+      const rounded = Math.round(diff * 10) / 10;
+      if(Math.abs(rounded) < 0.1) return `<span class="diff-zero">${label} 0%</span>`;
+      const cls = rounded > 0 ? "diff-up" : "diff-down";
+      const icon = rounded > 0 ? "🟥" : "🟩";
+      const sign = rounded > 0 ? `+${rounded}` : `${rounded}`;
+      return `<span class="${cls}">${label} ${sign}% ${icon}</span>`;
+    };
+
+    return [
+      fmt("物爆率", physRateDiff),
+      fmt("魔爆率", magicRateDiff),
+      fmt("物爆傷", physDmgDiff),
+      fmt("魔爆傷", magicDmgDiff)
+    ].join("／");
   }
 
 
