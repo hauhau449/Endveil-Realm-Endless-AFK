@@ -999,19 +999,47 @@ const MOUNTS={
   
   const CLASS_REQ=[10,30,70,120];
   const zones = buildZones();
-  function monsterTemplate(lvl,labelTag=""){ return {
-    hp: Math.round(28 + lvl*4.5),
-    mp: Math.round(lvl*0.8),
-    atk: Math.round(6 + lvl*1.2),
-    def: Math.round(2 + lvl*0.7),
-  //  gold:[3+Math.floor(lvl*0.6), 6+Math.floor(lvl*1.0)],
-        gold:[
-      Math.round((3+Math.floor(lvl*0.6)) * GOLD_RATE),
-      Math.round((6+Math.floor(lvl*1.0)) * GOLD_RATE)],
-    exp:[10+Math.floor(lvl*1.8), 18+Math.floor(lvl*2.6)],
-    drops: baseDropsForLevel(lvl,labelTag),
-    tag: labelTag
-  };}
+  function monsterTemplate(lvl, label = "normal") {
+
+  // 小怪（不能無腦，需要補品）
+  let hp = 60 + lvl * 25;
+  let atk = 7 + lvl * 2.5;
+  let def = lvl * 0.8;
+  let mdef = lvl * 0.7;
+  let speed = lvl * 0.25;
+
+  // 菁英怪（容易死，不注意會翻車）
+  if (label === "elite") {
+    hp *= 3.0;
+    atk *= 1.8;
+    def *= 1.3;
+  }
+
+  // BOSS（10~15 分鐘耐久戰）
+  if (label === "boss") {
+    // HP 大幅提升：確保戰鬥可以 10~15 分鐘
+    hp = lvl * lvl * 120 + 20000;
+
+    // 攻擊輸出更高：逼玩家開技能＋補品
+    atk *= 2.5;
+
+    // 防禦更高：避免玩家爆擊秒殺
+    def *= 2.0;
+  }
+
+  return {
+    lvl,
+    hp: Math.round(hp),
+    maxhp: Math.round(hp),
+    atk: Math.round(atk),
+    def: Math.round(def),
+    mdef: Math.round(mdef),
+    spd: Math.round(speed),
+    exp: [lvl * 12, lvl * 18],
+    gold: [lvl * 1.5, lvl * 2.5],
+    tag: label
+  };
+}
 
  
 
