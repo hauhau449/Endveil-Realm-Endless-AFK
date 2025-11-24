@@ -132,6 +132,9 @@
   .tabs{display:flex;gap:6px;margin-bottom:8px}
   .tab{padding:6px 10px;border-radius:8px;border:1px solid #0005;background:var(--panel);cursor:pointer}
   .tab.active{outline:2px solid var(--accent)}
+  #skillTabs{display:flex;gap:6px;margin:0 0 8px 0}
+  #skillTabs button{background:var(--panel);color:var(--fg);border:1px solid #0005;border-radius:8px;padding:6px 10px;cursor:pointer}
+  #skillTabs button.active{background:#0f172a;border-color:var(--accent-strong);box-shadow:0 0 0 2px #0b0f16,0 0 0 4px rgba(56,189,248,.6)}
   .q-white{color:var(--q-white)} .q-green{color:var(--q-green)} .q-blue{color:var(--q-blue)}
   .q-yellow{color:var(--q-yellow)} .q-orange{color:var(--q-orange)} .q-purple{color:var(--q-purple)} .q-arti-red{color:var(--q-arti-red)} .q-arti{color:var(--q-purple)}
 .arti-name{color:var(--q-arti-red);font-weight:700}
