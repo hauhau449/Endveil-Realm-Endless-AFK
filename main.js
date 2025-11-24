@@ -196,17 +196,38 @@ const ARTIFACT_NAME_LIB = {
       blade:  ["審判長劍","斬裂之刃","白狼細劍","破曉闊劍","裁決大劍"],
       dagger: ["夜行匕首","蛇牙短刃","影縫之刺","無聲之刃","獵月短刀"],
       staff:  ["星吟法杖","霜語長杖","魂燈權杖","靈潮長杖","雷唱權杖"],
+      focus:  ["星核吊墜","靈紋水晶","霜心魔球","燼脈法核"],
+      tome:   ["星痕魔典","虛織咒頁","霜符古籍","深淵啟示錄"],
+      bow:    ["裂風長弓","落星長弓","白羽神弓","森語影弓"],
+      crossbow:["碎鳴重弩","影襲手弩","連射鎖弩","晦暗弩弓"],
       any:    ["遺落武器"]
     },
     armor: { any: ["白狼胸甲","霜紋鎧","星砂長袍","深寒皮甲","誓約戰袍","鳶影外套","蒼星護胸"] },
     acc:   { any: ["遠旅戒","回音之環","霧語吊墜","晨星耳飾","靈印手環","蒐魂勳章","月潮項鍊"] }
   }
 };
+const ARTIFACT_WEAPON_KEY = {
+  "短劍盾（快）": "blade",
+  "長劍盾（慢）": "blade",
+  "吊墜（快）": "focus",
+  "水晶球（慢）": "focus",
+  "魔法書（快）": "tome",
+  "法杖（慢）": "staff",
+  "雙刀（快）": "dagger",
+  "刺刀（慢）": "dagger",
+  "爪（快）": "dagger",
+  "暗器（慢）": "dagger",
+  "長弓（快）": "bow",
+  "短弓（慢）": "bow",
+  "手弩（快）": "crossbow",
+  "重弩（慢）": "crossbow"
+};
 function rndPick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 function artifactBaseName(slot, weapon){
   if (slot === "weapon"){
     const lib = ARTIFACT_NAME_LIB.base.weapon;
-    if (weapon && lib[weapon]) return rndPick(lib[weapon]);
+    const key = ARTIFACT_WEAPON_KEY[weapon] || weapon;
+    if (key && lib[key]) return rndPick(lib[key]);
     return rndPick(lib.any);
   }
   if (slot === "armor") return rndPick(ARTIFACT_NAME_LIB.base.armor.any);
@@ -244,81 +265,81 @@ function ensureUniqueName(name){
     {tier:0,key:"Novice", name:"初心者"},
 
     // 1 轉
-    {tier:1,key:"Warrior", name:"戰士", parent:"Novice", weapon:"blade", passive:"武勇", start:["ArmorBreak"]},
-    {tier:1,key:"Mage",    name:"法師", parent:"Novice", weapon:"staff", passive:"星識", start:["ManaShot"]},
-    {tier:1,key:"Assassin",name:"刺客", parent:"Novice", weapon:"dagger", passive:"潛匿", start:["SwiftSlash"]},
-    {tier:1,key:"Ranger",  name:"弓手", parent:"Novice", weapon:"blade", passive:"野獵", start:["QuickShot"]},
+    {tier:1,key:"Warrior", name:"戰士", parent:"Novice", weapon:"長劍盾（慢）", passive:"武勇", start:["ArmorBreak"]},
+    {tier:1,key:"Mage",    name:"法師", parent:"Novice", weapon:"法杖（慢）", passive:"星識", start:["ManaShot"]},
+    {tier:1,key:"Assassin",name:"刺客", parent:"Novice", weapon:"刺刀（慢）", passive:"潛匿", start:["SwiftSlash"]},
+    {tier:1,key:"Ranger",  name:"弓手", parent:"Novice", weapon:"長弓（快）", passive:"野獵", start:["QuickShot"]},
 
     // 戰士系
-    {tier:2,key:"Berserker",        name:"狂血戰士", parent:"Warrior", weapon:"blade", passive:"武勇", start:["ArmorBreak"]},
-    {tier:3,key:"BloodflameReaver", name:"血焰狂刃", parent:"Berserker", weapon:"blade", passive:"武勇", start:["ArmorBreak"]},
-    {tier:4,key:"Warshura",         name:"嗜戰修羅", parent:"BloodflameReaver", weapon:"blade", passive:"武勇", start:["ArmorBreak"]},
+    {tier:2,key:"Berserker",        name:"狂血戰士", parent:"Warrior", weapon:"長劍盾（慢）", passive:"武勇", start:["ArmorBreak"]},
+    {tier:3,key:"BloodflameReaver", name:"血焰狂刃", parent:"Berserker", weapon:"長劍盾（慢）", passive:"武勇", start:["ArmorBreak"]},
+    {tier:4,key:"Warshura",         name:"嗜戰修羅", parent:"BloodflameReaver", weapon:"長劍盾（慢）", passive:"武勇", start:["ArmorBreak"]},
 
-    {tier:2,key:"Steelheart",       name:"鋼心戰士", parent:"Warrior", weapon:"blade", passive:"武勇", start:["ArmorBreak"]},
-    {tier:3,key:"EdgewallKnight",   name:"鋒壁騎士", parent:"Steelheart", weapon:"blade", passive:"武勇", start:["ArmorBreak"]},
-    {tier:4,key:"BulwarkWarlord",   name:"破陣戰君", parent:"EdgewallKnight", weapon:"blade", passive:"武勇", start:["ArmorBreak"]},
+    {tier:2,key:"Steelheart",       name:"鋼心戰士", parent:"Warrior", weapon:"長劍盾（慢）", passive:"武勇", start:["ArmorBreak"]},
+    {tier:3,key:"EdgewallKnight",   name:"鋒壁騎士", parent:"Steelheart", weapon:"長劍盾（慢）", passive:"武勇", start:["ArmorBreak"]},
+    {tier:4,key:"BulwarkWarlord",   name:"破陣戰君", parent:"EdgewallKnight", weapon:"長劍盾（慢）", passive:"武勇", start:["ArmorBreak"]},
 
     // 法師系
-    {tier:2,key:"ElementWeaver",    name:"元素編織者", parent:"Mage", weapon:"staff", passive:"星識", start:["ManaShot"]},
-    {tier:3,key:"ArcaneConductor",  name:"秘法咒導師", parent:"ElementWeaver", weapon:"staff", passive:"星識", start:["ManaShot"]},
-    {tier:4,key:"AstralArchmage",   name:"天紋魔導師", parent:"ArcaneConductor", weapon:"staff", passive:"星識", start:["ManaShot"]},
+    {tier:2,key:"ElementWeaver",    name:"元素編織者", parent:"Mage", weapon:"法杖（慢）", passive:"星識", start:["ManaShot"]},
+    {tier:3,key:"ArcaneConductor",  name:"秘法咒導師", parent:"ElementWeaver", weapon:"法杖（慢）", passive:"星識", start:["ManaShot"]},
+    {tier:4,key:"AstralArchmage",   name:"天紋魔導師", parent:"ArcaneConductor", weapon:"法杖（慢）", passive:"星識", start:["ManaShot"]},
 
-    {tier:2,key:"StarshadeCaster",  name:"星影咒師", parent:"Mage", weapon:"staff", passive:"星識", start:["ManaShot"]},
-    {tier:3,key:"LunarisArcanist",  name:"月寂導法者", parent:"StarshadeCaster", weapon:"staff", passive:"星識", start:["ManaShot"]},
-    {tier:4,key:"NoxAbyssEmperor",  name:"夜墟星淵帝", parent:"LunarisArcanist", weapon:"staff", passive:"星識", start:["ManaShot"]},
+    {tier:2,key:"StarshadeCaster",  name:"星影咒師", parent:"Mage", weapon:"法杖（慢）", passive:"星識", start:["ManaShot"]},
+    {tier:3,key:"LunarisArcanist",  name:"月寂導法者", parent:"StarshadeCaster", weapon:"法杖（慢）", passive:"星識", start:["ManaShot"]},
+    {tier:4,key:"NoxAbyssEmperor",  name:"夜墟星淵帝", parent:"LunarisArcanist", weapon:"法杖（慢）", passive:"星識", start:["ManaShot"]},
 
     // 刺客系
-    {tier:2,key:"Shadowblade",      name:"影刃者", parent:"Assassin", weapon:"dagger", passive:"潛匿", start:["SwiftSlash"]},
-    {tier:3,key:"NightReaver",      name:"夜影斬", parent:"Shadowblade", weapon:"dagger", passive:"潛匿", start:["SwiftSlash"]},
-    {tier:4,key:"AbyssShadereaver", name:"闇刃修羅", parent:"NightReaver", weapon:"dagger", passive:"潛匿", start:["SwiftSlash"]},
+    {tier:2,key:"Shadowblade",      name:"影刃者", parent:"Assassin", weapon:"刺刀（慢）", passive:"潛匿", start:["SwiftSlash"]},
+    {tier:3,key:"NightReaver",      name:"夜影斬", parent:"Shadowblade", weapon:"刺刀（慢）", passive:"潛匿", start:["SwiftSlash"]},
+    {tier:4,key:"AbyssShadereaver", name:"闇刃修羅", parent:"NightReaver", weapon:"刺刀（慢）", passive:"潛匿", start:["SwiftSlash"]},
 
-    {tier:2,key:"ShadeMark",        name:"暗印者", parent:"Assassin", weapon:"dagger", passive:"潛匿", start:["SwiftSlash"]},
-    {tier:3,key:"ShadowDevourer",   name:"影噬者", parent:"ShadeMark", weapon:"dagger", passive:"潛匿", start:["SwiftSlash"]},
-    {tier:4,key:"UmbralAshura",     name:"幽噬修羅", parent:"ShadowDevourer", weapon:"dagger", passive:"潛匿", start:["SwiftSlash"]},
+    {tier:2,key:"ShadeMark",        name:"暗印者", parent:"Assassin", weapon:"刺刀（慢）", passive:"潛匿", start:["SwiftSlash"]},
+    {tier:3,key:"ShadowDevourer",   name:"影噬者", parent:"ShadeMark", weapon:"刺刀（慢）", passive:"潛匿", start:["SwiftSlash"]},
+    {tier:4,key:"UmbralAshura",     name:"幽噬修羅", parent:"ShadowDevourer", weapon:"刺刀（慢）", passive:"潛匿", start:["SwiftSlash"]},
 
     // 弓手系
-    {tier:2,key:"WindHunter",       name:"獵風者", parent:"Ranger", weapon:"blade", passive:"野獵", start:["QuickShot"]},
-    {tier:3,key:"Chaser",           name:"追獵者", parent:"WindHunter", weapon:"blade", passive:"野獵", start:["QuickShot"]},
-    {tier:4,key:"DeicideRanger",    name:"獵神者", parent:"Chaser", weapon:"blade", passive:"野獵", start:["QuickShot"]},
+    {tier:2,key:"WindHunter",       name:"獵風者", parent:"Ranger", weapon:"長弓（快）", passive:"野獵", start:["QuickShot"]},
+    {tier:3,key:"Chaser",           name:"追獵者", parent:"WindHunter", weapon:"長弓（快）", passive:"野獵", start:["QuickShot"]},
+    {tier:4,key:"DeicideRanger",    name:"獵神者", parent:"Chaser", weapon:"長弓（快）", passive:"野獵", start:["QuickShot"]},
 
-    {tier:2,key:"UmbralCrossbowman",name:"冥弩使", parent:"Ranger", weapon:"blade", passive:"野獵", start:["QuickShot"]},
-    {tier:3,key:"UmbralBoltReaver", name:"冥矢獵者", parent:"UmbralCrossbowman", weapon:"blade", passive:"野獵", start:["QuickShot"]},
-    {tier:4,key:"UmbralHuntshura",  name:"冥狩修羅", parent:"UmbralBoltReaver", weapon:"blade", passive:"野獵", start:["QuickShot"]},
+    {tier:2,key:"UmbralCrossbowman",name:"冥弩使", parent:"Ranger", weapon:"長弓（快）", passive:"野獵", start:["QuickShot"]},
+    {tier:3,key:"UmbralBoltReaver", name:"冥矢獵者", parent:"UmbralCrossbowman", weapon:"長弓（快）", passive:"野獵", start:["QuickShot"]},
+    {tier:4,key:"UmbralHuntshura",  name:"冥狩修羅", parent:"UmbralBoltReaver", weapon:"長弓（快）", passive:"野獵", start:["QuickShot"]},
   ];
   const JOB_WEAPON={
-    Novice:["blade","staff","dagger"],
+    Novice:["吊墜（快）","水晶球（慢）","魔法書（快）","法杖（慢）","短劍盾（快）","長劍盾（慢）","雙刀（快）","刺刀（慢）","爪（快）","暗器（慢）","長弓（快）","短弓（慢）","手弩（快）","重弩（慢）"],
 
-    Warrior:["blade"],
-    Berserker:["blade"],
-    BloodflameReaver:["blade"],
-    Warshura:["blade"],
-    Steelheart:["blade"],
-    EdgewallKnight:["blade"],
-    BulwarkWarlord:["blade"],
+    Warrior:["短劍盾（快）","長劍盾（慢）"],
+    Berserker:["短劍盾（快）","長劍盾（慢）"],
+    BloodflameReaver:["短劍盾（快）","長劍盾（慢）"],
+    Warshura:["短劍盾（快）","長劍盾（慢）"],
+    Steelheart:["短劍盾（快）","長劍盾（慢）"],
+    EdgewallKnight:["短劍盾（快）","長劍盾（慢）"],
+    BulwarkWarlord:["短劍盾（快）","長劍盾（慢）"],
 
-    Mage:["staff"],
-    ElementWeaver:["staff"],
-    ArcaneConductor:["staff"],
-    AstralArchmage:["staff"],
-    StarshadeCaster:["staff"],
-    LunarisArcanist:["staff"],
-    NoxAbyssEmperor:["staff"],
+    Mage:["吊墜（快）","水晶球（慢）","魔法書（快）","法杖（慢）"],
+    ElementWeaver:["吊墜（快）","水晶球（慢）","魔法書（快）","法杖（慢）"],
+    ArcaneConductor:["吊墜（快）","水晶球（慢）","魔法書（快）","法杖（慢）"],
+    AstralArchmage:["吊墜（快）","水晶球（慢）","魔法書（快）","法杖（慢）"],
+    StarshadeCaster:["吊墜（快）","水晶球（慢）","魔法書（快）","法杖（慢）"],
+    LunarisArcanist:["吊墜（快）","水晶球（慢）","魔法書（快）","法杖（慢）"],
+    NoxAbyssEmperor:["吊墜（快）","水晶球（慢）","魔法書（快）","法杖（慢）"],
 
-    Assassin:["dagger"],
-    Shadowblade:["dagger"],
-    NightReaver:["dagger"],
-    AbyssShadereaver:["dagger"],
-    ShadeMark:["dagger"],
-    ShadowDevourer:["dagger"],
-    UmbralAshura:["dagger"],
+    Assassin:["雙刀（快）","刺刀（慢）","爪（快）","暗器（慢）"],
+    Shadowblade:["雙刀（快）","刺刀（慢）","爪（快）","暗器（慢）"],
+    NightReaver:["雙刀（快）","刺刀（慢）","爪（快）","暗器（慢）"],
+    AbyssShadereaver:["雙刀（快）","刺刀（慢）","爪（快）","暗器（慢）"],
+    ShadeMark:["雙刀（快）","刺刀（慢）","爪（快）","暗器（慢）"],
+    ShadowDevourer:["雙刀（快）","刺刀（慢）","爪（快）","暗器（慢）"],
+    UmbralAshura:["雙刀（快）","刺刀（慢）","爪（快）","暗器（慢）"],
 
-    Ranger:["blade","dagger"],
-    WindHunter:["blade","dagger"],
-    Chaser:["blade","dagger"],
-    DeicideRanger:["blade","dagger"],
-    UmbralCrossbowman:["blade","dagger"],
-    UmbralBoltReaver:["blade","dagger"],
-    UmbralHuntshura:["blade","dagger"],
+    Ranger:["長弓（快）","短弓（慢）","手弩（快）","重弩（慢）"],
+    WindHunter:["長弓（快）","短弓（慢）","手弩（快）","重弩（慢）"],
+    Chaser:["長弓（快）","短弓（慢）","手弩（快）","重弩（慢）"],
+    DeicideRanger:["長弓（快）","短弓（慢）","手弩（快）","重弩（慢）"],
+    UmbralCrossbowman:["長弓（快）","短弓（慢）","手弩（快）","重弩（慢）"],
+    UmbralBoltReaver:["長弓（快）","短弓（慢）","手弩（快）","重弩（慢）"],
+    UmbralHuntshura:["長弓（快）","短弓（慢）","手弩（快）","重弩（慢）"],
 };
 
 
@@ -955,12 +976,36 @@ const XP_SCROLL_RATE = 2.0;
   };
 
   const EQUIPS={
-    "木劍":{slot:"weapon", weapon:"blade", qual:"白", str:1, agi:0, int:0, spi:0},
-    "法杖":{slot:"weapon", weapon:"staff", qual:"白", str:0, agi:0, int:1, spi:0},
-    "匕首":{slot:"weapon", weapon:"dagger",qual:"白", str:0, agi:1, int:0, spi:0},
-    "皮甲":{slot:"armor",  qual:"白", str:1, agi:1, int:0, spi:0},
-    "學者斗篷":{slot:"armor",qual:"白", str:0, agi:0, int:1, spi:1},
-    "幸運戒指":{slot:"acc", qual:"白", str:1, agi:1, int:1, spi:1},
+    "新手武器":{slot:"weapon", qual:"白", str:1, agi:1, int:1, spi:1},
+    "新手毛衣":{slot:"armor",  qual:"白", str:1, agi:1, int:1, spi:1},
+    "新手抱枕":{slot:"acc",    qual:"白", str:1, agi:1, int:1, spi:1},
+
+    "吊墜（快）":{slot:"weapon", weapon:"吊墜（快）", qual:"白", atk:2, mp:10, int:1, spi:1},
+    "水晶球（慢）":{slot:"weapon", weapon:"水晶球（慢）", qual:"白", atk:3, mp:12, int:2},
+    "魔法書（快）":{slot:"weapon", weapon:"魔法書（快）", qual:"白", atk:2, mp:8, int:1, spi:1},
+    "法杖（慢）":{slot:"weapon", weapon:"法杖（慢）", qual:"白", atk:3, int:2, spi:1},
+
+    "短劍盾（快）":{slot:"weapon", weapon:"短劍盾（快）", qual:"白", atk:3, def:1, str:1, agi:1},
+    "長劍盾（慢）":{slot:"weapon", weapon:"長劍盾（慢）", qual:"白", atk:4, def:2, str:2},
+
+    "雙刀（快）":{slot:"weapon", weapon:"雙刀（快）", qual:"白", atk:3, str:1, agi:2},
+    "刺刀（慢）":{slot:"weapon", weapon:"刺刀（慢）", qual:"白", atk:4, str:2, agi:1},
+    "爪（快）":{slot:"weapon", weapon:"爪（快）", qual:"白", atk:3, agi:2, spi:1},
+    "暗器（慢）":{slot:"weapon", weapon:"暗器（慢）", qual:"白", atk:3, agi:1, int:1, spi:1},
+
+    "長弓（快）":{slot:"weapon", weapon:"長弓（快）", qual:"白", atk:3, agi:2},
+    "短弓（慢）":{slot:"weapon", weapon:"短弓（慢）", qual:"白", atk:4, agi:1, str:1},
+    "手弩（快）":{slot:"weapon", weapon:"手弩（快）", qual:"白", atk:3, agi:1, str:1},
+    "重弩（慢）":{slot:"weapon", weapon:"重弩（慢）", qual:"白", atk:4, str:2, def:1},
+
+    "盔甲":{slot:"armor", qual:"白", def:3, hp:15, str:1},
+    "披風":{slot:"acc",   qual:"白", def:1, str:1, agi:1},
+    "長袍":{slot:"armor", qual:"白", def:2, hp:12, int:1, spi:1},
+    "戒指":{slot:"acc",   qual:"白", mp:12, int:1, spi:1},
+    "皮甲":{slot:"armor", qual:"白", def:2, hp:12, str:1, agi:1},
+    "腰鍊":{slot:"acc",   qual:"白", def:1, agi:1, spi:1},
+    "皮衣":{slot:"armor", qual:"白", def:2, hp:10, agi:2},
+    "耳環":{slot:"acc",   qual:"白", agi:1, int:1, spi:1},
   };
 
 const MOUNTS={
@@ -983,12 +1028,28 @@ const MOUNTS={
     {name:"小魔力藥水",type:"consum",price:10},
     {name:"煙霧彈",type:"consum",price:15},
     {name:"經驗加倍捲",type:"consum",price:100}, // [NEW]
-    {name:"木劍",type:"equip",price:20},
+    {name:"短劍盾（快）",type:"equip",price:24},
+    {name:"長劍盾（慢）",type:"equip",price:28},
+    {name:"吊墜（快）",type:"equip",price:26},
+    {name:"水晶球（慢）",type:"equip",price:30},
+    {name:"魔法書（快）",type:"equip",price:25},
+    {name:"法杖（慢）",type:"equip",price:28},
+    {name:"雙刀（快）",type:"equip",price:24},
+    {name:"刺刀（慢）",type:"equip",price:27},
+    {name:"爪（快）",type:"equip",price:25},
+    {name:"暗器（慢）",type:"equip",price:26},
+    {name:"長弓（快）",type:"equip",price:25},
+    {name:"短弓（慢）",type:"equip",price:26},
+    {name:"手弩（快）",type:"equip",price:24},
+    {name:"重弩（慢）",type:"equip",price:28},
+    {name:"盔甲",type:"equip",price:22},
+    {name:"長袍",type:"equip",price:22},
     {name:"皮甲",type:"equip",price:22},
-    {name:"法杖",type:"equip",price:26},
-    {name:"匕首",type:"equip",price:18},
-    {name:"學者斗篷",type:"equip",price:24},
-    {name:"幸運戒指",type:"equip",price:30},
+    {name:"皮衣",type:"equip",price:22},
+    {name:"披風",type:"equip",price:20},
+    {name:"戒指",type:"equip",price:24},
+    {name:"腰鍊",type:"equip",price:20},
+    {name:"耳環",type:"equip",price:22},
     {name:"戰馬",type:"mount",price:10000},
   ];
 
@@ -1088,12 +1149,18 @@ const MOUNTS={
   // 低等區域白裝掉落（1~30 等）
   if(lvl<=30){
     base.push(
-      {equip:"木劍",rate:0.05},
-      {equip:"皮甲",rate:0.05},
-      {equip:"法杖",rate:0.03},
-      {equip:"匕首",rate:0.04},
-      {equip:"學者斗篷",rate:0.03},
-      {equip:"幸運戒指",rate:0.03}
+      {equip:"短劍盾（快）",rate:0.05},
+      {equip:"吊墜（快）",rate:0.04},
+      {equip:"雙刀（快）",rate:0.04},
+      {equip:"長弓（快）",rate:0.04},
+      {equip:"盔甲",rate:0.03},
+      {equip:"長袍",rate:0.03},
+      {equip:"皮甲",rate:0.03},
+      {equip:"皮衣",rate:0.03},
+      {equip:"披風",rate:0.02},
+      {equip:"戒指",rate:0.02},
+      {equip:"腰鍊",rate:0.02},
+      {equip:"耳環",rate:0.02}
     );
   }
 
@@ -2030,7 +2097,7 @@ function displayEquipName(id){
   const starHtml = (inst.qual==="紫" || inst.qual==="神器") && (inst.stars>0)
     ? ` <span class="star">${inst.stars}☆</span>` : "";
   const tag = categoryTagForKey(id); // [武器] / [防具] / [飾品] / [坐騎]
-  // ➜ 「[武器] 木劍 +5 ☆」整串會帶顏色
+  // ➜ 「[武器] 短劍盾（快） +5 ☆」整串會帶顏色
   return `${tag} ${nameHtml}${inst.plus ? ` +${inst.plus}` : ""}${starHtml}`;
 }
 
@@ -2370,14 +2437,15 @@ function displayEquipName(id){
 
 // 每個 Boss 的專屬神器清單：只用 slot / weapon / base 來控制強度
 // slot: "weapon" / "armor" / "acc"
-// weapon: "blade" / "staff" / "dagger"（只有武器才需要）
+// weapon: 新武器分類字串（只有武器才需要）
 const BOSS_ARTIFACT_DATA = {
   "火龍":{
     fragmentName:"[火龍神器碎片]",
     artifacts:[
-      {slot:"weapon", weapon:"blade",  name:"燼焰斬界劍", base:{atk:110, def:8,  hp:60,  mp:20}},
-      {slot:"weapon", weapon:"staff",  name:"焰心詠咒杖", base:{atk:90,  def:6,  hp:40,  mp:60}},
-      {slot:"weapon", weapon:"dagger", name:"赤燄影牙刃", base:{atk:100, def:6,  hp:40,  mp:20}},
+      {slot:"weapon", weapon:"長劍盾（慢）", name:"燼焰斬界劍", base:{atk:110, def:8,  hp:60,  mp:20}},
+      {slot:"weapon", weapon:"法杖（慢）",  name:"焰心詠咒杖", base:{atk:90,  def:6,  hp:40,  mp:60}},
+      {slot:"weapon", weapon:"雙刀（快）",  name:"赤燄影牙刃", base:{atk:100, def:6,  hp:40,  mp:20}},
+      {slot:"weapon", weapon:"長弓（快）",  name:"熾翼裂焰弓", base:{atk:105, def:8,  hp:50,  mp:30}},
       {slot:"armor",               name:"熾鱗君王鎧", base:{atk:20,  def:80, hp:260, mp:40}},
       {slot:"armor",               name:"焰翼戰袍",   base:{atk:30,  def:60, hp:200, mp:80}},
       {slot:"acc",                 name:"紅蓮誓約戒", base:{atk:40,  def:20, hp:120, mp:40}},
@@ -2387,9 +2455,10 @@ const BOSS_ARTIFACT_DATA = {
   "暴雪巨靈":{
     fragmentName:"[暴雪巨靈神器碎片]",
     artifacts:[
-      {slot:"weapon", weapon:"staff",  name:"霜域審判杖", base:{atk:80,  def:12, hp:80,  mp:80}},
-      {slot:"weapon", weapon:"blade",  name:"冰脈裂嶺劍", base:{atk:95,  def:18, hp:80,  mp:30}},
-      {slot:"weapon", weapon:"dagger", name:"凜鋒碎霜刃", base:{atk:90,  def:16, hp:60,  mp:40}},
+      {slot:"weapon", weapon:"法杖（慢）",  name:"霜域審判杖", base:{atk:80,  def:12, hp:80,  mp:80}},
+      {slot:"weapon", weapon:"長劍盾（慢）", name:"冰脈裂嶺劍", base:{atk:95,  def:18, hp:80,  mp:30}},
+      {slot:"weapon", weapon:"雙刀（快）",  name:"凜鋒碎霜刃", base:{atk:90,  def:16, hp:60,  mp:40}},
+      {slot:"weapon", weapon:"長弓（快）",  name:"霜刻冰牙弓", base:{atk:92,  def:16, hp:70,  mp:40}},
       {slot:"armor",               name:"永凍巨靈鎧", base:{atk:10,  def:110, hp:320, mp:40}},
       {slot:"armor",               name:"雪紋護法袍", base:{atk:15,  def:80,  hp:260, mp:80}},
       {slot:"acc",                 name:"霜心環印",   base:{atk:25,  def:30,  hp:160, mp:60}},
@@ -2399,9 +2468,10 @@ const BOSS_ARTIFACT_DATA = {
   "深淵之眼":{
     fragmentName:"[深淵之眼神器碎片]",
     artifacts:[
-      {slot:"weapon", weapon:"staff",  name:"深淵凝視杖", base:{atk:85,  def:8,  hp:40,  mp:110}},
-      {slot:"weapon", weapon:"dagger", name:"冥潮噬魂刃", base:{atk:100, def:10, hp:40,  mp:80}},
-      {slot:"weapon", weapon:"blade",  name:"暗潮絕鳴劍", base:{atk:105, def:8,  hp:50,  mp:70}},
+      {slot:"weapon", weapon:"法杖（慢）",  name:"深淵凝視杖", base:{atk:85,  def:8,  hp:40,  mp:110}},
+      {slot:"weapon", weapon:"雙刀（快）",  name:"冥潮噬魂刃", base:{atk:100, def:10, hp:40,  mp:80}},
+      {slot:"weapon", weapon:"長劍盾（慢）", name:"暗潮絕鳴劍", base:{atk:105, def:8,  hp:50,  mp:70}},
+      {slot:"weapon", weapon:"長弓（快）",  name:"獄淵裂息弓", base:{atk:100, def:9,  hp:45,  mp:90}},
       {slot:"armor",               name:"深淵觀測袍", base:{atk:20,  def:55, hp:200, mp:120}},
       {slot:"armor",               name:"虛渦棱光甲", base:{atk:25,  def:65, hp:220, mp:100}},
       {slot:"acc",                 name:"渦心瞳戒",   base:{atk:25,  def:20, hp:120, mp:100}},
@@ -2411,9 +2481,10 @@ const BOSS_ARTIFACT_DATA = {
   "星墜魔像":{
     fragmentName:"[星墜魔像神器碎片]",
     artifacts:[
-      {slot:"weapon", weapon:"blade",  name:"隕星斷界刃", base:{atk:105, def:20, hp:80,  mp:30}},
-      {slot:"weapon", weapon:"staff",  name:"星核導引杖", base:{atk:85,  def:18, hp:80,  mp:70}},
-      {slot:"weapon", weapon:"dagger", name:"星蝕裂殘刃", base:{atk:95,  def:18, hp:70,  mp:40}},
+      {slot:"weapon", weapon:"長劍盾（慢）", name:"隕星斷界刃", base:{atk:105, def:20, hp:80,  mp:30}},
+      {slot:"weapon", weapon:"法杖（慢）",  name:"星核導引杖", base:{atk:85,  def:18, hp:80,  mp:70}},
+      {slot:"weapon", weapon:"雙刀（快）",  name:"星蝕裂殘刃", base:{atk:95,  def:18, hp:70,  mp:40}},
+      {slot:"weapon", weapon:"長弓（快）",  name:"墜星震雷弓", base:{atk:100, def:19, hp:75,  mp:50}},
       {slot:"armor",               name:"星墜重核鎧", base:{atk:10,  def:120, hp:360, mp:40}},
       {slot:"armor",               name:"流隕披風袍", base:{atk:20,  def:80,  hp:260, mp:80}},
       {slot:"acc",                 name:"星塵權衡戒", base:{atk:25,  def:30,  hp:160, mp:60}},
@@ -2423,9 +2494,10 @@ const BOSS_ARTIFACT_DATA = {
   "終末領主":{
     fragmentName:"[終末領主神器碎片]",
     artifacts:[
-      {slot:"weapon", weapon:"blade",  name:"終焉審判劍", base:{atk:130, def:24, hp:90,  mp:60}},
-      {slot:"weapon", weapon:"staff",  name:"末日詔令杖", base:{atk:120, def:20, hp:80,  mp:90}},
-      {slot:"weapon", weapon:"dagger", name:"墜星終刻刃", base:{atk:125, def:22, hp:80,  mp:70}},
+      {slot:"weapon", weapon:"長劍盾（慢）", name:"終焉審判劍", base:{atk:130, def:24, hp:90,  mp:60}},
+      {slot:"weapon", weapon:"法杖（慢）",  name:"末日詔令杖", base:{atk:120, def:20, hp:80,  mp:90}},
+      {slot:"weapon", weapon:"雙刀（快）",  name:"墜星終刻刃", base:{atk:125, def:22, hp:80,  mp:70}},
+      {slot:"weapon", weapon:"長弓（快）",  name:"終末審決弓", base:{atk:125, def:22, hp:85,  mp:75}},
       {slot:"armor",               name:"終末權威鎧", base:{atk:20,  def:130, hp:380, mp:80}},
       {slot:"armor",               name:"終焉聖紋袍", base:{atk:30,  def:95,  hp:280, mp:120}},
       {slot:"acc",                 name:"審判王座戒", base:{atk:35,  def:35,  hp:180, mp:80}},
@@ -3097,6 +3169,33 @@ function upgradeSkillByPoint(id){
     };
     addEquip(inst);
     return inst.id;
+  }
+
+  function ensureStarterEquipment(){
+    const p = game.player || {};
+    if(!p.equip) p.equip = {weapon:null, armor:null, acc:null, mount:null};
+
+    const starters = [
+      {name:"新手武器", slot:"weapon"},
+      {name:"新手毛衣", slot:"armor"},
+      {name:"新手抱枕", slot:"acc"}
+    ];
+
+    starters.forEach(({name, slot})=>{
+      const tpl = EQUIPS[name];
+      if(!tpl) return;
+
+      const currentId = p.equip[slot];
+      const currentInst = currentId ? (getEquipInstance(currentId) || tryRestoreEquipFromSave(currentId)) : null;
+
+      if(currentInst) return;
+
+      const newId = makeEquipInstance(name, tpl.qual, tpl.slot, tpl.weapon||null, {
+        atk:tpl.atk, def:tpl.def, hp:tpl.hp, mp:tpl.mp,
+        str:tpl.str, agi:tpl.agi, int:tpl.int, spi:tpl.spi
+      });
+      p.equip[slot] = newId;
+    });
   }
 
   function addMountToInv(name){
@@ -4906,9 +5005,10 @@ const m = Math.max(1, Math.floor(game.player.maxmp * pct) + regen);
     say("你試圖逃跑，但失敗了！"); 
     enemyTurn(); 
   } 
-}
+  }
     // 啟動
   load();
+  ensureStarterEquipment();
   initAllArtifactFragments();            // ⬅ 在這裡先註冊所有神器碎片道具
   renderFake();
   ensureStock();
