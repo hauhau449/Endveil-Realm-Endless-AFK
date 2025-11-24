@@ -1413,8 +1413,9 @@ function recalcPlayerStats(){
   p.def   = Math.max(0, Math.floor(def));
   p.magicAtk = Math.max(1, Math.floor(magicAtk));
 
-  if(typeof p.hp !== "number") p.hp = p.maxhp;
-  if(typeof p.mp !== "number") p.mp = p.maxmp;
+  // 若血量／魔力未初始化或為 0，開場時自動補滿（避免新檔沒有血魔的問題）
+  if(typeof p.hp !== "number" || p.hp <= 0) p.hp = p.maxhp;
+  if(typeof p.mp !== "number" || p.mp <= 0) p.mp = p.maxmp;
   p.hp = Math.min(p.hp, p.maxhp);
   p.mp = Math.min(p.mp, p.maxmp);
 
