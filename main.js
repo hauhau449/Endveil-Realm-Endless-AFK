@@ -53,6 +53,7 @@ function toggleUpdateLog(){
 (function(){
   const $=s=>document.querySelector(s), LKEY="stealth_rpg_full_v4";
   const log=$("#log"), statsBox=$("#stats"), invBox=$("#inv");
+  let skillDlg;
   const enemyUI={name:$("#eName"),lvl:$("#eLvl"),atk:$("#eAtk"),def:$("#eDef"),hpTxt:$("#eHpTxt"),mpTxt:$("#eMpTxt"),hpBar:$("#eHpBar"),mpBar:$("#eMpBar")};
   const battleStatusUI={
     ally:{
@@ -1623,10 +1624,12 @@ function recomputeStats(){
     $("#runBtn").disabled=!game.state.inBattle;
     renderEnemy(); renderEquipSlots();
   }
- function renderEquipSlots(){
+  function renderEquipSlots(){
   const show = (slot) => {
     const id = game.player.equip[slot];
     const el = $("#equip-"+slot);
+    const btn = document.querySelector(`[data-unequip="${slot}"]`);
+    if(btn){ btn.disabled = !id; }
     if(id){
       if(slot === "mount"){
         el.innerHTML = displayInvName(id);     // 坐騎維持純文字
@@ -2249,6 +2252,16 @@ function openInventory(){
       invFilters.appendChild(b);
     });
   }
+  function refreshInventoryListIfOpen(){
+    if(invDlg && invDlg.open){
+      renderInventoryList();
+    }
+  }
+  function refreshSkillListIfOpen(){
+    if(typeof skillDlg !== "undefined" && skillDlg && skillDlg.open){
+      renderSkillList();
+    }
+  }
     function renderInventoryList(){
     invList.innerHTML = '';
 
@@ -2651,7 +2664,10 @@ const jobLock = {
   }
   // 主動技能：升級後自動設為當前技能（維持原行為）
   if(SKILL[id].type!=="被動"){ p.activeSkill = id; }
-  render(); autosave();
+  render();
+  refreshSkillListIfOpen();
+  refreshInventoryListIfOpen();
+  autosave();
 }
 function upgradeSkillByPoint(id){
   const sk = SKILL[id];
@@ -2667,7 +2683,9 @@ function upgradeSkillByPoint(id){
   if(sk.type === "主動" && (cur===0 || !game.player.activeSkill)){ game.player.activeSkill = id; }
   say(`📘 <b>${sk.name}</b> 升至 Lv.${game.player.learned[id]}（剩餘技能點 ${game.player.freeSkillPoints}）。`);
   recomputeStats(true);
-  render(); autosave();
+  render();
+  refreshSkillListIfOpen();
+  autosave();
 }
   function addInv(name,c=1){ game.inv[name]=(game.inv[name]||0)+c; autosave(); }
   function decInv(name,c=1){ if(!game.inv[name]) return; game.inv[name]-=c; if(game.inv[name]<=0) delete game.inv[name]; autosave(); }
@@ -2805,7 +2823,7 @@ displayEquipName = function(id){
     return __orig_displayInvName ? __orig_displayInvName(k) : k;
   };
 
- function equipItem(id){
+function equipItem(id){
   const inst = getEquipInstance(id); if(!inst) return;
   const allowed = JOB_WEAPON[game.player.job]||[];
   if(inst.slot==="weapon" && inst.weapon && !allowed.includes(inst.weapon)){
@@ -2817,6 +2835,7 @@ displayEquipName = function(id){
   decInv(id,1);
   say(`你裝備了 <b>${displayEquipName(id)}</b>。`);
   recomputeStats(false); render();
+  refreshInventoryListIfOpen();
 }
 
  function equipMount(id){
@@ -2834,7 +2853,25 @@ displayEquipName = function(id){
   say(`你騎上了 <b>${inst.name}</b>！`);
 
   recomputeStats(false); render();
+  refreshInventoryListIfOpen();
 }
+
+  function unequipSlot(slot){
+    const current = game.player.equip[slot];
+    if(!current){
+      return say("目前此槽位沒有裝備可脫下。");
+    }
+
+    addInv(current,1);
+    game.player.equip[slot] = null;
+
+    const label = slot === "mount" ? displayInvName(current) : displayEquipName(current);
+    say(`你卸下了 <b>${label}</b>。`);
+
+    recomputeStats(false);
+    render();
+    refreshInventoryListIfOpen();
+  }
 
 
   function applyEquipMod(id,sign){
@@ -4249,13 +4286,15 @@ function doRebirth(){
   }
 
   /* ========= 綁定 ========= */
-  const mapDlg=$("#mapDlg"), classDlg=$("#classDlg"), questDlg=$("#questDlg"), skillDlg=$("#skillDlg"),
+  const mapDlg=$("#mapDlg"), classDlg=$("#classDlg"), questDlg=$("#questDlg"),
         shopClose1=$("#closeShop"), shopClose2=$("#closeShop2"),
         shopTabs=[...document.querySelectorAll("#shopDlg .tab")],
         shopCatBtns=[...document.querySelectorAll(".shopCatBtn")],
         bulkSellFilter=$("#bulkSellFilter"),
         bulkSellBtn=$("#bulkSellBtn"),
         helpDlg=$("#helpDlg");
+
+  skillDlg = $("#skillDlg");
 
 
   $("#exploreBtn").onclick=explore;
@@ -4294,6 +4333,10 @@ const doRebirthBtn = $("#doRebirthBtn");
 $("#rebirthBtn").onclick = ()=>{ rebirthDlg.showModal(); };
 $("#closeRebirth").onclick = ()=>{ rebirthDlg.close(); };
 doRebirthBtn.onclick = ()=>{ doRebirth(); };
+
+  document.querySelectorAll(".unequip-btn").forEach(btn=>{
+    btn.onclick = ()=>unequipSlot(btn.dataset.unequip);
+  });
   
   // 商店分頁
   shopTabs.forEach(t=>{
