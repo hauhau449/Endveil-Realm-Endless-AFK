@@ -757,10 +757,10 @@ const MOUNTS={
   const CLASS_REQ=[10,30,70,120];
   const zones = buildZones();
   function monsterTemplate(lvl,labelTag=""){ return {
-    hp: Math.round(18 + lvl*3.2),
-    mp: Math.round(lvl*0.6),
-    atk: Math.round(4 + lvl*0.9),
-    def: Math.round(1 + lvl*0.5),
+    hp: Math.round(28 + lvl*4.5),
+    mp: Math.round(lvl*0.8),
+    atk: Math.round(6 + lvl*1.2),
+    def: Math.round(2 + lvl*0.7),
   //  gold:[3+Math.floor(lvl*0.6), 6+Math.floor(lvl*1.0)],
         gold:[
       Math.round((3+Math.floor(lvl*0.6)) * GOLD_RATE),
