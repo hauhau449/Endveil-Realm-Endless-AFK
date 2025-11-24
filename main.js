@@ -839,13 +839,13 @@ const MOUNTS={
   const game = {
     player:{
       name:"你", job:"Novice", tier:0, lvl:1, exp:0,
-      hp:32, mp:12, atk:6, def:5, maxhp:32, maxmp:12,
+      baseStr:5, baseAgi:5, baseInt:5, baseSpi:5,
+      str:5, agi:5, int:5, spi:5,
+      freeStatPoints:0, freeSkillPoints:1,
+      hp:0, mp:0, atk:0, def:0, maxhp:0, maxmp:0,
       gold:200, afk:false, lastTick:0,
       equip:{weapon:null,armor:null,acc:null,mount:null},
       learned:{basicSlash:1, manaSpark:0, powerFundamentals:0, agilityFundamentals:0, accuracyFundamentals:0, arcaneFundamentals:0, insight:0},   // 初始技能庫
-      skillPoints:1,
-      attributes:{ str:5, agi:5, int:5, spi:5 },
-      attrPoints:0,
       activeSkill:"basicSlash",
       skillQual:{},
       passiveKills:{},
@@ -1092,27 +1092,50 @@ function ensureNoviceSkillDefaults(){
     ["basicSlash","manaSpark","powerFundamentals","agilityFundamentals","accuracyFundamentals","arcaneFundamentals","insight"].forEach(id=>{
       if(typeof p.learned[id] !== "number") p.learned[id] = id==="basicSlash" ? 1 : 0;
     });
-    if(typeof p.skillPoints !== "number"){
+    if(typeof p.freeSkillPoints !== "number"){
       const lvl = p.lvl || 1;
-      p.skillPoints = Math.max(1, lvl);
+      p.freeSkillPoints = Math.max(1, lvl);
     }
     if(!p.activeSkill || !SKILL[p.activeSkill]){
       p.activeSkill = "basicSlash";
     }
 
-    ensureAttributeDefaults();
+    ensurePlayerStatDefaults();
   }
 
-  function ensureAttributeDefaults(){
+  function ensurePlayerStatDefaults(){
     const p = game.player;
-    if(!p.attributes) p.attributes = { str:5, agi:5, int:5, spi:5 };
-    ["str","agi","int","spi"].forEach(k=>{
-      if(typeof p.attributes[k] !== "number") p.attributes[k] = 0;
-    });
-    if(typeof p.attrPoints !== "number"){
-      const lvl = p.lvl || 1;
-      p.attrPoints = Math.max(0, (lvl - 1) * 5);
+
+    // 舊版存檔兼容：若有舊的 attributes / attrPoints，轉入新欄位
+    if(typeof p.baseStr !== "number"){
+      const old = p.attributes || {};
+      p.baseStr = typeof old.str === "number" ? old.str : 5;
+      p.baseAgi = typeof old.agi === "number" ? old.agi : 5;
+      p.baseInt = typeof old.int === "number" ? old.int : 5;
+      p.baseSpi = typeof old.spi === "number" ? old.spi : 5;
     }
+    if(typeof p.baseAgi !== "number") p.baseAgi = 5;
+    if(typeof p.baseInt !== "number") p.baseInt = 5;
+    if(typeof p.baseSpi !== "number") p.baseSpi = 5;
+
+    if(typeof p.freeStatPoints !== "number"){
+      const legacy = typeof p.attrPoints === "number" ? p.attrPoints : null;
+      const lvl = p.lvl || 1;
+      p.freeStatPoints = Math.max(0, legacy!==null ? legacy : (lvl-1)*5);
+    }
+
+    if(typeof p.freeSkillPoints !== "number"){
+      const legacy = typeof p.skillPoints === "number" ? p.skillPoints : 1;
+      p.freeSkillPoints = Math.max(0, legacy);
+    }
+
+    ["str","agi","int","spi"].forEach(k=>{
+      const key = `base${k.charAt(0).toUpperCase()+k.slice(1)}`;
+      if(typeof p[k] !== "number") p[k] = p[key];
+    });
+
+    if(typeof p.lvl !== "number") p.lvl = 1;
+    if(typeof p.exp !== "number") p.exp = 0;
   }
 
   /* ========= 任務資料表 ========= */
@@ -1249,27 +1272,8 @@ function bossMountName(name){ return `${name}坐騎`; }
 //function bossArtifactName(name){ return `${name}之核`; }
 
 
-  /* ========= 角色計算 ========= */
-// === 白板核心設定（職業底值 + 等級成長 + 轉職/轉生倍率 + 被動） ===
-
-// 1) 職業底值（不穿裝、不吃技能）——可依你遊戲職業調
-const JOB_BASE = {
-  Novice: { atk: 6,  def: 2,  hp: 32, mp: 12 },
-  Warrior:{ atk: 9,  def: 4,  hp: 40, mp: 10 },
-  Rogue:  { atk: 10, def: 3,  hp: 34, mp: 12 },
-  Mage:   { atk: 5,  def: 2,  hp: 28, mp: 18 },
-  Priest: { atk: 6,  def: 3,  hp: 30, mp: 20 }
-};
-
-// 2) 等級成長（白板）——只加在白板階段
-function levelGrowth(lvl){
-  return {
-    atk: 2 * (lvl - 1),
-    def: 1 * (lvl - 1),
-    hp:  5 * (lvl - 1),
-    mp:  3 * (lvl - 1)
-  };
-}
+/* ========= 角色計算 ========= */
+// === 新屬性系統：以 STR/AGI/INT/SPI 驅動 ===
 
 function attributesToStats(attr={}){
   const str = Math.max(0, attr.str || 0);
@@ -1277,54 +1281,44 @@ function attributesToStats(attr={}){
   const intl = Math.max(0, attr.int || 0);
   const spi = Math.max(0, attr.spi || 0);
 
-  const atk = str * 1.2 + agi * 0.4;
-  const hp  = str * 4;
-  const mp  = intl * 3 + spi * 2;
-  const magicAtk = intl * 1.5 + str * 0.3;
-
   return {
-    atk,
-    hp,
-    mp,
-    magicAtk,
-    physCritRate: agi * 0.3,        // %
-    physCritDmg:  agi * 0.005,      // 乘數增量
+    physCritRate: agi * 0.3,
+    physCritDmg:  agi * 0.005,
     magicCritRate: spi * 0.3,
     magicCritDmg:  spi * 0.005,
-    haste: agi * 0.003,             // 行動速度／傷害加成
-    manaRegen: spi * 0.6,           // 行動後回魔
-    skillCostReduce: Math.min(0.40, intl * 0.003) // 技能耗魔減免（最多 -40%）
+    haste: agi * 0.003,
+    manaRegen: spi * 0.6,
+    skillCostReduce: Math.min(0.40, intl * 0.003),
+    magicAtk: intl * 1.5 + str * 0.3
   };
 }
 
 const ATTR_META = {
-  str:{ label:"STR 力量", desc:"物理攻擊／少量HP" },
-  agi:{ label:"AGI 敏捷", desc:"物爆／爆傷／攻速" },
-  int:{ label:"INT 智力", desc:"魔傷／魔力／技能效率" },
-  spi:{ label:"SPI 精神", desc:"魔爆／魔爆傷／回魔" }
+  str:{ label:"STR 力量", desc:"物理攻擊／生命" },
+  agi:{ label:"AGI 敏捷", desc:"物理攻擊／少量生命" },
+  int:{ label:"INT 智力", desc:"魔力／魔傷" },
+  spi:{ label:"SPI 精神", desc:"魔爆／回魔" }
 };
 
-// 3) 轉職/轉生倍率：只吃白板（不要乘到裝備）
-function tierMultiplier(tier){ return 1 + 0.005 * (tier||0); }   // 每轉 +2%
-function rebirthMultiplier(r){ return 1 + 0.20 * (r||0); }       // 每轉生 +10%
+function tierMultiplier(tier){ return 1 + 0.005 * (tier||0); }
 
-// 4) 被動（白板層）——如需更強可在此讀 p.learned 決定加法/乘法
+// 被動技能（白板層）
 function passiveFromSkills(p){
   const add={atk:0,def:0,hp:0,mp:0};
   const mul={atk:0,def:0,hp:0,mp:0};
   const misc={critRate:0, defPierce:0, insight:0, actionSpeed:0};
 
   const powerLv = skillLevel("powerFundamentals",0);
-  add.atk += powerLv; // 極小幅攻擊加成
+  add.atk += powerLv;
 
   const agiLv = skillLevel("agilityFundamentals",0);
-  misc.critRate += agiLv * 2; // 每級 +2% 暴擊率
+  misc.critRate += agiLv * 2;
 
   const accLv = skillLevel("accuracyFundamentals",0);
-  misc.defPierce += accLv * 2; // 輕度降低敵方防禦
+  misc.defPierce += accLv * 2;
 
   const arcLv = skillLevel("arcaneFundamentals",0);
-  add.mp += arcLv * 3; // 小幅提升 MP 上限
+  add.mp += arcLv * 3;
 
   const insightLv = skillLevel("insight",0);
   misc.insight = insightLv;
@@ -1332,90 +1326,97 @@ function passiveFromSkills(p){
 
   return { add, mul, misc };
 }
-  
-function recomputeStats(applyPassives=false){
+
+function getEquipTotalStats(){
+  const p = game.player || {};
+  const totals = { atk:0, def:0, hp:0, mp:0 };
+  ["weapon","armor","acc"].forEach(slot=>{
+    const n = p.equip?.[slot];
+    if(!n) return;
+    const inst = getEquipInstance(n);
+    if(inst){
+      totals.atk += inst.atk || 0;
+      totals.def += inst.def || 0;
+      totals.hp  += inst.hp  || 0;
+      totals.mp  += inst.mp  || 0;
+    }
+  });
+  const mid = p.equip?.mount;
+  if(mid){
+    const m = getMountInstance(mid);
+    if(m){
+      totals.atk += m.atk || 0;
+      totals.def += m.def || 0;
+      totals.hp  += m.hp  || 0;
+      totals.mp  += m.mp  || 0;
+    }
+  }
+  return totals;
+}
+
+function recalcPlayerStats(){
   const p = game.player;
+  ensurePlayerStatDefaults();
 
-  // （A）白板：職業底值 + 等級成長
-  const jb = JOB_BASE[p.job] || JOB_BASE.Novice;
-  const lg = levelGrowth(p.lvl||1);
-  const attrStats = attributesToStats(p.attributes || {});
-  let core = {
-    atk: (jb.atk||0) + lg.atk + attrStats.atk,
-    def: (jb.def||0) + lg.def,
-    hp:  (jb.hp ||0) + lg.hp + attrStats.hp,
-    mp:  (jb.mp ||0) + lg.mp + attrStats.mp
-  };
-  let magicCore = core.atk + attrStats.magicAtk;
+  p.str = p.baseStr;
+  p.agi = p.baseAgi;
+  p.int = p.baseInt;
+  p.spi = p.baseSpi;
 
-  // （B）轉職/轉生：只吃白板
+  const attrStats = attributesToStats({ str:p.str, agi:p.agi, int:p.int, spi:p.spi });
+
+  let maxhp = 100 + p.str * 8 + p.agi * 4;
+  let maxmp = 30 + p.int * 5 + p.str * 1 + p.agi * 1;
+  let atk   = p.str * 2 + p.agi * 1;
+  let def   = p.str * 1 + p.agi * 0.5 + (p.lvl||1) * 0.2;
+  let magicAtk = attrStats.magicAtk || atk;
+
+  const eq = getEquipTotalStats();
+  maxhp += eq.hp || 0;
+  maxmp += eq.mp || 0;
+  atk   += eq.atk || 0;
+  def   += eq.def || 0;
+  magicAtk += eq.atk || 0;
+
   const mulTier = tierMultiplier(p.tier||0);
-  const mulReb  = rebirthMultiplier(p.rebirths||0);
-  core.atk = Math.floor(core.atk * mulTier * mulReb);
-  core.def = Math.floor(core.def * mulTier * mulReb);
-  core.hp  = Math.floor(core.hp  * mulTier * mulReb);
-  core.mp  = Math.floor(core.mp  * mulTier * mulReb);
-  magicCore = Math.floor(magicCore * mulTier * mulReb);
+  maxhp = Math.floor(maxhp * mulTier);
+  maxmp = Math.floor(maxmp * mulTier);
+  atk   = Math.floor(atk   * mulTier);
+  def   = Math.floor(def   * mulTier);
+  magicAtk = Math.floor(magicAtk * mulTier);
 
-  // （C）職業獎勵（你原本的 p.jobBonus 參數）——也只乘在白板
   if (game.player.jobBonus){
-    const jbMul = game.player.jobBonus; // 內容是「加多少倍率」，如 1.10 表「+110%」→ 這裡當作 1.10 使用
-    core.hp  = Math.floor(core.hp  * (1 + (jbMul.hp  || 0)));
-    core.mp  = Math.floor(core.mp  * (1 + (jbMul.mp  || 0)));
-    core.atk = Math.floor(core.atk * (1 + (jbMul.atk || 0)));
-    core.def = Math.floor(core.def * (1 + (jbMul.def || 0)));
-    magicCore = Math.floor(magicCore * (1 + (jbMul.atk || 0)));
+    const jbMul = game.player.jobBonus;
+    maxhp  = Math.floor(maxhp  * (1 + (jbMul.hp  || 0)));
+    maxmp  = Math.floor(maxmp  * (1 + (jbMul.mp  || 0)));
+    atk    = Math.floor(atk    * (1 + (jbMul.atk || 0)));
+    def    = Math.floor(def    * (1 + (jbMul.def || 0)));
+    magicAtk = Math.floor(magicAtk * (1 + (jbMul.atk || 0)));
   }
 
-  // （D）被動技能（白板層）
   const pas = passiveFromSkills(p);
-  core.atk = Math.floor( (core.atk + (pas.add.atk||0)) * (1 + (pas.mul.atk||0)) );
-  core.def = Math.floor( (core.def + (pas.add.def||0)) * (1 + (pas.mul.def||0)) );
-  core.hp  = Math.floor( (core.hp  + (pas.add.hp ||0)) * (1 + (pas.mul.hp ||0)) );
-  core.mp  = Math.floor( (core.mp  + (pas.add.mp ||0)) * (1 + (pas.mul.mp ||0)) );
-  magicCore = Math.floor( (magicCore + (pas.add.atk||0)) * (1 + (pas.mul.atk||0)) );
+  const apply = (base,key)=> Math.floor( (base + (pas.add?.[key]||0)) * (1 + (pas.mul?.[key]||0)) );
+  maxhp = apply(maxhp, "hp");
+  maxmp = apply(maxmp, "mp");
+  atk   = apply(atk, "atk");
+  def   = apply(def, "def");
+  magicAtk = apply(magicAtk, "atk");
+
   p.bonusCritRate = pas.misc?.critRate || 0;
   p.defPierce = pas.misc?.defPierce || 0;
   p.insightLv = pas.misc?.insight || 0;
   p.actionSpeedBonus = (pas.misc?.actionSpeed || 0) + (attrStats.haste || 0);
 
-  // （E）最後才把裝備/坐騎的屬性疊上去
-  let addHp=0, addMp=0, addAtk=0, addDef=0;
-  ["weapon","armor","acc"].forEach(slot=>{
-    const n = p.equip[slot];
-    if(!n) return;
-    const inst = getEquipInstance(n);
-    if(inst){ addHp+=inst.hp||0; addMp+=inst.mp||0; addAtk+=inst.atk||0; addDef+=inst.def||0; }
-  });
-  const mid = p.equip.mount;
-  if(mid){
-    const m = getMountInstance(mid);
-    if(m){ addHp+=m.hp||0; addMp+=m.mp||0; addAtk+=m.atk||0; addDef+=m.def||0; }
-  }
+  p.maxhp = Math.max(1, Math.floor(maxhp));
+  p.maxmp = Math.max(0, Math.floor(maxmp));
+  p.atk   = Math.max(1, Math.floor(atk));
+  p.def   = Math.max(0, Math.floor(def));
+  p.magicAtk = Math.max(1, Math.floor(magicAtk));
 
-  // 依舊 HP/MP 百分比過渡（避免突滿或見底）
-  const prevMaxHp = p.maxhp||1, prevMaxMp = p.maxmp||1;
-  const hpRate = Math.max(0, Math.min(1, (p.hp||prevMaxHp) / prevMaxHp ));
-  const mpRate = Math.max(0, Math.min(1, (p.mp||prevMaxMp) / prevMaxMp ));
-
-  const baseAtk = core.atk + addAtk;
-  const baseMagic = magicCore + addAtk;
-  p.maxhp = Math.max(1, core.hp + addHp);
-  p.maxmp = Math.max(0, core.mp + addMp);
-  p.atk   = Math.max(0, baseAtk);
-  p.def   = Math.max(0, core.def + addDef);
-  p.magicAtk = Math.max(0, baseMagic);
-
-  // 數值上限：避免攻擊、防禦、HP/MP 膨脹到失控
-  const CAP_ATK = 50000, CAP_DEF = 50000, CAP_HP = 80000, CAP_MP = 50000;
-  p.atk   = Math.min(p.atk,   CAP_ATK);
-  p.def   = Math.min(p.def,   CAP_DEF);
-  p.maxhp = Math.min(p.maxhp, CAP_HP);
-  p.maxmp = Math.min(p.maxmp, CAP_MP);
-  p.magicAtk = Math.min(p.magicAtk, CAP_ATK);
-
-  p.hp = clamp(Math.floor(p.maxhp * hpRate), 1, p.maxhp);
-  p.mp = clamp(Math.floor(p.maxmp * mpRate), 0, p.maxmp);
+  if(typeof p.hp !== "number") p.hp = p.maxhp;
+  if(typeof p.mp !== "number") p.mp = p.maxmp;
+  p.hp = Math.min(p.hp, p.maxhp);
+  p.mp = Math.min(p.mp, p.maxmp);
 
   p.physCritRate = 5 + (attrStats.physCritRate || 0) + (p.bonusCritRate || 0);
   p.magicCritRate = 5 + (attrStats.magicCritRate || 0);
@@ -1424,8 +1425,12 @@ function recomputeStats(applyPassives=false){
   p.manaRegen = attrStats.manaRegen || 0;
   p.skillCostReduce = attrStats.skillCostReduce || 0;
 
-  // （F）如需把坐騎移速記到玩家上（未來可用）
-  p.spdFromMount = 0; // 先不計算移速（你的移速邏輯可之後接）
+  p.spdFromMount = 0;
+}
+
+// 舊接口：確保其他流程仍可呼叫
+function recomputeStats(){
+  recalcPlayerStats();
 }
 
 
@@ -1448,8 +1453,8 @@ function recomputeStats(applyPassives=false){
   }
 
   function renderAttributePanel(p){
-    const attrs = p.attributes || {};
-    const remain = p.attrPoints || 0;
+    const attrs = { str:p.baseStr||0, agi:p.baseAgi||0, int:p.baseInt||0, spi:p.baseSpi||0 };
+    const remain = p.freeStatPoints || 0;
     const rows = ["str","agi","int","spi"].map(k=>{
       const meta = ATTR_META[k];
       const val = attrs[k] || 0;
@@ -1466,24 +1471,26 @@ function recomputeStats(applyPassives=false){
       btn.onclick=()=>{
         const attr = btn.dataset.attr;
         const add = Number(btn.dataset.add||1);
-        allocateAttribute(attr, add);
+        addStat(attr, add);
       };
     });
   }
 
-  function allocateAttribute(attr, amount=1){
-    if(!ATTR_META[attr]) return;
+  function addStat(statName, amount=1){
+    if(!ATTR_META[statName]) return;
     const p = game.player;
-    ensureAttributeDefaults();
-    const remain = p.attrPoints || 0;
-    if(remain < amount){
-      say("屬性點不足。");
-      return;
-    }
-    p.attrPoints = Math.max(0, remain - amount);
-    p.attributes[attr] = (p.attributes[attr]||0) + amount;
-    say(`📈 ${ATTR_META[attr].label} +${amount}（剩餘 ${p.attrPoints} 點）`);
-    recomputeStats(true);
+    ensurePlayerStatDefaults();
+    const spend = Math.min(Math.max(1, amount), p.freeStatPoints || 0);
+    if(spend <= 0) return;
+
+    if(statName === "str") p.baseStr += spend;
+    if(statName === "agi") p.baseAgi += spend;
+    if(statName === "int") p.baseInt += spend;
+    if(statName === "spi") p.baseSpi += spend;
+
+    p.freeStatPoints = Math.max(0, (p.freeStatPoints||0) - spend);
+    say(`📈 ${ATTR_META[statName].label} +${spend}（剩餘 ${p.freeStatPoints} 點）`);
+    recalcPlayerStats();
     render();
     autosave();
   }
@@ -1552,7 +1559,7 @@ function recomputeStats(applyPassives=false){
       <div class="stat atk">攻擊：${p.atk}｜魔傷：${p.magicAtk||p.atk}</div>
       <div class="stat def">防禦：${p.def}</div>
       <div class="stat lvl">等級：${p.lvl}（EXP ${p.exp}/${expNeedForLevel(p.lvl)}）</div>
-      <div class="stat">技能點：${p.skillPoints||0}｜屬性點：${p.attrPoints||0}</div>
+      <div class="stat">技能點：${p.freeSkillPoints||0}｜屬性點：${p.freeStatPoints||0}</div>
       ${critPanel}
       ${attrPanel}
       <div class="stat gold">金幣：${p.gold}｜職業：${jobName(p.job)}（${p.tier}轉）｜轉生：${p.rebirths||0} 次｜日數：${game.state.day}｜經驗加倍層數：${activeXpBuffs()}</div>
@@ -1898,27 +1905,16 @@ function displayEquipName(id){
       };
 
       p.lvl++;
-      p.skillPoints = (p.skillPoints||0) + 1;
-      p.attrPoints = (p.attrPoints||0) + 5;
-      recomputeStats(false);
-
-      const dhp  = p.maxhp - before.maxhp;
-      const dmp  = p.maxmp - before.maxmp;
-      const datk = p.atk   - before.atk;
-      const ddef = p.def   - before.def;
-
-      // 滿血 / 滿魔（可改成保留比例，依你的遊戲手感）
+      p.freeSkillPoints = (p.freeSkillPoints||0) + 1;
+      p.freeStatPoints = (p.freeStatPoints||0) + 5;
+      recalcPlayerStats();
       p.hp = p.maxhp;
       p.mp = p.maxmp;
 
       say(
         `🎉 升級到 <b>Lv.${p.lvl}</b>！` +
-        `HP ${dhp>=0?"+":""}${dhp}, ` +
-        `MP ${dmp>=0?"+":""}${dmp}, ` +
-        `攻 ${datk>=0?"+":""}${datk}, ` +
-        `防 ${ddef>=0?"+":""}${ddef}` +
-        `｜技能點 +1（共 ${p.skillPoints}）` +
-        `｜屬性點 +5（共 ${p.attrPoints}）。`
+        `｜技能點 +1（共 ${p.freeSkillPoints}）` +
+        `｜屬性點 +5（共 ${p.freeStatPoints}）。`
       );
 
       checkUnlocks();
@@ -2642,12 +2638,12 @@ function upgradeSkillByPoint(id){
   const max = skillMaxLv(id);
   if(cur >= max){ say(`🔒 <b>${sk.name}</b> 已達 Lv.${max}。`); return; }
   if(!checkSkillTierAllowed(id)) return;
-  if((game.player.skillPoints||0) <= 0){ say("技能點數不足。"); return; }
+  if((game.player.freeSkillPoints||0) <= 0){ say("技能點數不足。"); return; }
 
-  game.player.skillPoints = Math.max(0, (game.player.skillPoints||0) - 1);
+  game.player.freeSkillPoints = Math.max(0, (game.player.freeSkillPoints||0) - 1);
   game.player.learned[id] = cur + 1;
   if(sk.type === "主動" && (cur===0 || !game.player.activeSkill)){ game.player.activeSkill = id; }
-  say(`📘 <b>${sk.name}</b> 升至 Lv.${game.player.learned[id]}（剩餘技能點 ${game.player.skillPoints}）。`);
+  say(`📘 <b>${sk.name}</b> 升至 Lv.${game.player.learned[id]}（剩餘技能點 ${game.player.freeSkillPoints}）。`);
   recomputeStats(true);
   render(); autosave();
 }
@@ -4175,21 +4171,19 @@ function doRebirth(){
   if(p.lvl < 200){ say("尚未達到 200 等，不能轉生。"); return; }
   if(game.state.inBattle){ say("戰鬥中不可轉生。"); return; }
 
-  const hpR = Math.max(0, Math.min(1, p.hp / Math.max(1, p.maxhp)));
-  const mpR = Math.max(0, Math.min(1, p.mp / Math.max(1, p.maxmp)));
-
   p.rebirths = (p.rebirths||0) + 1;
   p.lvl = 1;
   p.exp = 0;
+  p.freeStatPoints = (p.freeStatPoints||0) + 2;
 
   game.state.inBattle = false;
   game.state.enemy = null;
 
-  recomputeStats(true);
-  p.hp = clamp(Math.floor(p.maxhp * hpR), 1, p.maxhp);
-  p.mp = clamp(Math.floor(p.maxmp * mpR), 0, p.maxmp);
+  recalcPlayerStats();
+  p.hp = p.maxhp;
+  p.mp = p.maxmp;
 
-  say(`♻️ <b>轉生成功！</b>（第 ${p.rebirths} 次）基礎素質永久提升：HP/MP/攻擊/防禦 各 +10。`);
+  say(`♻️ <b>轉生成功！</b>（第 ${p.rebirths} 次）獲得額外屬性點 +2，其他數值已重置為新屬性公式。`);
   $("#rebirthBtn").disabled = true;
   rebirthDlg.close();
   render(); autosave();
@@ -4361,7 +4355,7 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
   function renderSkillList(){
     const box=$("#skillList"); box.innerHTML="";
     const entries = Object.keys(game.player.learned||{});
-    const points = game.player.skillPoints || 0;
+    const points = game.player.freeSkillPoints || 0;
     const tip=document.createElement("div");
     tip.className="row";
     tip.innerHTML = `<span class="muted">技能點數：<b>${points}</b>（Lv10 共 10 點｜初心者技能上限 Lv.3）</span>`;
