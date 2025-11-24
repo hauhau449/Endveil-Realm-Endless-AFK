@@ -4884,9 +4884,16 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
       const seen = localStorage.getItem(INTRO_KEY)==="1";
       if(seen && !force) return;
     }catch(e){}
-    if(introDlg) introDlg.showModal();
+    if(introDlg){
+      introDlg.showModal();
+      scheduleIntroAutoClose();
+    }
   }
   function closeIntroAndMaybeRemember(){
+    if(introAutoClose){
+      clearTimeout(introAutoClose);
+      introAutoClose = null;
+    }
     if(introDontShow && introDontShow.checked){
       try{ localStorage.setItem(INTRO_KEY,"1"); }catch(e){}
     }
@@ -4894,6 +4901,19 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
   }
   if(introBtn) introBtn.onclick = ()=> openIntro(true);
   if(introStartBtn) introStartBtn.onclick = closeIntroAndMaybeRemember;
+
+  // 若玩家沒有點擊「開始遊戲」，自動關閉開場介紹避免卡住互動
+  let introAutoClose = null;
+  function scheduleIntroAutoClose(){
+    if(introAutoClose) clearTimeout(introAutoClose);
+    if(introStartBtn) introStartBtn.focus({preventScroll:true});
+    introAutoClose = setTimeout(()=>{
+      if(introDlg && introDlg.open){
+        closeIntroAndMaybeRemember();
+        say("🎬 已關閉開場介紹，開始冒險吧！");
+      }
+    }, 12000);
+  }
 
   /* ========= 技能庫 Render ========= */
   function skillTypeLabel(sk){
