@@ -1721,6 +1721,24 @@ function displayEquipName(id){
   }
   function jobName(key){ const j=JOB_TREE.find(j=>j.key===key); return j?j.name:key; }
 
+  function clampValue(v, min, max){ return Math.min(max, Math.max(min, v)); }
+
+  function combatPowerScore(stats={}){
+    const atk = Math.max(0, stats.atk || 0);
+    const def = Math.max(0, stats.def || 0);
+    const hp  = Math.max(0, stats.hp  || 0);
+    const mp  = Math.max(0, stats.mp  || 0);
+
+    const durability = Math.sqrt(hp) * 10 + Math.sqrt(mp) * 4;
+    return atk * 1.5 + def * 1.2 + durability;
+  }
+
+  function adaptiveDifficultyScale(playerPower, enemyPower){
+    if(enemyPower <= 0) return 1;
+    const ratio = playerPower / enemyPower;
+    return clampValue(1 + (ratio - 1) * 0.5, 0.75, 1.6);
+  }
+
   /* ========= 地圖 / 戰鬥 ========= */
   function currentZone(){ return zones.find(z=>z.id===game.state.zoneId) || zones[0]; }
   function openMap(){
@@ -1750,7 +1768,10 @@ function displayEquipName(id){
   const sc = 1 + (lvl - bandMid)*0.03;
   const p=game.player;
   const tierScale = 1 + p.tier*0.15 + Math.max(0, (p.lvl - bandMid))*0.01;
-  ["hp","mp","atk","def"].forEach(k=> base[k]=Math.max(1, Math.round(base[k]*dayScale*sc*tierScale)));
+  const playerPower = combatPowerScore({ atk:p.atk, def:p.def, hp:p.maxhp, mp:p.maxmp });
+  const enemyPower = combatPowerScore(base);
+  const dynScale = adaptiveDifficultyScale(playerPower, enemyPower);
+  ["hp","mp","atk","def"].forEach(k=> base[k]=Math.max(1, Math.round(base[k]*dayScale*sc*tierScale*dynScale)));
 
   const e = {
     name: basePick.name,
@@ -1761,7 +1782,7 @@ function displayEquipName(id){
     gold: Math.round(rnd(...base.gold)),
     exp:  Math.round(rnd(...base.exp)),
     drops: base.drops,            // ⬅️ 這一行是關鍵：把掉落表帶進敵人物件
-      isBoss: !!basePick.isBoss,
+    isBoss: !!basePick.isBoss,
     tag: base.tag || "",
     dot: 0, dotTurns: 0,
     defDown: 0, defDownTurns: 0   // 防禦 Debuff 用
