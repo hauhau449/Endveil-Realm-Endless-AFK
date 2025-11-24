@@ -1098,7 +1098,9 @@ const MOUNTS={
     spd: Math.round(speed),
     exp: [lvl * 12, lvl * 18],
     gold: [lvl * 1.5, lvl * 2.5],
-    tag: label
+    tag: label,
+    // 基礎掉落表：所有怪物類型都至少有一個陣列可用
+    drops: baseDropsForLevel(lvl, label)
   };
 }
 
