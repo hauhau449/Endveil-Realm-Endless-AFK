@@ -54,6 +54,7 @@ function toggleUpdateLog(){
   const $=s=>document.querySelector(s), LKEY="stealth_rpg_full_v4";
   const log=$("#log"), statsBox=$("#stats"), invBox=$("#inv");
   let skillDlg;
+  let currentSkillTierTab=0;
   const enemyUI={name:$("#eName"),lvl:$("#eLvl"),atk:$("#eAtk"),def:$("#eDef"),hpTxt:$("#eHpTxt"),mpTxt:$("#eMpTxt"),hpBar:$("#eHpBar"),mpBar:$("#eMpBar")};
   const battleStatusUI={
     ally:{
@@ -243,46 +244,46 @@ function ensureUniqueName(name){
     {tier:0,key:"Novice", name:"初心者"},
 
     // 1 轉
-    {tier:1,key:"Warrior", name:"戰士", parent:"Novice", weapon:"blade", passive:"武勇", start:["armorbreak"]},
-    {tier:1,key:"Mage",    name:"法師", parent:"Novice", weapon:"staff", passive:"星識", start:["fireball"]},
-    {tier:1,key:"Assassin",name:"刺客", parent:"Novice", weapon:"dagger", passive:"潛匿", start:["flurry"]},
-    {tier:1,key:"Ranger",  name:"弓手", parent:"Novice", weapon:"blade", passive:"野獵", start:["armorbreak"]},
+    {tier:1,key:"Warrior", name:"戰士", parent:"Novice", weapon:"blade", passive:"武勇", start:["ArmorBreak"]},
+    {tier:1,key:"Mage",    name:"法師", parent:"Novice", weapon:"staff", passive:"星識", start:["ManaShot"]},
+    {tier:1,key:"Assassin",name:"刺客", parent:"Novice", weapon:"dagger", passive:"潛匿", start:["SwiftSlash"]},
+    {tier:1,key:"Ranger",  name:"弓手", parent:"Novice", weapon:"blade", passive:"野獵", start:["QuickShot"]},
 
     // 戰士系
-    {tier:2,key:"Berserker",        name:"狂血戰士", parent:"Warrior", weapon:"blade", passive:"武勇", start:["armorbreak"]},
-    {tier:3,key:"BloodflameReaver", name:"血焰狂刃", parent:"Berserker", weapon:"blade", passive:"武勇", start:["armorbreak"]},
-    {tier:4,key:"Warshura",         name:"嗜戰修羅", parent:"BloodflameReaver", weapon:"blade", passive:"武勇", start:["armorbreak"]},
+    {tier:2,key:"Berserker",        name:"狂血戰士", parent:"Warrior", weapon:"blade", passive:"武勇", start:["ArmorBreak"]},
+    {tier:3,key:"BloodflameReaver", name:"血焰狂刃", parent:"Berserker", weapon:"blade", passive:"武勇", start:["ArmorBreak"]},
+    {tier:4,key:"Warshura",         name:"嗜戰修羅", parent:"BloodflameReaver", weapon:"blade", passive:"武勇", start:["ArmorBreak"]},
 
-    {tier:2,key:"Steelheart",       name:"鋼心戰士", parent:"Warrior", weapon:"blade", passive:"武勇", start:["armorbreak"]},
-    {tier:3,key:"EdgewallKnight",   name:"鋒壁騎士", parent:"Steelheart", weapon:"blade", passive:"武勇", start:["armorbreak"]},
-    {tier:4,key:"BulwarkWarlord",   name:"破陣戰君", parent:"EdgewallKnight", weapon:"blade", passive:"武勇", start:["armorbreak"]},
+    {tier:2,key:"Steelheart",       name:"鋼心戰士", parent:"Warrior", weapon:"blade", passive:"武勇", start:["ArmorBreak"]},
+    {tier:3,key:"EdgewallKnight",   name:"鋒壁騎士", parent:"Steelheart", weapon:"blade", passive:"武勇", start:["ArmorBreak"]},
+    {tier:4,key:"BulwarkWarlord",   name:"破陣戰君", parent:"EdgewallKnight", weapon:"blade", passive:"武勇", start:["ArmorBreak"]},
 
     // 法師系
-    {tier:2,key:"ElementWeaver",    name:"元素編織者", parent:"Mage", weapon:"staff", passive:"星識", start:["fireball"]},
-    {tier:3,key:"ArcaneConductor",  name:"秘法咒導師", parent:"ElementWeaver", weapon:"staff", passive:"星識", start:["fireball"]},
-    {tier:4,key:"AstralArchmage",   name:"天紋魔導師", parent:"ArcaneConductor", weapon:"staff", passive:"星識", start:["fireball"]},
+    {tier:2,key:"ElementWeaver",    name:"元素編織者", parent:"Mage", weapon:"staff", passive:"星識", start:["ManaShot"]},
+    {tier:3,key:"ArcaneConductor",  name:"秘法咒導師", parent:"ElementWeaver", weapon:"staff", passive:"星識", start:["ManaShot"]},
+    {tier:4,key:"AstralArchmage",   name:"天紋魔導師", parent:"ArcaneConductor", weapon:"staff", passive:"星識", start:["ManaShot"]},
 
-    {tier:2,key:"StarshadeCaster",  name:"星影咒師", parent:"Mage", weapon:"staff", passive:"星識", start:["fireball"]},
-    {tier:3,key:"LunarisArcanist",  name:"月寂導法者", parent:"StarshadeCaster", weapon:"staff", passive:"星識", start:["fireball"]},
-    {tier:4,key:"NoxAbyssEmperor",  name:"夜墟星淵帝", parent:"LunarisArcanist", weapon:"staff", passive:"星識", start:["fireball"]},
+    {tier:2,key:"StarshadeCaster",  name:"星影咒師", parent:"Mage", weapon:"staff", passive:"星識", start:["ManaShot"]},
+    {tier:3,key:"LunarisArcanist",  name:"月寂導法者", parent:"StarshadeCaster", weapon:"staff", passive:"星識", start:["ManaShot"]},
+    {tier:4,key:"NoxAbyssEmperor",  name:"夜墟星淵帝", parent:"LunarisArcanist", weapon:"staff", passive:"星識", start:["ManaShot"]},
 
     // 刺客系
-    {tier:2,key:"Shadowblade",      name:"影刃者", parent:"Assassin", weapon:"dagger", passive:"潛匿", start:["flurry"]},
-    {tier:3,key:"NightReaver",      name:"夜影斬", parent:"Shadowblade", weapon:"dagger", passive:"潛匿", start:["flurry"]},
-    {tier:4,key:"AbyssShadereaver", name:"闇刃修羅", parent:"NightReaver", weapon:"dagger", passive:"潛匿", start:["flurry"]},
+    {tier:2,key:"Shadowblade",      name:"影刃者", parent:"Assassin", weapon:"dagger", passive:"潛匿", start:["SwiftSlash"]},
+    {tier:3,key:"NightReaver",      name:"夜影斬", parent:"Shadowblade", weapon:"dagger", passive:"潛匿", start:["SwiftSlash"]},
+    {tier:4,key:"AbyssShadereaver", name:"闇刃修羅", parent:"NightReaver", weapon:"dagger", passive:"潛匿", start:["SwiftSlash"]},
 
-    {tier:2,key:"ShadeMark",        name:"暗印者", parent:"Assassin", weapon:"dagger", passive:"潛匿", start:["flurry"]},
-    {tier:3,key:"ShadowDevourer",   name:"影噬者", parent:"ShadeMark", weapon:"dagger", passive:"潛匿", start:["flurry"]},
-    {tier:4,key:"UmbralAshura",     name:"幽噬修羅", parent:"ShadowDevourer", weapon:"dagger", passive:"潛匿", start:["flurry"]},
+    {tier:2,key:"ShadeMark",        name:"暗印者", parent:"Assassin", weapon:"dagger", passive:"潛匿", start:["SwiftSlash"]},
+    {tier:3,key:"ShadowDevourer",   name:"影噬者", parent:"ShadeMark", weapon:"dagger", passive:"潛匿", start:["SwiftSlash"]},
+    {tier:4,key:"UmbralAshura",     name:"幽噬修羅", parent:"ShadowDevourer", weapon:"dagger", passive:"潛匿", start:["SwiftSlash"]},
 
     // 弓手系
-    {tier:2,key:"WindHunter",       name:"獵風者", parent:"Ranger", weapon:"blade", passive:"野獵", start:["armorbreak"]},
-    {tier:3,key:"Chaser",           name:"追獵者", parent:"WindHunter", weapon:"blade", passive:"野獵", start:["armorbreak"]},
-    {tier:4,key:"DeicideRanger",    name:"獵神者", parent:"Chaser", weapon:"blade", passive:"野獵", start:["armorbreak"]},
+    {tier:2,key:"WindHunter",       name:"獵風者", parent:"Ranger", weapon:"blade", passive:"野獵", start:["QuickShot"]},
+    {tier:3,key:"Chaser",           name:"追獵者", parent:"WindHunter", weapon:"blade", passive:"野獵", start:["QuickShot"]},
+    {tier:4,key:"DeicideRanger",    name:"獵神者", parent:"Chaser", weapon:"blade", passive:"野獵", start:["QuickShot"]},
 
-    {tier:2,key:"UmbralCrossbowman",name:"冥弩使", parent:"Ranger", weapon:"blade", passive:"野獵", start:["armorbreak"]},
-    {tier:3,key:"UmbralBoltReaver", name:"冥矢獵者", parent:"UmbralCrossbowman", weapon:"blade", passive:"野獵", start:["armorbreak"]},
-    {tier:4,key:"UmbralHuntshura",  name:"冥狩修羅", parent:"UmbralBoltReaver", weapon:"blade", passive:"野獵", start:["armorbreak"]},
+    {tier:2,key:"UmbralCrossbowman",name:"冥弩使", parent:"Ranger", weapon:"blade", passive:"野獵", start:["QuickShot"]},
+    {tier:3,key:"UmbralBoltReaver", name:"冥矢獵者", parent:"UmbralCrossbowman", weapon:"blade", passive:"野獵", start:["QuickShot"]},
+    {tier:4,key:"UmbralHuntshura",  name:"冥狩修羅", parent:"UmbralBoltReaver", weapon:"blade", passive:"野獵", start:["QuickShot"]},
   ];
   const JOB_WEAPON={
     Novice:["blade","staff","dagger"],
@@ -322,6 +323,28 @@ function ensureUniqueName(name){
 
 
   // 技能
+  function scaleByLevel(lv, min, max, cap=10){
+    const cur = clamp(lv, 1, cap);
+    if(cap <= 1) return max;
+    return min + (max - min) * ((cur - 1) / (cap - 1));
+  }
+  function physicalSkillHit(p,e,min,max,lv){
+    const effDef = effectiveEnemyDef(e,p);
+    const base = Math.max(1, rnd(p.atk-2, p.atk+2) - effDef);
+    let dmg = Math.floor(base * scaleByLevel(lv, min, max));
+    dmg = critMaybe(p, dmg, "physical");
+    dmg = applySpeedBonus(p, dmg);
+    return Math.max(1, dmg);
+  }
+  function magicSkillHit(p,e,min,max,lv){
+    const effDef = effectiveEnemyDef(e,p);
+    const base = Math.max(1, rnd(p.magicAtk-3, p.magicAtk+1) + Math.floor(p.maxmp * 0.02) - Math.floor(effDef * 0.7));
+    let dmg = Math.floor(base * scaleByLevel(lv, min, max));
+    dmg = critMaybe(p, dmg, "magic");
+    dmg = applySpeedBonus(p, dmg);
+    return Math.max(1, dmg);
+  }
+
   const SKILL={
  // ===== 初心者：主動技能 =====
     basicSlash:{
@@ -338,14 +361,7 @@ function ensureUniqueName(name){
         if(p.mp < cost){ say("MP 不足。"); return false; }
         p.mp -= cost;
 
-        const effDef = effectiveEnemyDef(e,p);
-        let dmg = Math.max(1, rnd(p.atk-1, p.atk+3) - effDef);
-
-        const scale = 1.05 + 0.08 * (lv-1); // Lv1 稍強於普攻，逐級微幅提升
-        dmg = Math.floor(dmg * scale);
-
-        dmg = critMaybe(p, dmg, "physical");
-        dmg = applySpeedBonus(p, dmg);
+        const dmg = physicalSkillHit(p, e, 1.05, 1.3, lv);
         e.hp = clamp(e.hp - dmg, 0, e.maxhp);
         affixOnHit(p, e, dmg);
         say(`🗡️ 你施展<b>斬擊基礎</b>（Lv.${lv}），造成 <span class="hp">-${dmg}</span>。`);
@@ -368,15 +384,7 @@ function ensureUniqueName(name){
         if(p.mp < cost){ say("MP 不足。"); return false; }
         p.mp -= cost;
 
-        const effDef = effectiveEnemyDef(e,p);
-        const magicBase = Math.max(1, rnd(p.magicAtk-3, p.magicAtk-1) + Math.floor(p.maxmp * 0.03));
-        let dmg = Math.max(1, magicBase - Math.floor(effDef * 0.7));
-
-        const scale = 1.00 + 0.12 * (lv-1); // 提升倍率，留待後續平衡
-        dmg = Math.floor(dmg * scale);
-
-        dmg = critMaybe(p, dmg, "magic");
-        dmg = applySpeedBonus(p, dmg);
+        const dmg = magicSkillHit(p, e, 1.05, 1.32, lv);
         e.hp = clamp(e.hp - dmg, 0, e.maxhp);
         affixOnHit(p, e, dmg);
         say(`✨ 你釋放<b>魔能火花</b>（Lv.${lv}），造成 <span class="hp">-${dmg}</span> 魔法傷害。`);
@@ -432,185 +440,397 @@ function ensureUniqueName(name){
       desc:"敏銳觀察怪物行動與氣息，獲得額外情報。",
     },
 
-  // ===== 戰士系：破甲斬 =====
- armorbreak:{
-    id:"armorbreak",
-    name:"破甲斬",
-    type:"主動",
-    baseMp:4,
-  desc:"強力斬擊，造成約 140% 傷害，並使敵人防禦 -50% 持續 2 回合（傷害隨等級上升）。",
+// 🗡️ Assassin — 1 轉技能
+SwiftSlash: {
+  id:"SwiftSlash",
+  name:"迅刃",
+  desc:"快速揮出短刃攻擊，造成單體物理傷害。",
+  maxLv:10, tier:1, tree:"Assassin", type:"active", baseMp:4,
   use(p,e,lv){
     if(!e) return false;
-    const cost=calcSkillCost(p, this.baseMp + lv);        // 等級越高耗魔略升
+    const cost = calcSkillCost(p, this.baseMp);
     if(p.mp < cost){ say("MP 不足。"); return false; }
     p.mp -= cost;
-
-    const effDef = effectiveEnemyDef(e,p);
-    const base = Math.max(1, rnd(p.atk-1, p.atk+3) - effDef);
-    let dmg = Math.floor(base * 1.4);   // 基礎 140% 傷害
-
-    // 等級倍率：每級額外 +2% 傷害
-    const scale = 1 + 0.02 * (lv-1);
-    dmg = Math.floor(dmg * scale);
-
-    dmg = critMaybe(p, dmg, "physical");
-    dmg = applySpeedBonus(p, dmg);
+    const dmg = physicalSkillHit(p, e, 1.1, 1.8, lv);
     e.hp = clamp(e.hp - dmg, 0, e.maxhp);
-
-    // 🔻 防禦 -50%，持續 2 回合（比原本溫和一點）
-    e.defDown = 0.5;
-    e.defDownTurns = 2;
-
     affixOnHit(p, e, dmg);
-    say(`🪓 你使出<b>破甲斬</b>（Lv.${lv}），造成 <span class="hp">-${dmg}</span>，並大幅削弱敵人防禦（-50%，2 回合）。`);
+    say(`🥷 你使出<b>迅刃</b>（Lv.${lv}），造成 <span class="hp">-${dmg}</span>。`);
     recoverManaOnAction(p);
     return true;
   }
 },
-
-
-  // ===== 戰士系：猛擊（如果你還要留著可以保留原本的） =====
- /*
-    smash:{
-    id:"smash",
-    name:"猛擊",
-    type:"主動",
-    baseMp:4,
-    desc:"沉重打擊，造成 120% 左右傷害。",
-    use(p,e,lv){
-      if(!e) return false;
-      const cost=this.baseMp + lv;
-      if(p.mp < cost){ say("MP 不足。"); return false; }
-      p.mp -= cost;
-
-      const effDef = effectiveEnemyDef(e,p);
-      let dmg = Math.max(1, rnd(p.atk, p.atk+4) - effDef);
-      dmg = Math.floor(dmg * 1.2);
-      dmg = critMaybe(p, dmg);
-
-      e.hp = clamp(e.hp - dmg, 0, e.maxhp);
-      affixOnHit(p, e, dmg);
-      say(`💢 你施展<b>猛擊</b>，造成 <span class="hp">-${dmg}</span>。`);
-      return true;
-    }
-  },
-*/
-  // ===== 法師系：火球術 =====
-  fireball:{
-    id:"fireball",
-    name:"火球術",
-    type:"主動",
-  baseMp:6,
-  desc:"投擲火球造成約 130% 傷害，並點燃敵人 3 回合（等級越高主傷與燃燒都會變強）。",
+VitalStab: {
+  id:"VitalStab",
+  name:"要害突刺",
+  desc:"瞄準要害的刺擊，造成較高物理傷害。",
+  maxLv:10, tier:1, tree:"Assassin", type:"active", baseMp:5,
   use(p,e,lv){
     if(!e) return false;
-    const cost = calcSkillCost(p, this.baseMp + lv);
+    const cost = calcSkillCost(p, this.baseMp+1);
     if(p.mp < cost){ say("MP 不足。"); return false; }
     p.mp -= cost;
-
-    const effDef = effectiveEnemyDef(e,p);
-    const base = Math.max(1, rnd(p.magicAtk-1, p.magicAtk+3) - effDef);
-    let main = Math.floor(base * 1.3);  // 130% 主傷害
-
-    // 等級倍率：每級 +2% 主傷與 DOT
-    const scale = 1 + 0.02 * (lv-1);
-    main = Math.floor(main * scale);
-
-    main = critMaybe(p, main, "magic");
-    main = applySpeedBonus(p, main);
-    e.hp = clamp(e.hp - main, 0, e.maxhp);
-
-    // 🔥 燃燒 DOT：3 回合，每回合 main 的 10~20%
-    const dot = Math.max(1, Math.floor(main * rnd(10,20) / 100));
-    e.dot = dot;
-      e.dotTurns = 3;
-
-    affixOnHit(p, e, main);
-    say(`🔥 你施放<b>火球術</b>（Lv.${lv}），造成 <span class="hp">-${main}</span>，並點燃敵人（3 回合，每回合 -${dot} HP）。`);
+    const dmg = physicalSkillHit(p, e, 1.2, 2.0, lv);
+    e.hp = clamp(e.hp - dmg, 0, e.maxhp);
+    affixOnHit(p, e, dmg);
+    say(`🎯 <b>要害突刺</b>擊中要點，造成 <span class="hp">-${dmg}</span>。`);
     recoverManaOnAction(p);
     return true;
   }
 },
-
-  // ===== 盜賊系：連擊 =====
-  flurry:{
-    id:"flurry",
-    name:"連擊",
-    type:"主動",
-  baseMp:5,
-  desc:"三段連擊：第一段必定命中，後兩段有機率追加（每級提升總傷害約 3%）。",
+ExposeStrike: {
+  id:"ExposeStrike",
+  name:"破綻擊",
+  desc:"造成物傷並使敵人防禦下降（2 回合）。",
+  maxLv:3, tier:1, tree:"Assassin", type:"debuff", baseMp:5,
   use(p,e,lv){
     if(!e) return false;
-    const cost=calcSkillCost(p, this.baseMp + lv);
+    const cost = calcSkillCost(p, this.baseMp);
     if(p.mp < cost){ say("MP 不足。"); return false; }
     p.mp -= cost;
+    const dmg = physicalSkillHit(p, e, 1.05, 1.5, lv);
+    e.hp = clamp(e.hp - dmg, 0, e.maxhp);
+    e.defDown = Math.max(e.defDown || 0, 0.22);
+    e.defDownTurns = 2;
+    affixOnHit(p, e, dmg);
+    say(`🔻 你以<b>破綻擊</b>打亂敵形，造成 <span class="hp">-${dmg}</span>，防禦下降。`);
+    recoverManaOnAction(p);
+    return true;
+  }
+},
+ShadowstepBasic: {
+  id:"ShadowstepBasic",
+  name:"閃步",
+  desc:"降低敵方本回合命中率。",
+  maxLv:3, tier:1, tree:"Assassin", type:"survival", baseMp:3,
+  use(p,e,lv){
+    if(!e) return false;
+    const cost = calcSkillCost(p, this.baseMp);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
+    e.hitDown = Math.max(e.hitDown || 0, 0.22 + 0.02*(lv-1));
+    e.hitDownTurns = 1;
+    say(`💨 你施展<b>閃步</b>，本回合敵人更難命中你。`);
+    recoverManaOnAction(p);
+    return true;
+  }
+},
+BreakForm: {
+  id:"BreakForm",
+  name:"拆招",
+  desc:"干擾敵人攻擊，使其本回合攻擊下降。",
+  maxLv:3, tier:1, tree:"Assassin", type:"survival", baseMp:4,
+  use(p,e,lv){
+    if(!e) return false;
+    const cost = calcSkillCost(p, this.baseMp);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
+    e.atkDown = Math.max(e.atkDown || 0, 0.18 + 0.02*(lv-1));
+    e.atkDownTurns = 1;
+    say(`🌀 你拆解敵招，本回合攻勢減弱。`);
+    recoverManaOnAction(p);
+    return true;
+  }
+},
+BladeMastery: {
+  id:"BladeMastery",
+  name:"刀術熟練",
+  desc:"提升短刀掌握度，使攻擊更穩定、命中更易。",
+  maxLv:3, tier:1, tree:"Assassin", type:"passive"
+},
+AgilityTraining: {
+  id:"AgilityTraining",
+  name:"敏捷訓練",
+  desc:"提升反應速度，提高閃避能力。",
+  maxLv:3, tier:1, tree:"Assassin", type:"passive"
+},
+SilentFocus: {
+  id:"SilentFocus",
+  name:"冷靜專注",
+  desc:"提升命中或暴擊穩定度。",
+  maxLv:3, tier:1, tree:"Assassin", type:"passive"
+},
 
-      const effDef = effectiveEnemyDef(e,p);
-      const baseRaw = Math.max(1, rnd(p.atk-2, p.atk+2) - effDef);
+// 🏹 Archer — 1 轉技能
+QuickShot:{
+  id:"QuickShot",
+  name:"速射",
+  desc:"快速射出一箭，造成物理傷害。",
+  maxLv:10, tier:1, tree:"Ranger", type:"active", baseMp:4,
+  use(p,e,lv){
+    if(!e) return false;
+    const cost = calcSkillCost(p, this.baseMp);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
+    const dmg = physicalSkillHit(p, e, 1.12, 1.75, lv);
+    e.hp = clamp(e.hp - dmg, 0, e.maxhp);
+    affixOnHit(p, e, dmg);
+    say(`🏹 你施放<b>速射</b>（Lv.${lv}），造成 <span class="hp">-${dmg}</span>。`);
+    recoverManaOnAction(p);
+    return true;
+  }
+},
+ChargedShot:{
+  id:"ChargedShot",
+  name:"蓄力射擊",
+  desc:"蓄力發射強力一箭，造成較高物理傷害。",
+  maxLv:10, tier:1, tree:"Ranger", type:"active", baseMp:6,
+  use(p,e,lv){
+    if(!e) return false;
+    const cost = calcSkillCost(p, this.baseMp);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
+    const dmg = physicalSkillHit(p, e, 1.2, 2.0, lv);
+    e.hp = clamp(e.hp - dmg, 0, e.maxhp);
+    affixOnHit(p, e, dmg);
+    say(`🎯 你蓄力放出<b>蓄力射擊</b>（Lv.${lv}），造成 <span class="hp">-${dmg}</span>。`);
+    recoverManaOnAction(p);
+    return true;
+  }
+},
+SoftSpotShot:{
+  id:"SoftSpotShot",
+  name:"弱化射擊",
+  desc:"瞄準脆弱處，使敵人防禦下降（2 回合）。",
+  maxLv:3, tier:1, tree:"Ranger", type:"debuff", baseMp:5,
+  use(p,e,lv){
+    if(!e) return false;
+    const cost = calcSkillCost(p, this.baseMp);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
+    const dmg = physicalSkillHit(p, e, 1.05, 1.45, lv);
+    e.hp = clamp(e.hp - dmg, 0, e.maxhp);
+    e.defDown = Math.max(e.defDown || 0, 0.22 + 0.01*(lv-1));
+    e.defDownTurns = 2;
+    affixOnHit(p, e, dmg);
+    say(`🎯 <b>弱化射擊</b>造成 <span class="hp">-${dmg}</span>，並削弱防禦。`);
+    recoverManaOnAction(p);
+    return true;
+  }
+},
+DodgeRoll:{
+  id:"DodgeRoll",
+  name:"翻滾迴避",
+  desc:"翻滾閃避攻擊，本回合受到的傷害下降。",
+  maxLv:3, tier:1, tree:"Ranger", type:"survival", baseMp:3,
+  use(p,e,lv){
+    if(!e) return false;
+    const cost = calcSkillCost(p, this.baseMp);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
+    game.state.guardMitigation = { ratio: 0.30 + 0.05*(lv-1), turns: 1 };
+    say(`🌀 你翻滾閃避，暫時降低所受傷害。`);
+    recoverManaOnAction(p);
+    return true;
+  }
+},
+DecoyTrick:{
+  id:"DecoyTrick",
+  name:"誘餌術",
+  desc:"干擾敵人，使其命中率下降。",
+  maxLv:3, tier:1, tree:"Ranger", type:"survival", baseMp:4,
+  use(p,e,lv){
+    if(!e) return false;
+    const cost = calcSkillCost(p, this.baseMp);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
+    e.hitDown = Math.max(e.hitDown || 0, 0.25 + 0.02*(lv-1));
+    e.hitDownTurns = 1;
+    say(`🎭 誘餌吸引了敵人注意，牠的攻擊更容易落空。`);
+    recoverManaOnAction(p);
+    return true;
+  }
+},
+BowMastery:{
+  id:"BowMastery",
+  name:"弓術熟練",
+  desc:"提升射擊穩定度，使傷害更一致。",
+  maxLv:3, tier:1, tree:"Ranger", type:"passive"
+},
+AgileFootwork:{
+  id:"AgileFootwork",
+  name:"敏捷步伐",
+  desc:"提升步伐靈活性，更容易閃避攻擊。",
+  maxLv:3, tier:1, tree:"Ranger", type:"passive"
+},
+SteadyBreath:{
+  id:"SteadyBreath",
+  name:"專注呼吸",
+  desc:"提升攻擊穩定性，減少射擊誤差。",
+  maxLv:3, tier:1, tree:"Ranger", type:"passive"
+},
 
-      let baseTotal = 0;
-      const logs = [];
+// 🔮 Mage — 1 轉技能
+ManaShot:{
+  id:"ManaShot",
+  name:"魔力彈",
+  desc:"發射初級魔力彈造成魔法傷害。",
+  maxLv:10, tier:1, tree:"Mage", type:"active", baseMp:5,
+  use(p,e,lv){
+    if(!e) return false;
+    const cost = calcSkillCost(p, this.baseMp);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
+    const dmg = magicSkillHit(p, e, 1.1, 1.9, lv);
+    e.hp = clamp(e.hp - dmg, 0, e.maxhp);
+    affixOnHit(p, e, dmg);
+    say(`🔮 你射出<b>魔力彈</b>（Lv.${lv}），造成 <span class="hp">-${dmg}</span> 魔法傷害。`);
+    recoverManaOnAction(p);
+    return true;
+  }
+},
+ManaShock:{
+  id:"ManaShock",
+  name:"法力震盪",
+  desc:"干擾敵方魔力，使其更容易受到魔法傷害（2 回合）。",
+  maxLv:10, tier:1, tree:"Mage", type:"buff", baseMp:5,
+  use(p,e,lv){
+    if(!e) return false;
+    const cost = calcSkillCost(p, this.baseMp);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
+    const dmg = magicSkillHit(p, e, 1.05, 1.6, lv);
+    e.hp = clamp(e.hp - dmg, 0, e.maxhp);
+    e.defDown = Math.max(e.defDown || 0, 0.2 + 0.01*Math.min(5, lv));
+    e.defDownTurns = 2;
+    affixOnHit(p, e, dmg);
+    say(`💫 <b>法力震盪</b>造成 <span class="hp">-${dmg}</span>，敵方魔抗被撼動。`);
+    recoverManaOnAction(p);
+    return true;
+  }
+},
+Bind:{
+  id:"Bind",
+  name:"束縛術",
+  desc:"束縛敵人，使其攻擊或速度下降。",
+  maxLv:3, tier:1, tree:"Mage", type:"control", baseMp:4,
+  use(p,e,lv){
+    if(!e) return false;
+    const cost = calcSkillCost(p, this.baseMp);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
+    const dmg = magicSkillHit(p, e, 0.9, 1.3, lv);
+    e.hp = clamp(e.hp - dmg, 0, e.maxhp);
+    e.hitDown = Math.max(e.hitDown || 0, 0.2 + 0.03*(lv-1));
+    e.hitDownTurns = 1;
+    e.atkDown = Math.max(e.atkDown || 0, 0.15 + 0.02*(lv-1));
+    e.atkDownTurns = 1;
+    affixOnHit(p, e, dmg);
+    say(`⛓️ <b>束縛術</b>使敵人動作遲緩，並造成 <span class="hp">-${dmg}</span>。`);
+    recoverManaOnAction(p);
+    return true;
+  }
+},
+ArcaneWard:{
+  id:"ArcaneWard",
+  name:"魔法護盾術",
+  desc:"形成護盾，吸收部分傷害。",
+  maxLv:3, tier:1, tree:"Mage", type:"defense", baseMp:4,
+  use(p){
+    const cost = calcSkillCost(p, this.baseMp);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
+    const shield = Math.max(3, Math.floor(p.maxhp * (0.08 + 0.02*skillLevel(this.id,1))));
+    game.state.playerShield = Math.min(p.maxhp, (game.state.playerShield||0) + shield);
+    say(`🛡️ 魔法護盾展開，可吸收 <b>${shield}</b> 傷害。`);
+    recoverManaOnAction(p);
+    return true;
+  }
+},
+ManaShield:{
+  id:"ManaShield",
+  name:"魔力護盾",
+  desc:"受到傷害時優先扣 MP。轉職自動給 Lv1。",
+  maxLv:3, tier:1, tree:"Mage", type:"passive"
+},
+ArcaneMastery:{
+  id:"ArcaneMastery",
+  name:"奧術熟練",
+  desc:"提升施法精準度與傷害穩定性。",
+  maxLv:3, tier:1, tree:"Mage", type:"passive"
+},
+MeditationFocus:{
+  id:"MeditationFocus",
+  name:"精神專注",
+  desc:"提升回魔或最大 MP。",
+  maxLv:3, tier:1, tree:"Mage", type:"passive"
+},
 
-      // 第一段：100% 觸發，100% 傷害
-      {
-        const raw1 = Math.max(1, baseRaw);
-        let d1 = critMaybe(p, raw1);
-        baseTotal += d1;
-        logs.push(`第一段 <span class="hp">-${d1}</span>`);
-      }
-
-      // 第二段：60% 機率，70% 傷害
-      if(Math.random() < 0.60){
-        const raw2 = Math.max(1, Math.floor(baseRaw * 0.7));
-        let d2 = critMaybe(p, raw2);
-        baseTotal += d2;
-        logs.push(`第二段 <span class="hp">-${d2}</span>`);
-      }
-
-      // 第三段：30% 機率，30% 傷害
-      if(Math.random() < 0.30){
-        const raw3 = Math.max(1, Math.floor(baseRaw * 0.3));
-        let d3 = critMaybe(p, raw3);
-        baseTotal += d3;
-        logs.push(`第三段 <span class="hp">-${d3}</span>`);
-      }
-
-      if(baseTotal <= 0){
-        say("你的連擊沒有造成傷害。");
-        return true;
-      }
-
-      // 等級倍率：總傷害再乘上一層
-      const scale = 1 + 0.02 * (lv-1);
-      let finalTotal = Math.max(1, Math.floor(baseTotal * scale));
-      finalTotal = applySpeedBonus(p, finalTotal);
-
-      e.hp = clamp(e.hp - finalTotal, 0, e.maxhp);
-      affixOnHit(p, e, finalTotal);
-      say(`🔺 你施展<b>連擊</b>（Lv.${lv}）！${logs.join("，")}（合計 <span class="hp">-${finalTotal}</span>）。`);
-      recoverManaOnAction(p);
-      return true;
-    }
-  },
-
-    
-    smite:{ id:"smite", name:"聖光制裁", type:"主動", baseMp:6, desc:"聖光重擊，對黑暗系額外傷害。",
-      use:(p,e,lv)=>{if (!e) return false;  // 沒敵人就直接跳出，不要繼續執行
- const mp=calcSkillCost(p, 6); if(p.mp<mp) return say("魔力不足。"), false;
-        p.mp-=mp; const scale=1+lv*0.06; const effDef=effectiveEnemyDef(e,p); let out=Math.max(5, Math.floor((p.magicAtk+8 - Math.floor(effDef*0.5))*scale)); if(e.tag==="dark") out=Math.floor(out*1.25);
-        out=critMaybe(p,out,"magic"); out = applySpeedBonus(p, out); e.hp=clamp(e.hp-out,0,e.maxhp); affixOnHit(p,e,out); tryCombo(p,e); say(`你釋放 <b>聖光制裁</b> Lv.${lv}！<span class="hp">-${out}</span>。`); recoverManaOnAction(p); return true; } },
-    
-    vitality:{ id:"vitality", name:"活力", type:"被動", desc:"最大HP +10 / 等",
-      passive:(p,lv)=>{ p.maxhp+=10*lv; p.hp=Math.min(p.hp+10*lv,p.maxhp);} },
-    
-    focus:{ id:"focus", name:"專注", type:"被動", desc:"最大MP +6 / 等",
-      passive:(p,lv)=>{ p.maxmp+=6*lv; p.mp=Math.min(p.mp+6*lv,p.maxmp);} },
-    
-    omnislash:{ id:"omnislash", name:"奧義：萬斬", type:"奧義", baseMp:8, desc:"爆發 4~6 段大傷。",
-  use:(p,e,lv)=>{if (!e) return false;  // 沒敵人就直接跳出，不要繼續執行
- const mp=calcSkillCost(p, 8); if(p.mp<mp) return say("魔力不足。"), false;
-        p.mp-=mp; let h=rnd(4,6), tot=0, scale=1+lv*0.04; for(let i=0;i<h;i++){ const effDef=effectiveEnemyDef(e,p); const d=Math.max(2,rnd(p.atk+3,p.atk+8)-Math.floor(effDef*0.6)); tot+=critMaybe(p,d,"physical"); }
-        tot=Math.floor(tot*scale); tot = applySpeedBonus(p, tot); e.hp=clamp(e.hp-tot,0,e.maxhp); affixOnHit(p,e,tot); tryCombo(p,e); say(`你使出 <b>奧義·萬斬</b> Lv.${lv}！合計 <span class="hp">-${tot}</span>！`); recoverManaOnAction(p); return true; } }
+// 🛡 Warrior — 1 轉技能
+ArmorBreak:{
+  id:"ArmorBreak",
+  name:"破甲斬",
+  desc:"造成物傷並降低敵人防禦（2 回合）。",
+  maxLv:3, tier:1, tree:"Warrior", type:"debuff", baseMp:5,
+  use(p,e,lv){
+    if(!e) return false;
+    const cost = calcSkillCost(p, this.baseMp);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
+    const dmg = physicalSkillHit(p, e, 1.12, 1.6, lv);
+    e.hp = clamp(e.hp - dmg, 0, e.maxhp);
+    e.defDown = Math.max(e.defDown || 0, 0.22 + 0.01*(lv-1));
+    e.defDownTurns = 2;
+    affixOnHit(p, e, dmg);
+    say(`🪓 <b>破甲斬</b>劈開護甲，造成 <span class="hp">-${dmg}</span> 並削弱防禦。`);
+    recoverManaOnAction(p);
+    return true;
+  }
+},
+RageStrike:{
+  id:"RageStrike",
+  name:"血怒斬擊",
+  desc:"犧牲少量 HP 換取高傷害斬擊。",
+  maxLv:10, tier:1, tree:"Warrior", type:"active", baseMp:6,
+  use(p,e,lv){
+    if(!e) return false;
+    const cost = calcSkillCost(p, this.baseMp);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    const hpCost = Math.max(5, Math.floor(p.maxhp * 0.03));
+    if(p.hp <= hpCost){ say("體力不足以施展。" ); return false; }
+    p.mp -= cost;
+    p.hp = Math.max(1, p.hp - hpCost);
+    const dmg = physicalSkillHit(p, e, 1.25, 2.05, lv);
+    e.hp = clamp(e.hp - dmg, 0, e.maxhp);
+    affixOnHit(p, e, dmg);
+    say(`💢 你以血怒揮擊，消耗 <b>${hpCost}</b> HP，造成 <span class="hp">-${dmg}</span>。`);
+    recoverManaOnAction(p);
+    return true;
+  }
+},
+GuardCounter:{
+  id:"GuardCounter",
+  name:"鐵壁反擊",
+  desc:"本回合減傷；如受到攻擊則反擊一次。",
+  maxLv:10, tier:1, tree:"Warrior", type:"defense", baseMp:5,
+  use(p){
+    const cost = calcSkillCost(p, this.baseMp);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
+    game.state.guardMitigation = { ratio: 0.35 + 0.02*(skillLevel(this.id,1)-1), turns: 1 };
+    game.state.counterReady = true;
+    say(`🛡️ 你架起盾勢，準備反擊來襲。`);
+    recoverManaOnAction(p);
+    return true;
+  }
+},
+VitalStrength:{
+  id:"VitalStrength",
+  name:"基礎體魄",
+  desc:"提升最大 HP 或耐久度。",
+  maxLv:3, tier:1, tree:"Warrior", type:"passive"
+},
+WeaponMastery:{
+  id:"WeaponMastery",
+  name:"武器熟練",
+  desc:"提升命中與攻擊穩定度。",
+  maxLv:3, tier:1, tree:"Warrior", type:"passive"
+},
+SteadfastFooting:{
+  id:"SteadfastFooting",
+  name:"堅毅步伐",
+  desc:"提升抗控能力，使戰士不易被打斷。",
+  maxLv:3, tier:1, tree:"Warrior", type:"passive"
+}
   };
 
 const SKILL_TIERS = {
@@ -621,13 +841,35 @@ const SKILL_TIERS = {
   accuracyFundamentals:0,
   arcaneFundamentals:0,
   insight:0,
-  vitality:0,
-  focus:0,
-  armorbreak:1,
-  fireball:1,
-  flurry:1,
-  smite:1,
-  omnislash:2
+  SwiftSlash:1,
+  VitalStab:1,
+  ExposeStrike:1,
+  ShadowstepBasic:1,
+  BreakForm:1,
+  BladeMastery:1,
+  AgilityTraining:1,
+  SilentFocus:1,
+  QuickShot:1,
+  ChargedShot:1,
+  SoftSpotShot:1,
+  DodgeRoll:1,
+  DecoyTrick:1,
+  BowMastery:1,
+  AgileFootwork:1,
+  SteadyBreath:1,
+  ManaShot:1,
+  ManaShock:1,
+  Bind:1,
+  ArcaneWard:1,
+  ManaShield:1,
+  ArcaneMastery:1,
+  MeditationFocus:1,
+  ArmorBreak:1,
+  RageStrike:1,
+  GuardCounter:1,
+  VitalStrength:1,
+  WeaponMastery:1,
+  SteadfastFooting:1
 };
 
   function skillTier(id){ return SKILL_TIERS[id] ?? 0; }
@@ -773,13 +1015,13 @@ const MOUNTS={
 
  
 
- function baseDropsForLevel(lvl,tag){
+  function baseDropsForLevel(lvl,tag){
   const base = [
     {item:"技能書：活力",rate:0.00},//技能書掉落率
     {item:"技能書：專注",rate:0.00},
-    {item:"技能書：火球術",rate:0.04},
-    {item:"技能書：連擊",rate:0.04},
-    {item:"技能書：破甲斬",rate:0.04},   // ★ 新增這行
+    {item:"技能書：火球術",rate:0},
+    {item:"技能書：連擊",rate:0},
+    {item:"技能書：破甲斬",rate:0},   // ★ 新增這行
 //    {item:"技能書：猛擊",rate:0.04},
   ];
 
@@ -858,7 +1100,7 @@ const MOUNTS={
       "小魔力藥水":10,
       "煙霧彈":1,
     },
-    state:{ inBattle:false, enemy:null, kills:{}, zoneId:"z-01", day:1 },
+    state:{ inBattle:false, enemy:null, kills:{}, zoneId:"z-01", day:1, guardMitigation:{ratio:0,turns:0}, counterReady:false, playerShield:0 },
     quests:[], shop:{stock:[]},
     buffs:{ xpLayers:[] } // 多層加倍，每層為剩餘日數
   };
@@ -1789,6 +2031,12 @@ function displayEquipName(id){
     return `${SKILL[id]?.name||"—"} Lv.${lv}/${max}${tag}`;
   }
   function jobName(key){ const j=JOB_TREE.find(j=>j.key===key); return j?j.name:key; }
+  function rootJobOf(jobKey){
+    const cur = JOB_TREE.find(j=>j.key===jobKey);
+    if(!cur) return null;
+    if(!cur.parent || cur.parent === "Novice") return cur.key;
+    return rootJobOf(cur.parent);
+  }
 
   function clampValue(v, min, max){ return Math.min(max, Math.max(min, v)); }
 
@@ -1854,7 +2102,9 @@ function displayEquipName(id){
     isBoss: !!basePick.isBoss,
     tag: base.tag || "",
     dot: 0, dotTurns: 0,
-    defDown: 0, defDownTurns: 0   // 防禦 Debuff 用
+    defDown: 0, defDownTurns: 0,   // 防禦 Debuff 用
+    atkDown:0, atkDownTurns:0,
+    hitDown:0, hitDownTurns:0
   };
 
   return e;
@@ -1865,6 +2115,9 @@ function displayEquipName(id){
     if(game.state.inBattle){ say("你還在戰鬥中！"); return; }
     const z=currentZone();
     const e=randomEnemy(); game.state.enemy=e; game.state.inBattle=true;
+    game.state.guardMitigation={ratio:0,turns:0};
+    game.state.counterReady=false;
+    game.state.playerShield=0;
     say(`⚔️ 在「${z.name}」遭遇 <b>${e.name}</b>（Lv.${e.lvl}｜HP ${e.hp}｜攻 ${e.atk}｜防 ${e.def}）。`);
     const insLv = game.player.insightLv || 0;
     if(insLv>0 && Array.isArray(e.drops)){
@@ -1899,12 +2152,12 @@ function displayEquipName(id){
 
   const id = game.player.activeSkill;
   const sk = SKILL[id];
-  if(!sk || sk.type !== "主動"){
+  if(!sk || typeof sk.use !== "function"){
     say("沒有可施放的主動技能。");
     return false;
   }
 
-  const lv = skillLevel(id, 1);
+  const lv = skillLevel(id, 0);
   if(lv <= 0){
     say("尚未習得此技能。");
     return false;
@@ -1949,12 +2202,67 @@ function displayEquipName(id){
       say(`🛡️ <b>${e.name}</b> 的防禦恢復了。`);
     }
   }
+  if(e.hitDown && e.hitDownTurns > 0){
+    const missRate = e.hitDown;
+    e.hitDownTurns--;
+    if(Math.random() < missRate){
+      say(`💨 <b>${e.name}</b> 的攻擊落空。`);
+      if(e.hitDownTurns <= 0){ e.hitDown = 0; say(`🎯 <b>${e.name}</b> 的命中恢復正常。`); }
+      return;
+    }
+    if(e.hitDownTurns <= 0){ e.hitDown = 0; say(`🎯 <b>${e.name}</b> 的命中恢復正常。`); }
+  }
 
-    const dmg=Math.max(1, rnd(e.atk-1,e.atk+3)-p.def);
-    p.hp=clamp(p.hp-dmg,0,p.maxhp);
-    say(`<b>${e.name}</b> 攻擊了你，<span class="bad">-${dmg}</span>。`);
-    if(p.hp<=0) return endBattle(false);
-    render();
+  let enemyAtk = e.atk;
+  if(e.atkDown && e.atkDownTurns > 0){
+    enemyAtk = Math.max(1, Math.floor(enemyAtk * (1 - e.atkDown)));
+    e.atkDownTurns--;
+    if(e.atkDownTurns <= 0){ e.atkDown = 0; say(`💢 <b>${e.name}</b> 的攻勢恢復。`); }
+  }
+
+  let dmg=Math.max(1, rnd(enemyAtk-1,enemyAtk+3)-p.def);
+  const guard = game.state.guardMitigation || {ratio:0,turns:0};
+  if(guard.ratio>0){
+    dmg = Math.max(0, Math.floor(dmg * (1-guard.ratio)));
+    guard.turns = Math.max(0, (guard.turns||0)-1);
+    if(guard.turns<=0) game.state.guardMitigation={ratio:0,turns:0};
+    else game.state.guardMitigation=guard;
+  }
+
+  if(game.state.playerShield>0 && dmg>0){
+    const absorbed=Math.min(game.state.playerShield,dmg);
+    game.state.playerShield-=absorbed;
+    dmg-=absorbed;
+    say(`🛡️ 護盾吸收了 ${absorbed} 傷害。`);
+  }
+
+  const manaShieldLv = skillLevel("ManaShield",0);
+  if(manaShieldLv>0 && dmg>0 && p.mp>0){
+    const mpAbsorb = Math.min(p.mp, Math.ceil(dmg * (0.5 + 0.05*manaShieldLv)));
+    p.mp = Math.max(0, p.mp - mpAbsorb);
+    const reduced = Math.min(dmg, mpAbsorb);
+    dmg = Math.max(0, dmg - reduced);
+    say(`🔷 魔力護盾抵銷 ${reduced} 傷害。`);
+  }
+
+  p.hp=clamp(p.hp-dmg,0,p.maxhp);
+  say(`<b>${e.name}</b> 攻擊了你，<span class="bad">-${dmg}</span>。`);
+  if(p.hp<=0) return endBattle(false);
+
+  if(game.state.counterReady){
+    game.state.counterReady=false;
+    if(e.hp>0){
+      const effDef=effectiveEnemyDef(e,p);
+      let out=Math.max(1, Math.floor((rnd(p.atk-2,p.atk+2)-effDef) * 1.1));
+      out = critMaybe(p,out,"physical");
+      out = applySpeedBonus(p,out);
+      e.hp = clamp(e.hp - out, 0, e.maxhp);
+      say(`🛡️ 你趁勢反擊，造成 <span class="hp">-${out}</span>。`);
+      if(e.hp<=0) return endBattle(true);
+    }
+  }
+
+  render();
   }
   function endBattle(victory){
     const e=game.state.enemy; game.state.inBattle=false; game.state.enemy=null; $("#runBtn").disabled=true;
@@ -2638,29 +2946,15 @@ function calcSkillBooksNeeded(totalLv){
 
   function learnOrUpgradeSkill(id, bookName){
   const p = game.player;
+  const sk = SKILL[id];
+  if(!sk){ say("未知技能。"); return; }
   const maxLv = skillMaxLv(id);
   const cur = p.learned[id] || 0;
 
-  // 🔒 進階技能職業限制（依你前面設定）
-  // flurry：連擊 → 盜賊系
-  // fireball：火球術 → 法師系
-  // armorbreak：破甲斬 → 戰士系
-const jobLock = {
-  flurry:     ["Rogue","Paladin"],
-  fireball:   ["Mage","Paladin"],
-  armorbreak: ["Warrior","Paladin"]
-};
-
-
-  // 若這個技能有職業限制，就檢查「是否有轉職」＋「職業是否正確」
-  if (jobLock[id]) {
-    const t = p.tier || 0;
-    if (t <= 0) {
-      say("❌ 尚未轉職，無法學習這個技能。");
-      return;
-    }
-    if (!jobLock[id].includes(p.job)) {
-      say("❌ 這本技能書只能由對應職業習得。");
+  const rootJob = rootJobOf(p.job);
+  if(sk.tree && sk.tier > 0){
+    if(!rootJob || rootJob !== sk.tree){
+      say(`❌ 只有 ${jobName(sk.tree)} 系才能學習這個技能。`);
       return;
     }
   }
@@ -2727,7 +3021,7 @@ function upgradeSkillByPoint(id){
 
   game.player.freeSkillPoints = Math.max(0, (game.player.freeSkillPoints||0) - 1);
   game.player.learned[id] = cur + 1;
-  if(sk.type === "主動" && (cur===0 || !game.player.activeSkill)){ game.player.activeSkill = id; }
+  if(typeof sk.use === "function" && (cur===0 || !game.player.activeSkill)){ game.player.activeSkill = id; }
   say(`📘 <b>${sk.name}</b> 升至 Lv.${game.player.learned[id]}（剩餘技能點 ${game.player.freeSkillPoints}）。`);
   recomputeStats(true);
   render();
@@ -4344,6 +4638,7 @@ function doRebirth(){
         helpDlg=$("#helpDlg");
 
   skillDlg = $("#skillDlg");
+  const skillTabButtons=[...document.querySelectorAll('#skillTabs button')];
 
 
   $("#exploreBtn").onclick=explore;
@@ -4367,6 +4662,12 @@ const doRebirthBtn = $("#doRebirthBtn");
   $("#shopBtn").onclick=()=>openShop();
   $("#mapBtn").onclick=()=>openMap();
   $("#skillBookBtn").onclick=()=>{ renderSkillList(); skillDlg.showModal(); };
+  skillTabButtons.forEach(btn=>{
+    btn.onclick=()=>{
+      currentSkillTierTab = Number(btn.dataset.tier||0);
+      renderSkillList();
+    };
+  });
   $("#helpBtn").onclick=()=>openHelp();
   $("#afkBtn").onclick=()=>toggleAFK();
 
@@ -4466,9 +4767,22 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
   if(introStartBtn) introStartBtn.onclick = closeIntroAndMaybeRemember;
 
   /* ========= 技能庫 Render ========= */
+  function skillTypeLabel(sk){
+    const map={
+      active:"主動",
+      debuff:"弱化",
+      survival:"生存",
+      passive:"被動",
+      buff:"增益",
+      control:"控場",
+      defense:"防禦"
+    };
+    if(sk.type==="主動" || sk.type==="被動" || sk.type==="特殊") return sk.type;
+    return map[sk.type] || sk.type || "技能";
+  }
   function renderSkillList(){
     const box=$("#skillList"); box.innerHTML="";
-    const entries = Object.keys(game.player.learned||{});
+    const entries = Object.keys(game.player.learned||{}).filter(id=> skillTier(id) === currentSkillTierTab);
     const points = game.player.freeSkillPoints || 0;
     const tip=document.createElement("div");
     tip.className="row";
@@ -4482,13 +4796,19 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
       box.appendChild(empty);
       return;
     }
+    document.querySelectorAll('#skillTabs button').forEach(btn=>{
+      const t = Number(btn.dataset.tier||0);
+      btn.classList.toggle('active', t === currentSkillTierTab);
+    });
+
     entries.forEach(id=>{
       const sk=SKILL[id]; if(!sk) return;
       const lv=skillLevel(id,0); const qual=(game.player.skillQual||{})[id]||0; const max=skillMaxLv(id);
       const row=document.createElement("div"); row.className="row";
-      row.innerHTML=`<div><b>${sk.name}</b> <span class="tag">【${sk.type}】Lv.${lv}/${max}${qual>=1?`｜${QUALS[qual]}`:""}</span><br><span class="muted">${sk.desc}</span></div>`;
+      const typeLabel = skillTypeLabel(sk);
+      row.innerHTML=`<div><b>${sk.name}</b> <span class="tag">【${typeLabel}】Lv.${lv}/${max}${qual>=1?`｜${QUALS[qual]}`:""}</span><br><span class="muted">${sk.desc}</span></div>`;
       const right=document.createElement("div"); right.className="right";
-      if(sk.type==="主動"){
+      if(typeof sk.use === "function"){
         const setBtn=btn( game.player.activeSkill===id?"當前技能✓":"設為當前", ()=>{ game.player.activeSkill=id; say(`📚 已將當前技能設為 <b>${sk.name}</b>。`); $("#activeSkillName").textContent=skillNameWithLv(id); autosave(); renderSkillList(); });
         if(lv<=0) setBtn.disabled=true;
         right.append(setBtn);
