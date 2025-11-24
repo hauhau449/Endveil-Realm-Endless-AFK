@@ -100,28 +100,28 @@ const QUALITY_ORDER={白:0,綠:1,藍:2,黃:3,橘:4,紫:5,神器:6};
 // === 低階固定素質（依「部位」分別定義，可自行調整） ===
 const FIXED_LOW_TIER = {
   weapon: { // 白/綠/藍固定值
-    白:{atk:2, def:0,  hp:0,  mp:0},
-    綠:{atk:6, def:1,  hp:2,  mp:2},
-    藍:{atk:18, def:2,  hp:4,  mp:4}
+    白:{atk:0, def:0,  hp:0,  mp:0, str:0, agi:0, int:0, spi:0},
+    綠:{atk:0, def:0,  hp:0,  mp:0, str:0, agi:0, int:0, spi:0},
+    藍:{atk:0, def:0,  hp:0,  mp:0, str:0, agi:0, int:0, spi:0}
   },
   armor: {
-    白:{atk:0,  def:2,  hp:5, mp:0},
-    綠:{atk:0,  def:6,  hp:15, mp:2},
-    藍:{atk:0,  def:18, hp:45, mp:6}
+    白:{atk:0,  def:0,  hp:0, mp:0, str:0, agi:0, int:0, spi:0},
+    綠:{atk:0,  def:0,  hp:0, mp:0, str:0, agi:0, int:0, spi:0},
+    藍:{atk:0,  def:0,  hp:0, mp:0, str:0, agi:0, int:0, spi:0}
   },
   acc:{
-    白:{atk:1,  def:1,  hp:3, mp:2},
-    綠:{atk:3,  def:3,  hp:9, mp:6},
-    藍:{atk:9,  def:9,  hp:27, mp:18}
+    白:{atk:0,  def:0,  hp:0, mp:0, str:0, agi:0, int:0, spi:0},
+    綠:{atk:0,  def:0,  hp:0, mp:0, str:0, agi:0, int:0, spi:0},
+    藍:{atk:0,  def:0,  hp:0, mp:0, str:0, agi:0, int:0, spi:0}
   }
 };
 // === 強化規則定義 ===
 // 每 +1 的素質增量
 const PLUS_DELTA = {
-  藍:{atk:1,  def:1,  hp:5,  mp:3},
-  黃:{atk:1,  def:1,  hp:5, mp:3},
-  橘:{atk:1,  def:1,  hp:5, mp:3},
-  紫:{atk:1, def:1,  hp:5, mp:3},
+  藍:{atk:0, def:0, hp:0, mp:0, str:1, agi:1, int:1, spi:1},
+  黃:{atk:0, def:0, hp:0, mp:0, str:1, agi:1, int:1, spi:1},
+  橘:{atk:0, def:0, hp:0, mp:0, str:1, agi:1, int:1, spi:1},
+  紫:{atk:0, def:0, hp:0, mp:0, str:1, agi:1, int:1, spi:1},
   神器:{atk:5, def:4, hp:20, mp:12} // 神器獨立用
 };
 
@@ -713,24 +713,24 @@ const XP_SCROLL_RATE = 2.0;
   };
 
   const EQUIPS={
-    "木劍":{slot:"weapon", weapon:"blade", qual:"白", atk:2, def:0, hp:2, mp:0},
-    "法杖":{slot:"weapon", weapon:"staff", qual:"白", atk:2, def:0, hp:0, mp:5},
-    "匕首":{slot:"weapon", weapon:"dagger",qual:"白", atk:2, def:0, hp:1, mp:1},
-    "皮甲":{slot:"armor",  qual:"白", atk:0, def:1, hp:5, mp:2},
-    "學者斗篷":{slot:"armor",qual:"白", atk:0, def:1, hp:2, mp:8},
-    "幸運戒指":{slot:"acc", qual:"白", atk:1, def:1, hp:1, mp:1},
+    "木劍":{slot:"weapon", weapon:"blade", qual:"白", str:1, agi:0, int:0, spi:0},
+    "法杖":{slot:"weapon", weapon:"staff", qual:"白", str:0, agi:0, int:1, spi:0},
+    "匕首":{slot:"weapon", weapon:"dagger",qual:"白", str:0, agi:1, int:0, spi:0},
+    "皮甲":{slot:"armor",  qual:"白", str:1, agi:1, int:0, spi:0},
+    "學者斗篷":{slot:"armor",qual:"白", str:0, agi:0, int:1, spi:1},
+    "幸運戒指":{slot:"acc", qual:"白", str:1, agi:1, int:1, spi:1},
   };
 
 const MOUNTS={
   // 商店坐騎（保留）
-  "戰馬": { atk:20,  def:20,  hp:500,  mp:500,  spd:12, desc:"穩健耐跑，提供少量四圍＋移動效率" },
+  "戰馬": { atk:0,  def:0,  hp:0,  mp:0,  spd:0, desc:"穩健耐跑，僅提供移動效率，不額外增加素質" },
 
   // ⬇⬇⬇ Boss 專屬坐騎（對應 bossMountName(name) => `${name}坐騎`）⬇⬇⬇
-  "火龍坐騎":   { atk:200, def:20,  hp:500, mp:500,  spd:14, desc:"炙熱怒焰，偏攻擊與少量速度" },
-  "暴雪巨靈坐騎": { atk:100,  def:200, hp:2500, mp:500,  spd:12, desc:"寒霜壁障，偏防禦與耐久" },
-  "深淵之眼坐騎": { atk:300,  def:100,  hp:1200, mp:1000,  spd:15, desc:"暗潮凝視，兼顧攻擊與高 MP，速度略快" },
-  "星墜魔像坐騎": { atk:100,  def:500, hp:4000, mp:500,  spd:10, desc:"星核重鎧，極高防禦與血量，偏慢" },
-  "終末領主坐騎": { atk:10000, def:1000, hp:3000, mp:1000, spd:16, desc:"終焉權威，全面強化；最稀有" }
+  "火龍坐騎":   { atk:0, def:0,  hp:0, mp:0,  spd:0, desc:"炙熱怒焰，但不再提供屬性加成" },
+  "暴雪巨靈坐騎": { atk:0,  def:0, hp:0, mp:0,  spd:0, desc:"寒霜壁障，但不再提供屬性加成" },
+  "深淵之眼坐騎": { atk:0,  def:0,  hp:0, mp:0,  spd:0, desc:"暗潮凝視，但不再提供屬性加成" },
+  "星墜魔像坐騎": { atk:0,  def:0, hp:0, mp:0,  spd:0, desc:"星核重鎧，但不再提供屬性加成" },
+  "終末領主坐騎": { atk:0, def:0, hp:0, mp:0, spd:0, desc:"終焉權威，但不再提供屬性加成" }
 };
 
 
@@ -1328,9 +1328,9 @@ function passiveFromSkills(p){
   return { add, mul, misc };
 }
 
-function getEquipTotalStats(){
+  function getEquipTotalStats(){
   const p = game.player || {};
-  const totals = { atk:0, def:0, hp:0, mp:0 };
+  const totals = { atk:0, def:0, hp:0, mp:0, str:0, agi:0, int:0, spi:0 };
   ["weapon","armor","acc"].forEach(slot=>{
     const n = p.equip?.[slot];
     if(!n) return;
@@ -1340,6 +1340,10 @@ function getEquipTotalStats(){
       totals.def += inst.def || 0;
       totals.hp  += inst.hp  || 0;
       totals.mp  += inst.mp  || 0;
+      totals.str += inst.str || 0;
+      totals.agi += inst.agi || 0;
+      totals.int += inst.int || 0;
+      totals.spi += inst.spi || 0;
     }
   });
   const mid = p.equip?.mount;
@@ -1350,6 +1354,10 @@ function getEquipTotalStats(){
       totals.def += m.def || 0;
       totals.hp  += m.hp  || 0;
       totals.mp  += m.mp  || 0;
+      totals.str += m.str || 0;
+      totals.agi += m.agi || 0;
+      totals.int += m.int || 0;
+      totals.spi += m.spi || 0;
     }
   }
   return totals;
@@ -1359,10 +1367,12 @@ function recalcPlayerStats(){
   const p = game.player;
   ensurePlayerStatDefaults();
 
-  p.str = p.baseStr;
-  p.agi = p.baseAgi;
-  p.int = p.baseInt;
-  p.spi = p.baseSpi;
+  const eq = getEquipTotalStats();
+
+  p.str = p.baseStr + (eq.str || 0);
+  p.agi = p.baseAgi + (eq.agi || 0);
+  p.int = p.baseInt + (eq.int || 0);
+  p.spi = p.baseSpi + (eq.spi || 0);
 
   const attrStats = attributesToStats({ str:p.str, agi:p.agi, int:p.int, spi:p.spi });
 
@@ -1372,7 +1382,6 @@ function recalcPlayerStats(){
   let def   = p.str * 1 + p.agi * 0.5 + (p.lvl||1) * 0.2;
   let magicAtk = attrStats.magicAtk || atk;
 
-  const eq = getEquipTotalStats();
   maxhp += eq.hp || 0;
   maxmp += eq.mp || 0;
   atk   += eq.atk || 0;
@@ -1643,7 +1652,7 @@ function recomputeStats(){
   show("weapon"); show("armor"); show("acc"); show("mount");
 }
 
-  function renderEnemy(){
+function renderEnemy(){
     const e=game.state.enemy;
     if(!e){ enemyUI.name.textContent="—"; enemyUI.lvl.textContent="—"; enemyUI.atk.textContent="—"; enemyUI.def.textContent="—";
       enemyUI.hpTxt.textContent="0/0"; enemyUI.mpTxt.textContent="0/0"; enemyUI.hpBar.style.width="0%"; enemyUI.mpBar.style.width="0%"; return; }
@@ -1684,6 +1693,27 @@ function recomputeStats(){
   const isBook = (itemDefs?.[k]?.type === "skillbook") || k.includes("技能書");
   return isBook ? `${tag} ${cleanBookName(k)}` : `${tag} ${k}`;
 }
+  const STAT_LABELS = { str:"STR", agi:"AGI", int:"INT", spi:"SPI", atk:"ATK", def:"DEF", hp:"HP", mp:"MP" };
+  const STAT_ORDER = ["str","agi","int","spi","atk","def","hp","mp"];
+
+  function formatStatSummary(obj={}, {includeZero=false, delimiter=" ", skipEmptyText="無素質"}={}){
+    const parts = STAT_ORDER.map(k=>{
+      const v = obj[k] || 0;
+      if(!includeZero && !v) return null;
+      return `${STAT_LABELS[k]} ${v||0}`;
+    }).filter(Boolean);
+    return parts.length ? parts.join(delimiter) : skipEmptyText;
+  }
+
+  function formatStatDiff(newStats={}, oldStats={}){
+    const parts = STAT_ORDER.map(k=>{
+      const d = (newStats[k]||0) - (oldStats[k]||0);
+      if(d > 0) return `<span class="diff-up">${STAT_LABELS[k]} +${d} 🟥</span>`;
+      if(d < 0) return `<span class="diff-down">${STAT_LABELS[k]} ${d} 🟩</span>`;
+      return `<span class="diff-zero">${STAT_LABELS[k]} 0</span>`;
+    });
+    return parts.join("／");
+  }
 
 
 function displayEquipName(id){
@@ -2392,7 +2422,8 @@ function openInventory(){
               mHp  = m?.hp  || 0,
               mMp  = m?.mp  || 0,
               mSpd = m?.spd || 0;
-        extra = `｜ATK ${mAtk} DEF ${mDef} HP ${mHp} MP ${mMp} SPD ${mSpd}`;
+        const statText = formatStatSummary({atk:mAtk,def:mDef,hp:mHp,mp:mMp}, {delimiter:" "});
+        extra = `｜${statText}｜SPD ${mSpd}`;
         right.append(btn("裝備坐騎", ()=>{ equipMount(name); renderInventoryList(); }));
       }
       
@@ -2438,21 +2469,6 @@ function openInventory(){
       return;
     }
 
-    // 數值差異：上升綠色、下降紅色、沒變灰色
-const diff = (a,b)=>{
-  const d = (a||0) - (b||0);
-
-  if(d > 0)
-    return `<span class="diff-up">+${d}   🟥</span>`;   // 上升 → 紅色＋上箭頭
-
-  if(d < 0)
-    return `<span class="diff-down">${d} 🟩</span>`;  // 下降 → 綠色＋下箭頭
-
-  return `<span class="diff-zero">0</span>`;          // 無變化 → 灰色
-};
-
-
-
     // 詞條內文（如果沒有詞條就顯示「無特殊詞條」）
     const affixText = (inst)=>{
       const s = affixShort(inst);
@@ -2482,18 +2498,13 @@ const diff = (a,b)=>{
 
     equipCompare.innerHTML = `
       <div class="row" style="flex-direction:column;align-items:flex-start">
-        <div><b>目前裝備：</b>${displayEquipName(eid)}｜ATK ${cur.atk||0} DEF ${cur.def||0} HP ${cur.hp||0} MP ${cur.mp||0}</div>
+        <div><b>目前裝備：</b>${displayEquipName(eid)}｜${formatStatSummary(cur, {delimiter:"｜"})}</div>
         <div class="eq-affix-line"><b>目前詞條：</b>${affixText(cur)}</div>
 
-        <div><b>背包選取：</b>${displayEquipName(id)}｜ATK ${eq.atk||0} DEF ${eq.def||0} HP ${eq.hp||0} MP ${eq.mp||0}</div>
+        <div><b>背包選取：</b>${displayEquipName(id)}｜${formatStatSummary(eq, {delimiter:"｜"})}</div>
         <div class="eq-affix-line"><b>背包詞條：</b>${affixText(eq)}</div>
 
-        <div><b>差異（背包 − 身上）：</b>
-          ATK ${diff(eq.atk,cur.atk)}／
-          DEF ${diff(eq.def,cur.def)}／
-          HP ${diff(eq.hp,cur.hp)}／
-          MP ${diff(eq.mp,cur.mp)}
-        </div>
+        <div><b>差異（背包 − 身上）：</b>${formatStatDiff(eq, cur)}</div>
         <div><b>詞條變化：</b>${affixChange(cur, eq)}</div>
       </div>
     `;
@@ -2691,7 +2702,10 @@ function upgradeSkillByPoint(id){
   function decInv(name,c=1){ if(!game.inv[name]) return; game.inv[name]-=c; if(game.inv[name]<=0) delete game.inv[name]; autosave(); }
   function addEquipToInv(baseName,qual="白"){
     const tpl=EQUIPS[baseName]; if(!tpl) return;
-    const id = makeEquipInstance(baseName, qual, tpl.slot, tpl.weapon||null, {atk:tpl.atk,def:tpl.def,hp:tpl.hp,mp:tpl.mp});
+    const id = makeEquipInstance(baseName, qual, tpl.slot, tpl.weapon||null, {
+      atk:tpl.atk,def:tpl.def,hp:tpl.hp,mp:tpl.mp,
+      str:tpl.str,agi:tpl.agi,int:tpl.int,spi:tpl.spi
+    });
     addInv(id,1);
     say(`🗡️ 獲得裝備：${fmtItem(baseName,qual)}。`);
   }
@@ -2702,7 +2716,7 @@ function upgradeSkillByPoint(id){
     if (["白","綠","藍"].includes(qual) &&
         FIXED_LOW_TIER[slot] &&
         FIXED_LOW_TIER[slot][qual]){
-      base = { ...FIXED_LOW_TIER[slot][qual] };
+      base = { ...FIXED_LOW_TIER[slot][qual], ...base };
     }
     // 黃 / 橘 / 紫 → 沿用模板素質，之後靠強化成長
     const inst = {
@@ -2715,6 +2729,10 @@ function upgradeSkillByPoint(id){
       def: Math.round(base.def || 0),
       hp:  Math.round(base.hp  || 0),
       mp:  Math.round(base.mp  || 0),
+      str: Math.round(base.str || 0),
+      agi: Math.round(base.agi || 0),
+      int: Math.round(base.int || 0),
+      spi: Math.round(base.spi || 0),
       plus:  0,
       stars: 0,
       affix: []
@@ -3058,6 +3076,7 @@ function openMountPanel(){
 
   // 取原始定義（拿描述 desc 用，不影響實例數值）
   const tpl = (typeof MOUNTS !== "undefined") ? (MOUNTS[m.name] || {}) : {};
+  const statText = formatStatSummary(m, {delimiter:"｜"});
 
   // 排版：沿用你的 .stats/.stat 風格
   mountInfo.innerHTML = `
@@ -3067,10 +3086,7 @@ function openMountPanel(){
     </div>
     <div class="hint" style="margin:6px 0 10px 0">描述：${tpl.desc || "—"}</div>
     <div class="stats" style="margin-top:4px">
-      <div class="stat atk">攻擊：${m.atk || 0}</div>
-      <div class="stat def">防禦：${m.def || 0}</div>
-      <div class="stat hp">HP：${m.hp || 0}</div>
-      <div class="stat mp">MP：${m.mp || 0}</div>
+      <div class="stat">${statText}</div>
     </div>
   `;
   mountDlg.showModal();
@@ -3097,9 +3113,10 @@ function renderEnhancePanel(){
 
   const line = document.createElement("div");
   line.className = "row";
+  const statText = formatStatSummary(inst, {delimiter:" ｜"});
   line.innerHTML = `<div>
     ${displayEquipName(enhTargetId)}｜${qualWithStars(inst)}｜
-    ATK ${inst.atk} DEF ${inst.def} HP ${inst.hp} MP ${inst.mp}
+    ${statText}
     <br><span class="tag affix">${affixShort(inst)}</span>
     <br><span class="tag">強化成功率：${Math.round(chance*100)}%｜費用：${cost} G</span>
   </div>`;
@@ -3147,6 +3164,14 @@ function renderEnhancePanel(){
     enhBtnCombine.disabled = !canCombine;
   }
 }
+
+  function applyStatDelta(inst, delta={}, sign=1){
+    STAT_ORDER.forEach(k=>{
+      if(typeof delta[k] === "number"){
+        inst[k] = (inst[k] || 0) + delta[k] * sign;
+      }
+    });
+  }
 
 
   // 成功率表（藍 / 黃 / 橘）
@@ -3243,10 +3268,7 @@ if(inst.qual && inst.qual.startsWith("神器")){
     inst.plus = p + 1;
     const d = PLUS_DELTA.神器;
     if(d){
-      inst.atk += d.atk;
-      inst.def += d.def;
-      inst.hp  += d.hp;
-      inst.mp  += d.mp;
+      applyStatDelta(inst, d, 1);
     }
 
     if(inst.plus >= 10){
@@ -3265,10 +3287,7 @@ if(inst.qual && inst.qual.startsWith("神器")){
 
         const d = PLUS_DELTA.神器;
         if(d){
-          inst.atk -= d.atk;
-          inst.def -= d.def;
-          inst.hp  -= d.hp;
-          inst.mp  -= d.mp;
+          applyStatDelta(inst, d, -1);
         }
 
         say(`❌ 神器強化失敗，降為 +${inst.plus}`);
@@ -3306,10 +3325,7 @@ if(inst.qual && inst.qual.startsWith("神器")){
     // 成功：+1 並加屬性
     inst.plus = (inst.plus || 0) + 1;
     const delta = PLUS_DELTA[inst.qual];
-    inst.atk += delta.atk;
-    inst.def += delta.def;
-    inst.hp  += delta.hp;
-    inst.mp  += delta.mp;
+    applyStatDelta(inst, delta, 1);
 
     if(inst.plus >= 10){
       const progress = onReachPlusTen(inst); // 升階或升星
@@ -3326,10 +3342,7 @@ if(inst.qual && inst.qual.startsWith("神器")){
       inst.plus = beforePlus - 1;
       const d = PLUS_DELTA[inst.qual];
       if (d) {
-        inst.atk -= d.atk;
-        inst.def -= d.def;
-        inst.hp  -= d.hp;
-        inst.mp  -= d.mp;
+        applyStatDelta(inst, d, -1);
       }
       say(`❌ 強化失敗，降為 +${inst.plus}。`);
     } else {
@@ -3589,14 +3602,14 @@ function addRandomAffixN(inst, n){
         if(s.type === "equip"){
           const tpl = EQUIPS[s.name];
           if(tpl){
-            desc = `｜白品｜ATK ${tpl.atk||0} DEF ${tpl.def||0} HP ${tpl.hp||0} MP ${tpl.mp||0}`;
+            desc = `｜白品｜${formatStatSummary(tpl, {delimiter:"｜"})}`;
           }else{
             desc = "｜裝備";
           }
         }
         if(s.type === "mount"){
           const tpl = MOUNTS[s.name] || {};
-          desc = `｜坐騎｜ATK ${tpl.atk||0} DEF ${tpl.def||0} HP ${tpl.hp||0} MP ${tpl.mp||0}｜SPD ${tpl.spd||0}`;
+          desc = `｜坐騎｜${formatStatSummary(tpl, {delimiter:"｜"})}｜SPD ${tpl.spd||0}`;
         }
         if(s.type === "consum"){
           desc = `｜消耗品${s.name==="經驗加倍捲"?"（5 日加倍，可疊加）":""}`;
