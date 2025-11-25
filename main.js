@@ -2844,7 +2844,11 @@ function openInventory(){
       if(meta.type === "equip"){
         const eq = getEquipInstance(name);
         extra = `｜ATK ${eq.atk||0} DEF ${eq.def||0} HP ${eq.hp||0} MP ${eq.mp||0}${eq.plus?`｜+${eq.plus}`:""}${affixShort(eq)}`;
-        right.append(btn("裝備", ()=>equipItem(name)));
+        right.append(btn("裝備", ()=>{
+          const eqInst = getEquipInstance(name);
+          if(eqInst) showEquipCompare(name, eqInst);
+          equipItem(name);
+        }));
 
         // 合成：白→綠→藍（同名 3 件）
         const q = eq.qual || "白";
