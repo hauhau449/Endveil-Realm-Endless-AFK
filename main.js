@@ -5177,7 +5177,7 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
       const base="主動技可設為「當前技能」。";
       if(rangeInfo){
         const capNote = currentSkillTierTab===0 ? "，初心者單技上限 Lv.3" : "";
-        hint.textContent = `${base}${rangeInfo.label}技能消耗技能點（Lv.${rangeInfo.start}-${rangeInfo.end} 共 ${rangeInfo.total} 點${capNote}），其他技能仍以技能書升級並可升品質。`;
+        hint.textContent = `${base}${rangeInfo.label}技能消耗技能點（Lv.${rangeInfo.start}-${rangeInfo.end} 共 ${rangeInfo.total} 點${capNote}）。`;
       }else{
         hint.textContent = `${base}技能升級方式依各技能規則而定。`;
       }
