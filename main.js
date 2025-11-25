@@ -5077,6 +5077,20 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
     if(sk.type==="主動" || sk.type==="被動" || sk.type==="特殊") return sk.type;
     return map[sk.type] || sk.type || "技能";
   }
+  const SKILL_POINT_RANGES={
+    0:{start:1,end:9},
+    1:{start:1,end:29},
+    2:{start:1,end:69},
+    3:{start:1,end:119},
+    4:{start:1,end:200}
+  };
+  function tierLabel(tier){ return tier<=0?"0轉":`${tier}轉`; }
+  function skillPointRangeInfo(tier){
+    const r = SKILL_POINT_RANGES[tier];
+    if(!r) return null;
+    const total = Math.max(0, (r.end || 0) - (r.start || 0) + 1);
+    return { ...r, total, label:tierLabel(tier) };
+  }
   function renderSkillList(){
     const box=$("#skillList"); box.innerHTML="";
     const playerRootJob = rootJobOf(game.player?.job);
@@ -5088,10 +5102,23 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
       return true;
     });
     const points = game.player.freeSkillPoints || 0;
+    const rangeInfo = skillPointRangeInfo(currentSkillTierTab);
+    const rangeText = rangeInfo ? `（${rangeInfo.label}技能點來源：Lv.${rangeInfo.start}-${rangeInfo.end}｜共 ${rangeInfo.total} 點）` : "";
     const tip=document.createElement("div");
     tip.className="row";
-    tip.innerHTML = `<span class="muted">技能點數：<b>${points}</b>（Lv10 共 10 點｜初心者技能上限 Lv.3）</span>`;
+    tip.innerHTML = `<span class="muted">技能點數：<b>${points}</b>${rangeText}</span>`;
     box.appendChild(tip);
+
+    const hint=$("#skillHint");
+    if(hint){
+      const base="主動技可設為「當前技能」。";
+      if(rangeInfo){
+        const capNote = currentSkillTierTab===0 ? "，初心者單技上限 Lv.3" : "";
+        hint.textContent = `${base}${rangeInfo.label}技能消耗技能點（Lv.${rangeInfo.start}-${rangeInfo.end} 共 ${rangeInfo.total} 點${capNote}），其他技能仍以技能書升級並可升品質。`;
+      }else{
+        hint.textContent = `${base}技能升級方式依各技能規則而定。`;
+      }
+    }
 
     document.querySelectorAll('#skillTabs button').forEach(btn=>{
       const t = Number(btn.dataset.tier||0);
