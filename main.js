@@ -4707,7 +4707,7 @@ function refreshQuestsIfAllRewarded(){
       const candidates = classCandidatesForTier(t+1);
       candidates.forEach(c=>{
         const row=document.createElement("div"); row.className="row";
-        row.innerHTML=`<div><b>${c.name}</b> <span class="tag">— 轉職後學會：${c.start.map(id=>SKILL[id].name).join("、")}｜武器：${(JOB_WEAPON[c.key]||[]).join("/")}</span></div>`;
+        row.innerHTML=`<div><b>${c.name}</b> <span class="tag">— 轉職後可習得：${c.start.map(id=>SKILL[id].name).join("、")}｜武器：${(JOB_WEAPON[c.key]||[]).join("/")}</span></div>`;
         row.appendChild(btn("選擇",()=>chooseClass(c.key))); list.appendChild(row);
       });
     }
@@ -4731,10 +4731,10 @@ function refreshQuestsIfAllRewarded(){
   const hpRatio = Math.max(0, Math.min(1, p.hp / Math.max(1, p.maxhp)));
   const mpRatio = Math.max(0, Math.min(1, p.mp / Math.max(1, p.maxmp)));
 
-  // ② 不重置數值模板；僅切換職業/段數、發放起始技能
+  // ② 不重置數值模板；僅切換職業/段數，並把起始技能標記為待習得
   p.job = key;
   p.tier = t + 1;
-  cls.start.forEach(id=>{ if(!p.learned[id]) p.learned[id]=1; });
+  cls.start.forEach(id=>{ if(!(id in p.learned)) p.learned[id]=0; });
 
   // ③ 設定/疊加轉職獎勵（可自行調整）
   //    建議：第一段轉職就送這個倍率；之後每次轉職都「疊加」。
@@ -4751,7 +4751,7 @@ function refreshQuestsIfAllRewarded(){
   p.mp = clamp(Math.floor(p.maxmp * mpRatio), 0, p.maxmp);
 
   say(`🏷️ 你成為了 <b>${cls.name}</b>！
-✅ 屬性獎勵：HP +${Math.round(ADD.hp*100)}%、MP +${Math.round(ADD.mp*100)}%、攻防 +${Math.round(ADD.atk*100)}% / +${Math.round(ADD.def*100)}%（可累積）`);
+✅ 屬性獎勵：HP +${Math.round(ADD.hp*100)}%、MP +${Math.round(ADD.mp*100)}%、攻防 +${Math.round(ADD.atk*100)}% / +${Math.round(ADD.def*100)}%（可累積）；新職業技能已解鎖，使用技能點數即可學習。`);
   $("#classBtn").disabled=true;
   classDlg.close();
   render(); autosave();
