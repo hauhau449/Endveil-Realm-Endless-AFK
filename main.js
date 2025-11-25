@@ -2769,16 +2769,40 @@ function openInventory(){
     }
   }
     function renderInventoryList(){
+    // 舊版存檔可能把「裝備模板名稱」直接塞進背包，導致沒有 E# 實例而無法比較
+    const entries = Object.entries(game.inv);
+    let convertedLegacyEquip = false;
+
+    entries.forEach(([name, count])=>{
+      if(name.startsWith("E#")) return;       // 已是實例
+      const tpl = EQUIPS[name];               // 只處理裝備模板名稱
+      if(!tpl || !count) return;
+
+      delete game.inv[name];                  // 移除舊格式
+      for(let i=0; i<count; i++){
+        const id = makeEquipInstance(name, tpl.qual, tpl.slot, tpl.weapon||null, {
+          atk:tpl.atk, def:tpl.def, hp:tpl.hp, mp:tpl.mp,
+          str:tpl.str, agi:tpl.agi, int:tpl.int, spi:tpl.spi
+        });
+        game.inv[id] = (game.inv[id] || 0) + 1;
+      }
+      convertedLegacyEquip = true;
+    });
+
+    if(convertedLegacyEquip){
+      autosave();
+    }
+
     invList.innerHTML = '';
 
-    const entries = Object.entries(game.inv);
-    if(entries.length === 0){
+    const sorted = Object.entries(game.inv);
+    if(sorted.length === 0){
       invList.innerHTML = `<div class="row"><span class="muted">（空）</span></div>`;
       return;
     }
 
     // 先把道具轉成含 meta 的陣列
-    let arr = entries.map(([name, count])=>{
+    let arr = sorted.map(([name, count])=>{
       const meta = invMeta(name);
       return { name, count, meta };
     });
