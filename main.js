@@ -4138,7 +4138,8 @@ function addRandomAffixN(inst, n){
 
   function isEquipItem(s){
     const slot = itemSlot(s.name);
-    if(slot && slot !== "weapon") return true; // armor / acc
+    if(slot === "armor" || slot === "acc") return true; // armor / acc
+    if(slot === "weapon") return false;
     return s.type === "equip";
   }
 
@@ -4176,7 +4177,8 @@ function addRandomAffixN(inst, n){
           const tpl = EQUIPS[s.name];
           if(tpl){
             const req = equipRestrictionText(tpl);
-            const kind = itemSlot(s.name) === "weapon" ? "武器" : "裝備";
+            const slot = itemSlot(s.name);
+            const kind = slot === "weapon" ? "武器" : (slot === "armor" ? "防具" : (slot === "acc" ? "飾品" : "裝備"));
             desc = `｜${kind}｜白品｜${formatStatSummary(tpl, {delimiter:"｜"})}｜${req}`;
           }else{
             const kind = isWeaponItem(s)?"武器":"裝備";
