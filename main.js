@@ -4126,11 +4126,27 @@ function addRandomAffixN(inst, n){
   }
 
   // 依分類判斷要不要顯示
+  function itemSlot(name){
+    return EQUIPS[name]?.slot;
+  }
+
+  function isWeaponItem(s){
+    const slot = itemSlot(s.name);
+    if(slot === "weapon") return true;
+    return s.type === "weapon";
+  }
+
+  function isEquipItem(s){
+    const slot = itemSlot(s.name);
+    if(slot && slot !== "weapon") return true; // armor / acc
+    return s.type === "equip";
+  }
+
   function matchShopCategory(s, cat){
     if(cat === "all") return true;
 
-    if(cat === "weapon") return s.type === "weapon";
-    if(cat === "equip")  return s.type === "equip";
+    if(cat === "weapon") return isWeaponItem(s);
+    if(cat === "equip")  return isEquipItem(s);
     if(cat === "consum") return s.type === "consum";
     if(cat === "mount")  return s.type === "mount";
 
@@ -4160,10 +4176,11 @@ function addRandomAffixN(inst, n){
           const tpl = EQUIPS[s.name];
           if(tpl){
             const req = equipRestrictionText(tpl);
-            const kind = s.type === "weapon" ? "武器" : "裝備";
+            const kind = itemSlot(s.name) === "weapon" ? "武器" : "裝備";
             desc = `｜${kind}｜白品｜${formatStatSummary(tpl, {delimiter:"｜"})}｜${req}`;
           }else{
-            desc = `｜${s.type === "weapon" ? "武器" : "裝備"}`;
+            const kind = isWeaponItem(s)?"武器":"裝備";
+            desc = `｜${kind}`;
           }
         }
         if(s.type === "mount"){
