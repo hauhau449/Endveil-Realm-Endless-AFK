@@ -5007,31 +5007,38 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
   }
   function renderSkillList(){
     const box=$("#skillList"); box.innerHTML="";
-    const entries = Object.keys(game.player.learned||{}).filter(id=> skillTier(id) === currentSkillTierTab);
+    const entries = Object.keys(SKILL).filter(id=> skillTier(id) === currentSkillTierTab);
     const points = game.player.freeSkillPoints || 0;
     const tip=document.createElement("div");
     tip.className="row";
     tip.innerHTML = `<span class="muted">技能點數：<b>${points}</b>（Lv10 共 10 點｜初心者技能上限 Lv.3）</span>`;
     box.appendChild(tip);
 
-    if(entries.length===0){
-      const empty=document.createElement("div");
-      empty.className="row";
-      empty.innerHTML = `<span class="muted">尚未學習任何技能。</span>`;
-      box.appendChild(empty);
-      return;
-    }
     document.querySelectorAll('#skillTabs button').forEach(btn=>{
       const t = Number(btn.dataset.tier||0);
       btn.classList.toggle('active', t === currentSkillTierTab);
     });
+
+    const allowedTiers = allowedSkillTiersForPlayer();
+    const playerRootJob = rootJobOf(game.player?.job);
 
     entries.forEach(id=>{
       const sk=SKILL[id]; if(!sk) return;
       const lv=skillLevel(id,0); const qual=(game.player.skillQual||{})[id]||0; const max=skillMaxLv(id);
       const row=document.createElement("div"); row.className="row";
       const typeLabel = skillTypeLabel(sk);
-      row.innerHTML=`<div><b>${sk.name}</b> <span class="tag">【${typeLabel}】Lv.${lv}/${max}${qual>=1?`｜${QUALS[qual]}`:""}</span><br><span class="muted">${sk.desc}</span></div>`;
+      const tierAllowed = allowedTiers.includes(skillTier(id));
+      const treeAllowed = !sk.tree || !sk.tier || sk.tier <= 0 || playerRootJob === sk.tree;
+      const statusNotes = [];
+      if(!tierAllowed) statusNotes.push("未解鎖該轉職階段");
+      if(!treeAllowed) statusNotes.push(`僅限 ${jobName(sk.tree)} 系`);
+      if(lv<=0) statusNotes.push("尚未習得");
+
+      const tagParts = [`【${typeLabel}】Lv.${lv}/${max}${qual>=1?`｜${QUALS[qual]}`:""}`];
+      if(sk.tree) tagParts.push(`｜${jobName(sk.tree)}系`);
+
+      const extra = statusNotes.length>0 ? `<div class="muted">🔒 ${statusNotes.join("｜")}</div>` : "";
+      row.innerHTML=`<div><b>${sk.name}</b> <span class="tag">${tagParts.join("")}</span><br><span class="muted">${sk.desc}</span>${extra}</div>`;
       const right=document.createElement("div"); right.className="right";
       if(typeof sk.use === "function"){
         const setBtn=btn( game.player.activeSkill===id?"當前技能✓":"設為當前", ()=>{ game.player.activeSkill=id; say(`📚 已將當前技能設為 <b>${sk.name}</b>。`); $("#activeSkillName").textContent=skillNameWithLv(id); autosave(); renderSkillList(); });
@@ -5042,7 +5049,7 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
       }
 
       if(sk.acquisition==="point"){
-        const canUp = lv < max && points > 0;
+        const canUp = lv < max && points > 0 && tierAllowed && treeAllowed;
         const upLab = lv>0 ? "升級 +1（消耗 1 點）" : "習得 Lv.1（消耗 1 點）";
         const upBtn = btn(upLab, ()=> upgradeSkillByPoint(id));
         upBtn.disabled = !canUp;
