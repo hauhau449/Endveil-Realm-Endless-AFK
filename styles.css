@@ -269,13 +269,34 @@ dialog{
   border-top: 1px solid var(--dash);
   padding-top: 8px;
 }
+#updateLog .log-entry {
+  border: 1px solid var(--dash);
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-top: 8px;
+  background: var(--panel);
+}
+#updateLog .log-entry[open] {
+  border-color: var(--accent);
+}
+#updateLog .log-entry summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  list-style: none;
+}
+#updateLog .log-entry summary::-webkit-details-marker { display:none; }
 #updateLog .log-date {
   color: var(--accent);
   font-size: 13px;
+  font-weight: 700;
 }
 #updateLog .log-content {
   line-height: 1.5;
   font-size: 13px;
+  margin-top: 6px;
+  padding-left: 4px;
 }
 /* 分類標籤 */
 .cat{
