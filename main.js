@@ -492,6 +492,7 @@ SwiftSlash: {
   id:"SwiftSlash",
   name:"迅刃",
   desc:"快速揮出短刃攻擊，造成單體物理傷害。",
+  acquisition:"point",
   maxLv:10, tier:1, tree:"Assassin", type:"active", baseMp:4,
   use(p,e,lv){
     if(!e) return false;
@@ -510,6 +511,7 @@ VitalStab: {
   id:"VitalStab",
   name:"要害突刺",
   desc:"瞄準要害的刺擊，造成較高物理傷害。",
+  acquisition:"point",
   maxLv:10, tier:1, tree:"Assassin", type:"active", baseMp:5,
   use(p,e,lv){
     if(!e) return false;
@@ -528,6 +530,7 @@ ExposeStrike: {
   id:"ExposeStrike",
   name:"破綻擊",
   desc:"造成物傷並使敵人防禦下降（2 回合）。",
+  acquisition:"point",
   maxLv:3, tier:1, tree:"Assassin", type:"debuff", baseMp:5,
   use(p,e,lv){
     if(!e) return false;
@@ -548,6 +551,7 @@ ShadowstepBasic: {
   id:"ShadowstepBasic",
   name:"閃步",
   desc:"降低敵方本回合命中率。",
+  acquisition:"point",
   maxLv:3, tier:1, tree:"Assassin", type:"survival", baseMp:3,
   use(p,e,lv){
     if(!e) return false;
@@ -565,6 +569,7 @@ BreakForm: {
   id:"BreakForm",
   name:"拆招",
   desc:"干擾敵人攻擊，使其本回合攻擊下降。",
+  acquisition:"point",
   maxLv:3, tier:1, tree:"Assassin", type:"survival", baseMp:4,
   use(p,e,lv){
     if(!e) return false;
@@ -582,18 +587,21 @@ BladeMastery: {
   id:"BladeMastery",
   name:"刀術熟練",
   desc:"提升短刀掌握度，使攻擊更穩定、命中更易。",
+  acquisition:"point",
   maxLv:3, tier:1, tree:"Assassin", type:"passive"
 },
 AgilityTraining: {
   id:"AgilityTraining",
   name:"敏捷訓練",
   desc:"提升反應速度，提高閃避能力。",
+  acquisition:"point",
   maxLv:3, tier:1, tree:"Assassin", type:"passive"
 },
 SilentFocus: {
   id:"SilentFocus",
   name:"冷靜專注",
   desc:"提升命中或暴擊穩定度。",
+  acquisition:"point",
   maxLv:3, tier:1, tree:"Assassin", type:"passive"
 },
 
@@ -602,6 +610,7 @@ QuickShot:{
   id:"QuickShot",
   name:"速射",
   desc:"快速射出一箭，造成物理傷害。",
+  acquisition:"point",
   maxLv:10, tier:1, tree:"Ranger", type:"active", baseMp:4,
   use(p,e,lv){
     if(!e) return false;
@@ -620,6 +629,7 @@ ChargedShot:{
   id:"ChargedShot",
   name:"蓄力射擊",
   desc:"蓄力發射強力一箭，造成較高物理傷害。",
+  acquisition:"point",
   maxLv:10, tier:1, tree:"Ranger", type:"active", baseMp:6,
   use(p,e,lv){
     if(!e) return false;
@@ -638,6 +648,7 @@ SoftSpotShot:{
   id:"SoftSpotShot",
   name:"弱化射擊",
   desc:"瞄準脆弱處，使敵人防禦下降（2 回合）。",
+  acquisition:"point",
   maxLv:3, tier:1, tree:"Ranger", type:"debuff", baseMp:5,
   use(p,e,lv){
     if(!e) return false;
@@ -658,6 +669,7 @@ DodgeRoll:{
   id:"DodgeRoll",
   name:"翻滾迴避",
   desc:"翻滾閃避攻擊，本回合受到的傷害下降。",
+  acquisition:"point",
   maxLv:3, tier:1, tree:"Ranger", type:"survival", baseMp:3,
   use(p,e,lv){
     if(!e) return false;
@@ -674,6 +686,7 @@ DecoyTrick:{
   id:"DecoyTrick",
   name:"誘餌術",
   desc:"干擾敵人，使其命中率下降。",
+  acquisition:"point",
   maxLv:3, tier:1, tree:"Ranger", type:"survival", baseMp:4,
   use(p,e,lv){
     if(!e) return false;
@@ -691,18 +704,21 @@ BowMastery:{
   id:"BowMastery",
   name:"弓術熟練",
   desc:"提升射擊穩定度，使傷害更一致。",
+  acquisition:"point",
   maxLv:3, tier:1, tree:"Ranger", type:"passive"
 },
 AgileFootwork:{
   id:"AgileFootwork",
   name:"敏捷步伐",
   desc:"提升步伐靈活性，更容易閃避攻擊。",
+  acquisition:"point",
   maxLv:3, tier:1, tree:"Ranger", type:"passive"
 },
 SteadyBreath:{
   id:"SteadyBreath",
   name:"專注呼吸",
   desc:"提升攻擊穩定性，減少射擊誤差。",
+  acquisition:"point",
   maxLv:3, tier:1, tree:"Ranger", type:"passive"
 },
 
@@ -711,6 +727,7 @@ ManaShot:{
   id:"ManaShot",
   name:"魔力彈",
   desc:"發射初級魔力彈造成魔法傷害。",
+  acquisition:"point",
   maxLv:10, tier:1, tree:"Mage", type:"active", baseMp:5,
   use(p,e,lv){
     if(!e) return false;
@@ -729,6 +746,7 @@ ManaShock:{
   id:"ManaShock",
   name:"法力震盪",
   desc:"干擾敵方魔力，使其更容易受到魔法傷害（2 回合）。",
+  acquisition:"point",
   maxLv:10, tier:1, tree:"Mage", type:"buff", baseMp:5,
   use(p,e,lv){
     if(!e) return false;
@@ -749,6 +767,7 @@ Bind:{
   id:"Bind",
   name:"束縛術",
   desc:"束縛敵人，使其攻擊或速度下降。",
+  acquisition:"point",
   maxLv:3, tier:1, tree:"Mage", type:"control", baseMp:4,
   use(p,e,lv){
     if(!e) return false;
@@ -771,6 +790,7 @@ ArcaneWard:{
   id:"ArcaneWard",
   name:"魔法護盾術",
   desc:"形成護盾，吸收部分傷害。",
+  acquisition:"point",
   maxLv:3, tier:1, tree:"Mage", type:"defense", baseMp:4,
   use(p){
     const cost = calcSkillCost(p, this.baseMp);
@@ -787,18 +807,21 @@ ManaShield:{
   id:"ManaShield",
   name:"魔力護盾",
   desc:"受到傷害時優先扣 MP。轉職自動給 Lv1。",
+  acquisition:"point",
   maxLv:3, tier:1, tree:"Mage", type:"passive"
 },
 ArcaneMastery:{
   id:"ArcaneMastery",
   name:"奧術熟練",
   desc:"提升施法精準度與傷害穩定性。",
+  acquisition:"point",
   maxLv:3, tier:1, tree:"Mage", type:"passive"
 },
 MeditationFocus:{
   id:"MeditationFocus",
   name:"精神專注",
   desc:"提升回魔或最大 MP。",
+  acquisition:"point",
   maxLv:3, tier:1, tree:"Mage", type:"passive"
 },
 
@@ -807,6 +830,7 @@ ArmorBreak:{
   id:"ArmorBreak",
   name:"破甲斬",
   desc:"造成物傷並降低敵人防禦（2 回合）。",
+  acquisition:"point",
   maxLv:3, tier:1, tree:"Warrior", type:"debuff", baseMp:5,
   use(p,e,lv){
     if(!e) return false;
@@ -827,6 +851,7 @@ RageStrike:{
   id:"RageStrike",
   name:"血怒斬擊",
   desc:"犧牲少量 HP 換取高傷害斬擊。",
+  acquisition:"point",
   maxLv:10, tier:1, tree:"Warrior", type:"active", baseMp:6,
   use(p,e,lv){
     if(!e) return false;
@@ -848,6 +873,7 @@ GuardCounter:{
   id:"GuardCounter",
   name:"鐵壁反擊",
   desc:"本回合減傷；如受到攻擊則反擊一次。",
+  acquisition:"point",
   maxLv:10, tier:1, tree:"Warrior", type:"defense", baseMp:5,
   use(p){
     const cost = calcSkillCost(p, this.baseMp);
@@ -864,18 +890,21 @@ VitalStrength:{
   id:"VitalStrength",
   name:"基礎體魄",
   desc:"提升最大 HP 或耐久度。",
+  acquisition:"point",
   maxLv:3, tier:1, tree:"Warrior", type:"passive"
 },
 WeaponMastery:{
   id:"WeaponMastery",
   name:"武器熟練",
   desc:"提升命中與攻擊穩定度。",
+  acquisition:"point",
   maxLv:3, tier:1, tree:"Warrior", type:"passive"
 },
 SteadfastFooting:{
   id:"SteadfastFooting",
   name:"堅毅步伐",
   desc:"提升抗控能力，使戰士不易被打斷。",
+  acquisition:"point",
   maxLv:3, tier:1, tree:"Warrior", type:"passive"
 }
   };
