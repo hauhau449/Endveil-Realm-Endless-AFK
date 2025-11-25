@@ -4257,6 +4257,13 @@ function addRandomAffixN(inst, n){
       return;
     }
 
+    // 批量購買上限 200，避免一次買太多把錢花光
+    const MAX_BULK = 200;
+    if(q > MAX_BULK){
+      alert(`一次最多購買 ${MAX_BULK} 個，已自動調整為 ${MAX_BULK}。`);
+      q = MAX_BULK;
+    }
+
     // 坐騎通常只需要 1 個，這裡限制為 1
     if(s.type === "mount"){
       q = 1;
