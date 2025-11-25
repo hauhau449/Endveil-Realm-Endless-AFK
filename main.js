@@ -1236,7 +1236,7 @@ const MOUNTS={
       name:"你", job:"Novice", tier:0, lvl:1, exp:0,
       baseStr:5, baseAgi:5, baseInt:5, baseSpi:5,
       str:5, agi:5, int:5, spi:5,
-      freeStatPoints:0, freeSkillPoints:1,
+      freeStatPoints:0, freeSkillPoints:1, skillPointsByTier:{0:1},
       hp:0, mp:0, atk:0, def:0, maxhp:0, maxmp:0,
       gold:200, afk:false, lastTick:0,
       equip:{weapon:null,armor:null,acc:null,mount:null},
@@ -1487,15 +1487,12 @@ function ensureNoviceSkillDefaults(){
     ["basicSlash","manaSpark","powerFundamentals","agilityFundamentals","accuracyFundamentals","arcaneFundamentals","insight"].forEach(id=>{
       if(typeof p.learned[id] !== "number") p.learned[id] = id==="basicSlash" ? 1 : 0;
     });
-    if(typeof p.freeSkillPoints !== "number"){
-      const lvl = p.lvl || 1;
-      p.freeSkillPoints = Math.max(1, lvl);
-    }
     if(!p.activeSkill || !SKILL[p.activeSkill]){
       p.activeSkill = "basicSlash";
     }
 
     ensurePlayerStatDefaults();
+    refreshSkillPointBuckets();
   }
 
   function ensurePlayerStatDefaults(){
@@ -1517,11 +1514,6 @@ function ensureNoviceSkillDefaults(){
       const legacy = typeof p.attrPoints === "number" ? p.attrPoints : null;
       const lvl = p.lvl || 1;
       p.freeStatPoints = Math.max(0, legacy!==null ? legacy : (lvl-1)*5);
-    }
-
-    if(typeof p.freeSkillPoints !== "number"){
-      const legacy = typeof p.skillPoints === "number" ? p.skillPoints : 1;
-      p.freeSkillPoints = Math.max(0, legacy);
     }
 
     ["str","agi","int","spi"].forEach(k=>{
@@ -1949,6 +1941,7 @@ function recomputeStats(){
   }
 
   function render(){
+    refreshSkillPointBuckets();
     const p=game.player, z=currentZone();
     const hpPct = Math.round((p.hp / p.maxhp) * 100);
     const mpPct = Math.round((p.mp / p.maxmp) * 100);
@@ -1964,7 +1957,7 @@ function recomputeStats(){
       <div class="stat atk">攻擊：${p.atk}｜魔傷：${p.magicAtk||p.atk}</div>
       <div class="stat def">防禦：${p.def}</div>
       <div class="stat lvl">等級：${p.lvl}（EXP ${p.exp}/${expNeedForLevel(p.lvl)}）</div>
-      <div class="stat">技能點：${p.freeSkillPoints||0}｜屬性點：${p.freeStatPoints||0}</div>
+      <div class="stat">技能點：${totalFreeSkillPoints()}｜屬性點：${p.freeStatPoints||0}</div>
       ${critPanel}
       ${attrPanel}
       <div class="stat gold">金幣：${p.gold}｜職業：${jobName(p.job)}（${p.tier}轉）｜轉生：${p.rebirths||0} 次｜日數：${game.state.day}｜經驗加倍層數：${activeXpBuffs()}</div>
@@ -2479,16 +2472,23 @@ function equipRestrictionText(inst){
         def:   p.def
       };
 
+      refreshSkillPointBuckets();
+      const beforePools = { ...(game.player.skillPointsByTier||{}) };
+
       p.lvl++;
-      p.freeSkillPoints = (p.freeSkillPoints||0) + 1;
       p.freeStatPoints = (p.freeStatPoints||0) + 5;
       recalcPlayerStats();
       p.hp = p.maxhp;
       p.mp = p.maxmp;
 
+      refreshSkillPointBuckets();
+      const tier = skillPointTierForLevel(p.lvl) ?? 0;
+      const gained = Math.max(0, freeSkillPointsForTier(tier) - (beforePools?.[tier]||0));
+      const tierPool = freeSkillPointsForTier(tier);
+
       say(
         `🎉 升級到 <b>Lv.${p.lvl}</b>！` +
-        `｜技能點 +1（共 ${p.freeSkillPoints}）` +
+        `｜${tierLabel(tier)}技能點 +${gained}（該階剩餘 ${tierPool}）` +
         `｜屬性點 +5（共 ${p.freeStatPoints}）。`
       );
 
@@ -3223,16 +3223,19 @@ function calcSkillBooksNeeded(totalLv){
 function upgradeSkillByPoint(id){
   const sk = SKILL[id];
   if(!sk || sk.acquisition !== "point") return;
+  refreshSkillPointBuckets();
   const cur = skillLevel(id,0);
   const max = skillMaxLv(id);
   if(cur >= max){ say(`🔒 <b>${sk.name}</b> 已達 Lv.${max}。`); return; }
   if(!checkSkillTierAllowed(id)) return;
-  if((game.player.freeSkillPoints||0) <= 0){ say("技能點數不足。"); return; }
+  const tier = skillTier(id);
+  const pool = freeSkillPointsForTier(tier);
+  if(pool <= 0){ say(`${tierLabel(tier)}技能點數不足。`); return; }
 
-  game.player.freeSkillPoints = Math.max(0, (game.player.freeSkillPoints||0) - 1);
   game.player.learned[id] = cur + 1;
   if(typeof sk.use === "function" && (cur===0 || !game.player.activeSkill)){ game.player.activeSkill = id; }
-  say(`📘 <b>${sk.name}</b> 升至 Lv.${game.player.learned[id]}（剩餘技能點 ${game.player.freeSkillPoints}）。`);
+  refreshSkillPointBuckets();
+  say(`📘 <b>${sk.name}</b> 升至 Lv.${game.player.learned[id]}（${tierLabel(tier)}剩餘技能點 ${freeSkillPointsForTier(tier)}）。`);
   recomputeStats(true);
   render();
   refreshSkillListIfOpen();
@@ -5079,19 +5082,72 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
   }
   const SKILL_POINT_RANGES={
     0:{start:1,end:9},
-    1:{start:1,end:29},
-    2:{start:1,end:69},
-    3:{start:1,end:119},
-    4:{start:1,end:200}
+    1:{start:10,end:29},
+    2:{start:30,end:69},
+    3:{start:70,end:119},
+    4:{start:120,end:200}
   };
   function tierLabel(tier){ return tier<=0?"0轉":`${tier}轉`; }
+  function skillPointTierForLevel(lvl){
+    for(const [t,r] of Object.entries(SKILL_POINT_RANGES)){
+      const start = r.start ?? 1, end = r.end ?? start;
+      if(lvl >= start && lvl <= end) return Number(t);
+    }
+    return null;
+  }
   function skillPointRangeInfo(tier){
     const r = SKILL_POINT_RANGES[tier];
     if(!r) return null;
     const total = Math.max(0, (r.end || 0) - (r.start || 0) + 1);
     return { ...r, total, label:tierLabel(tier) };
   }
+  const BASE_POINT_SKILL_LEVELS = { basicSlash:1 };
+  function baseSkillLevel(id){ return BASE_POINT_SKILL_LEVELS[id] || 0; }
+  function earnedSkillPointsForTier(tier, lvl){
+    const r = SKILL_POINT_RANGES[tier];
+    if(!r) return 0;
+    const start = r.start ?? 1, end = r.end ?? start;
+    if(lvl < start) return 0;
+    const cap = Math.min(lvl, end);
+    return Math.max(0, cap - start + 1);
+  }
+  function computeSkillPointsByTier(){
+    const lvl = game.player?.lvl || 1;
+    const earned={};
+    Object.keys(SKILL_POINT_RANGES).forEach(k=>{
+      const tier=Number(k);
+      earned[tier] = earnedSkillPointsForTier(tier, lvl);
+    });
+    const spent={};
+    Object.keys(SKILL_POINT_RANGES).forEach(k=> spent[Number(k)] = 0);
+    Object.entries(SKILL).forEach(([id, sk])=>{
+      if(sk.acquisition !== "point") return;
+      const tier = skillTier(id);
+      if(!(tier in SKILL_POINT_RANGES)) return;
+      const lv = skillLevel(id,0);
+      const cost = Math.max(0, lv - baseSkillLevel(id));
+      spent[tier] = (spent[tier]||0) + cost;
+    });
+    const available={};
+    Object.keys(SKILL_POINT_RANGES).forEach(k=>{
+      const tier=Number(k);
+      available[tier] = Math.max(0, (earned[tier]||0) - (spent[tier]||0));
+    });
+    return available;
+  }
+  function totalFreeSkillPoints(){
+    const pools = game.player?.skillPointsByTier || {};
+    return Object.values(pools).reduce((s,v)=>s+(v||0),0);
+  }
+  function refreshSkillPointBuckets(){
+    game.player.skillPointsByTier = computeSkillPointsByTier();
+    game.player.freeSkillPoints = totalFreeSkillPoints();
+  }
+  function freeSkillPointsForTier(tier){
+    return Math.max(0, game.player?.skillPointsByTier?.[tier] || 0);
+  }
   function renderSkillList(){
+    refreshSkillPointBuckets();
     const box=$("#skillList"); box.innerHTML="";
     const playerRootJob = rootJobOf(game.player?.job);
     const entries = Object.keys(SKILL).filter(id=>{
@@ -5101,12 +5157,12 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
       if(sk.tree && sk.tree !== playerRootJob) return false;
       return true;
     });
-    const points = game.player.freeSkillPoints || 0;
+    const points = freeSkillPointsForTier(currentSkillTierTab);
     const rangeInfo = skillPointRangeInfo(currentSkillTierTab);
     const rangeText = rangeInfo ? `（${rangeInfo.label}技能點來源：Lv.${rangeInfo.start}-${rangeInfo.end}｜共 ${rangeInfo.total} 點）` : "";
     const tip=document.createElement("div");
     tip.className="row";
-    tip.innerHTML = `<span class="muted">技能點數：<b>${points}</b>${rangeText}</span>`;
+    tip.innerHTML = `<span class="muted">${tierLabel(currentSkillTierTab)}剩餘技能點數：<b>${points}</b>${rangeText}</span>`;
     box.appendChild(tip);
 
     const hint=$("#skillHint");
