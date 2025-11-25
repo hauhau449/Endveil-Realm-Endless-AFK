@@ -5007,7 +5007,14 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
   }
   function renderSkillList(){
     const box=$("#skillList"); box.innerHTML="";
-    const entries = Object.keys(SKILL).filter(id=> skillTier(id) === currentSkillTierTab);
+    const playerRootJob = rootJobOf(game.player?.job);
+    const entries = Object.keys(SKILL).filter(id=>{
+      const sk = SKILL[id];
+      if(!sk) return false;
+      if(skillTier(id) !== currentSkillTierTab) return false;
+      if(sk.tree && sk.tree !== playerRootJob) return false;
+      return true;
+    });
     const points = game.player.freeSkillPoints || 0;
     const tip=document.createElement("div");
     tip.className="row";
@@ -5020,7 +5027,6 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
     });
 
     const allowedTiers = allowedSkillTiersForPlayer();
-    const playerRootJob = rootJobOf(game.player?.job);
 
     entries.forEach(id=>{
       const sk=SKILL[id]; if(!sk) return;
