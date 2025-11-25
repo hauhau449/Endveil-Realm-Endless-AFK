@@ -54,6 +54,7 @@ function toggleUpdateLog(){
   const $=s=>document.querySelector(s), LKEY="stealth_rpg_full_v4";
   const log=$("#log"), statsBox=$("#stats"), invBox=$("#inv");
   let skillDlg;
+  let classNoticeDlg, classNoticeText;
   let currentSkillTierTab=0;
   const enemyUI={name:$("#eName"),lvl:$("#eLvl"),atk:$("#eAtk"),def:$("#eDef"),hpTxt:$("#eHpTxt"),mpTxt:$("#eMpTxt"),hpBar:$("#eHpBar"),mpBar:$("#eMpBar")};
   const battleStatusUI={
@@ -1254,7 +1255,8 @@ const MOUNTS={
     },
     state:{ inBattle:false, enemy:null, kills:{}, zoneId:"z-01", day:1, guardMitigation:{ratio:0,turns:0}, counterReady:false, playerShield:0 },
     quests:[], shop:{stock:[]},
-    buffs:{ xpLayers:[] } // 多層加倍，每層為剩餘日數
+    buffs:{ xpLayers:[] }, // 多層加倍，每層為剩餘日數
+    uiFlags:{ classNotice:{} }
   };
 
   /* ========= 工具 ========= */
@@ -1470,6 +1472,8 @@ function qualWithStars(inst){
         }
         game.shop=data.shop||{stock:[]};
         game.buffs=data.buffs||{xpLayers:[]};
+        game.uiFlags=data.uiFlags||{classNotice:{}};
+        if(!game.uiFlags.classNotice) game.uiFlags.classNotice = {};
         // 反序列化 DB
         Object.assign(EQUIP_DB, data._eqdb||{});
         Object.assign(MOUNT_DB, data._mddb||{});
@@ -4719,11 +4723,27 @@ function refreshQuestsIfAllRewarded(){
   }
 
   /* ========= 轉職 ========= */
+  function ensureClassNoticeFlags(){
+    if(!game.uiFlags) game.uiFlags = { classNotice:{} };
+    if(!game.uiFlags.classNotice) game.uiFlags.classNotice = {};
+  }
+
+  function showClassUnlockNotice(req, tier){
+    ensureClassNoticeFlags();
+    if(game.uiFlags.classNotice[tier]) return;
+
+    game.uiFlags.classNotice[tier] = true;
+    say("🏷️ 你感受到職業之力在共鳴，<b>可以轉職</b>了！");
+    if(classNoticeText) classNoticeText.textContent = `達到 Lv.${req}，可以進行第 ${tier+1} 次轉職！`;
+    if(classNoticeDlg) classNoticeDlg.showModal();
+    autosave();
+  }
+
  function checkUnlocks(){
   const p=game.player; const t=p.tier||0; const nextReq=CLASS_REQ[t];
   if(nextReq && p.lvl>=nextReq){
     $("#classBtn").disabled=false;
-    say("🏷️ 你感受到職業之力在共鳴，<b>可以轉職</b>了！");
+    showClassUnlockNotice(nextReq, t);
   }
   // ★ 200 等解鎖轉生
   if(p.lvl >= 200){
@@ -4924,6 +4944,9 @@ function doRebirth(){
         bulkSellBtn=$("#bulkSellBtn"),
         helpDlg=$("#helpDlg");
 
+  classNoticeDlg = $("#classNoticeDlg");
+  classNoticeText = $("#classNoticeText");
+
   skillDlg = $("#skillDlg");
   const skillTabButtons=[...document.querySelectorAll('#skillTabs button')];
 
@@ -4961,6 +4984,8 @@ const doRebirthBtn = $("#doRebirthBtn");
   $("#closeInv").onclick=()=>invDlg.close();
   $("#closeQuest").onclick=()=>questDlg.close();
   $("#closeClass").onclick=()=>classDlg.close();
+  $("#closeClassNotice").onclick=()=>{ if(classNoticeDlg) classNoticeDlg.close(); };
+  $("#openClassNotice").onclick=()=>{ if(classNoticeDlg) classNoticeDlg.close(); openClass(); };
   $("#closeShop").onclick=()=>shopDlg.close();
   $("#closeShop2").onclick=()=>shopDlg.close();
   $("#closeMap").onclick=()=>mapDlg.close();
@@ -5017,11 +5042,11 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
   const INTRO_KEY = "stealth_rpg_intro_seen_v1";
 
   function anyDialogOpen(){
-    return [invDlg,questDlg,classDlg,shopDlg,mapDlg,skillDlg,helpDlg,enhDlg,introDlg].some(d=>d && d.open);
+    return [invDlg,questDlg,classDlg,classNoticeDlg,shopDlg,mapDlg,skillDlg,helpDlg,enhDlg,introDlg].some(d=>d && d.open);
   }
   document.addEventListener("keydown",(e)=>{
     if(e.key==="Escape"){
-      if(anyDialogOpen()){ [enhDlg,helpDlg,skillDlg,mapDlg,shopDlg,classDlg,questDlg,invDlg,introDlg].forEach(d=>d && d.open&&d.close()); return; }
+      if(anyDialogOpen()){ [enhDlg,helpDlg,skillDlg,mapDlg,shopDlg,classDlg,classNoticeDlg,questDlg,invDlg,introDlg].forEach(d=>d && d.open&&d.close()); return; }
     }
     if(document.body.classList.contains("stealth")){ if(e.key==="Escape"){ document.body.classList.toggle("stealth"); } return; }
     const map={
