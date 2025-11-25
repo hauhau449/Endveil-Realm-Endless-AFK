@@ -1054,20 +1054,20 @@ const MOUNTS={
     {name:"小魔力藥水",type:"consum",price:10},
     {name:"煙霧彈",type:"consum",price:15},
     {name:"經驗加倍捲",type:"consum",price:100}, // [NEW]
-    {name:"短劍盾",type:"equip",price:24},
-    {name:"長劍盾",type:"equip",price:28},
-    {name:"吊墜",type:"equip",price:26},
-    {name:"水晶球",type:"equip",price:30},
-    {name:"魔法書",type:"equip",price:25},
-    {name:"法杖",type:"equip",price:28},
-    {name:"雙刀",type:"equip",price:24},
-    {name:"刺刀",type:"equip",price:27},
-    {name:"爪",type:"equip",price:25},
-    {name:"暗器",type:"equip",price:26},
-    {name:"長弓",type:"equip",price:25},
-    {name:"短弓",type:"equip",price:26},
-    {name:"手弩",type:"equip",price:24},
-    {name:"重弩",type:"equip",price:28},
+    {name:"短劍盾",type:"weapon",price:24},
+    {name:"長劍盾",type:"weapon",price:28},
+    {name:"吊墜",type:"weapon",price:26},
+    {name:"水晶球",type:"weapon",price:30},
+    {name:"魔法書",type:"weapon",price:25},
+    {name:"法杖",type:"weapon",price:28},
+    {name:"雙刀",type:"weapon",price:24},
+    {name:"刺刀",type:"weapon",price:27},
+    {name:"爪",type:"weapon",price:25},
+    {name:"暗器",type:"weapon",price:26},
+    {name:"長弓",type:"weapon",price:25},
+    {name:"短弓",type:"weapon",price:26},
+    {name:"手弩",type:"weapon",price:24},
+    {name:"重弩",type:"weapon",price:28},
     {name:"盔甲",type:"equip",price:22},
     {name:"長袍",type:"equip",price:22},
     {name:"皮甲",type:"equip",price:22},
@@ -2122,7 +2122,7 @@ function renderEnemy(){
 
 
 function displayEquipName(id){
-  const inst = getEquipInstance(id); 
+  const inst = getEquipInstance(id);
   if(!inst) return id;
   // 🧩 這裡用 fmtItem + inst.qual，就會吃到你的品質顏色
   const nameHtml = fmtItem(inst.name, inst.qual); // 依品質上色
@@ -2131,6 +2131,26 @@ function displayEquipName(id){
   const tag = categoryTagForKey(id); // [武器] / [防具] / [飾品] / [坐騎]
   // ➜ 「[武器] 短劍盾 +5 ☆」整串會帶顏色
   return `${tag} ${nameHtml}${inst.plus ? ` +${inst.plus}` : ""}${starHtml}`;
+}
+
+function weaponSeriesKey(name){
+  for(const [series, names] of Object.entries(CLASS_WEAPONS)){
+    if(names.includes(name)) return series;
+  }
+  return null;
+}
+
+function equipRestrictionText(inst){
+  if(!inst) return "職業：—";
+
+  if(inst.slot === "weapon"){
+    const series = weaponSeriesKey(inst.weapon || inst.name);
+    return series ? `職業：${jobName(series)}系` : "職業：不限";
+  }
+
+  const series = inferEquipSeries(inst);
+  if(series) return `職業：${jobName(series)}系`;
+  return "職業：不限";
 }
 
 
@@ -2843,7 +2863,8 @@ function openInventory(){
 
       if(meta.type === "equip"){
         const eq = getEquipInstance(name);
-        extra = `｜ATK ${eq.atk||0} DEF ${eq.def||0} HP ${eq.hp||0} MP ${eq.mp||0}${eq.plus?`｜+${eq.plus}`:""}${affixShort(eq)}`;
+        const req = equipRestrictionText(eq);
+        extra = `｜ATK ${eq.atk||0} DEF ${eq.def||0} HP ${eq.hp||0} MP ${eq.mp||0}${eq.plus?`｜+${eq.plus}`:""}${affixShort(eq)}｜${req}`;
         right.append(btn("裝備", ()=>{
           const eqInst = getEquipInstance(name);
           if(eqInst) showEquipCompare(name, eqInst);
@@ -3002,10 +3023,10 @@ function openInventory(){
 
     equipCompare.innerHTML = `
       <div class="row" style="flex-direction:column;align-items:flex-start">
-        <div><b>目前裝備：</b>${displayEquipName(eid)}｜${formatStatSummary(cur, {delimiter:"｜"})}</div>
+        <div><b>目前裝備：</b>${displayEquipName(eid)}｜${formatStatSummary(cur, {delimiter:"｜"})}｜${equipRestrictionText(cur)}</div>
         <div class="eq-affix-line"><b>目前詞條：</b>${affixText(cur)}</div>
 
-        <div><b>背包選取：</b>${displayEquipName(id)}｜${formatStatSummary(eq, {delimiter:"｜"})}</div>
+        <div><b>背包選取：</b>${displayEquipName(id)}｜${formatStatSummary(eq, {delimiter:"｜"})}｜${equipRestrictionText(eq)}</div>
         <div class="eq-affix-line"><b>背包詞條：</b>${affixText(eq)}</div>
 
         <div><b>差異（背包 − 身上）：</b>${formatStatDiff(eq, cur)}</div>
@@ -4082,7 +4103,7 @@ function addRandomAffixN(inst, n){
   // HTML 裡已經拿掉 restockBtn，但這裡保留變數，不會壞（是 null）
   const restockBtn = $("#restockBtn");
 
-  // 商店目前的顯示分類（all / equip / consum / mount / enh）
+  // 商店目前的顯示分類（all / weapon / equip / consum / mount / enh）
   let shopCategory = "all";
 
   // 開啟商店：只要初始化一次商品清單即可，之後不限制庫存
@@ -4098,7 +4119,7 @@ function addRandomAffixN(inst, n){
     if(!game.shop.stock || game.shop.stock.length === 0){
       game.shop.stock = shopCatalog.map(x => ({
         name:  x.name,
-        type:  x.type,   // equip / consum / mount / 之後也可以加 enh
+        type:  x.type,   // weapon / equip / consum / mount / 之後也可以加 enh
         price: x.price
       }));
     }
@@ -4108,6 +4129,7 @@ function addRandomAffixN(inst, n){
   function matchShopCategory(s, cat){
     if(cat === "all") return true;
 
+    if(cat === "weapon") return s.type === "weapon";
     if(cat === "equip")  return s.type === "equip";
     if(cat === "consum") return s.type === "consum";
     if(cat === "mount")  return s.type === "mount";
@@ -4134,12 +4156,14 @@ function addRandomAffixN(inst, n){
         row.className = "row";
 
         let desc = "";
-        if(s.type === "equip"){
+        if(s.type === "equip" || s.type === "weapon"){
           const tpl = EQUIPS[s.name];
           if(tpl){
-            desc = `｜白品｜${formatStatSummary(tpl, {delimiter:"｜"})}`;
+            const req = equipRestrictionText(tpl);
+            const kind = s.type === "weapon" ? "武器" : "裝備";
+            desc = `｜${kind}｜白品｜${formatStatSummary(tpl, {delimiter:"｜"})}｜${req}`;
           }else{
-            desc = "｜裝備";
+            desc = `｜${s.type === "weapon" ? "武器" : "裝備"}`;
           }
         }
         if(s.type === "mount"){
@@ -4198,7 +4222,7 @@ function addRandomAffixN(inst, n){
     if(s.type === "consum"){
       addInv(s.name, q);
       say(`🛒 買下 <b>${s.name}</b> ×${q}（-${total}G）。`);
-    }else if(s.type === "equip"){
+    }else if(s.type === "equip" || s.type === "weapon"){
       for(let i=0;i<q;i++) addEquipToInv(s.name,"白");
       say(`🛒 買下 <b>${s.name}</b> ×${q}（-${total}G）。`);
     }else if(s.type === "mount"){
@@ -4903,7 +4927,7 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
       $("#sellPanel").style.display=(tab==="sell")?"block":"none";
     };
   });
-  // 商店分類按鈕（全部／武器裝備／消耗品／坐騎／強化道具）
+  // 商店分類按鈕（全部／武器／防具/飾品／消耗品／坐騎／強化道具）
   if(shopCatBtns && shopCatBtns.length){
     shopCatBtns.forEach(b=>{
       b.onclick = ()=>{
