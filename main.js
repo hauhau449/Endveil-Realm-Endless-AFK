@@ -3276,8 +3276,20 @@ function upgradeSkillByPoint(id){
 }
 
   const EQUIP_DB={}; const MOUNT_DB={};
-  function getEquipInstance(id){ return EQUIP_DB[id]; }
-  function getMountInstance(id){ return MOUNT_DB[id]; }
+  function getEquipInstance(id){
+    let inst = EQUIP_DB[id];
+    if(!inst && typeof id === "string" && id.startsWith("E#")){
+      inst = tryRestoreEquipFromSave(id);
+    }
+    return inst || null;
+  }
+  function getMountInstance(id){
+    let inst = MOUNT_DB[id];
+    if(!inst && typeof id === "string" && id.startsWith("M#")){
+      inst = tryRestoreMountFromSave(id);
+    }
+    return inst || null;
+  }
 
   // ✅ 註冊裝備實例到資料庫（修補 addEquip 未定義）
 function addEquip(inst){
