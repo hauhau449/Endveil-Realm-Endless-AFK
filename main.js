@@ -1785,6 +1785,8 @@ function recalcPlayerStats(){
   def   = Math.floor(def   * mulTier);
   magicAtk = Math.floor(magicAtk * mulTier);
 
+    // ⭐ 已取消轉職數值加成，舊存檔的 jobBonus 也不再套用
+  /*
   if (game.player.jobBonus){
     const jbMul = game.player.jobBonus;
     maxhp  = Math.floor(maxhp  * (1 + (jbMul.hp  || 0)));
@@ -1793,7 +1795,7 @@ function recalcPlayerStats(){
     def    = Math.floor(def    * (1 + (jbMul.def || 0)));
     magicAtk = Math.floor(magicAtk * (1 + (jbMul.atk || 0)));
   }
-
+*/
   const pas = passiveFromSkills(p);
   const apply = (base,key)=> Math.floor( (base + (pas.add?.[key]||0)) * (1 + (pas.mul?.[key]||0)) );
   maxhp = apply(maxhp, "hp");
@@ -4797,13 +4799,14 @@ function refreshQuestsIfAllRewarded(){
 
   // ③ 設定/疊加轉職獎勵（可自行調整）
   //    建議：第一段轉職就送這個倍率；之後每次轉職都「疊加」。
-  const ADD = { hp:1.10, mp:1.10, atk:1.05, def:1.05 }; // ← 想調整就改這裡
+ /*
+    const ADD = { hp:1.10, mp:1.10, atk:1.05, def:1.05 }; // ← 想調整就改這裡
   p.jobBonus = p.jobBonus || {hp:0, mp:0, atk:0, def:0};
   p.jobBonus.hp  += ADD.hp;
   p.jobBonus.mp  += ADD.mp;
   p.jobBonus.atk += ADD.atk;
   p.jobBonus.def += ADD.def;
-
+*/
   // 重新計算，並依比例恢復血魔
   recomputeStats(false);
   p.hp = clamp(Math.floor(p.maxhp * hpRatio), 1, p.maxhp);
