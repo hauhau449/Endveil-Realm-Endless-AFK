@@ -351,6 +351,16 @@ function ensureUniqueName(name){
     }
     return null;
   }
+  function isJobInLineage(job, target){
+    if(!job || !target) return false;
+    if(job === target) return true;
+    let node = JOB_TREE.find(x=>x.key===job);
+    while(node && node.parent){
+      if(node.parent === target) return true;
+      node = JOB_TREE.find(x=>x.key===node.parent);
+    }
+    return false;
+  }
   const ALL_WEAPONS = Object.values(CLASS_WEAPONS).flat();
   const JOB_WEAPON=JOB_TREE.reduce((acc, job)=>{
     const series = jobSeries(job.key);
@@ -382,6 +392,7 @@ function ensureUniqueName(name){
     let dmg = Math.floor(base * scaleByLevel(lv, min, max));
     dmg = critMaybe(p, dmg, "physical");
     dmg = applySpeedBonus(p, dmg);
+    dmg = Math.floor(dmg * berserkerAtkBuffMultiplier());
     return Math.max(1, dmg);
   }
   function magicSkillHit(p,e,min,max,lv){
@@ -907,6 +918,141 @@ SteadfastFooting:{
   desc:"提升抗控能力，使戰士不易被打斷。",
   acquisition:"point",
   maxLv:3, tier:1, tree:"Warrior", type:"passive"
+},
+
+// 🩸 Berserker — 2 轉技能
+BloodshatterSlash:{
+  id:"BloodshatterSlash",
+  name:"狂血破甲斬（Bloodshatter Slash）",
+  desc:"單體物理斬擊，破甲並以血為代價換取輸出。Lv.Max 10｜基礎傷害倍率隨等級提升，破甲約 22%→40%，持續 2～4 回合｜自殘為當前 HP 約 6%→12%｜HP 低於 50% 時額外提高傷害。",
+  acquisition:"point",
+  maxLv:10, tier:2, tree:"Berserker", type:"active", baseMp:10,
+  use(p,e,lv){
+    if(!e) return false;
+    const cost = calcSkillCost(p, this.baseMp);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    const hpCostRate = scaleByLevel(lv, 0.06, 0.12, this.maxLv);
+    const hpCost = Math.max(1, Math.floor(p.hp * hpCostRate));
+    if(p.hp <= hpCost){ say("體力不足以施展。"); return false; }
+    p.mp -= cost;
+    const boost = consumeBloodUnleashSkillBoost();
+    let dmg = physicalSkillHit(p, e, 1.35, 2.45, lv);
+    dmg = Math.floor(dmg * boost);
+    const hpPct = (p.hp || 0) / Math.max(1, p.maxhp || 1);
+    if(hpPct < 0.5){
+      const lowBonus = 0.25 + 0.02*(lv-1);
+      dmg = Math.floor(dmg * (1 + lowBonus));
+    }
+    e.hp = clamp(e.hp - dmg, 0, e.maxhp);
+    const shred = scaleByLevel(lv, 0.22, 0.4, this.maxLv);
+    const turns = 2 + Math.floor((lv-1)/3);
+    e.defDown = Math.max(e.defDown || 0, shred);
+    e.defDownTurns = Math.max(turns, e.defDownTurns || 0);
+    p.hp = Math.max(1, p.hp - hpCost);
+    affixOnHit(p, e, dmg);
+    say(`🩸 你施展<b>狂血破甲斬</b>，犧牲 <b>${hpCost}</b> HP，造成 <span class="hp">-${dmg}</span> 並使防禦 -${Math.round(shred*100)}%（${turns} 回合）。`);
+    recoverManaOnAction(p);
+    recalcPlayerStats();
+    return true;
+  }
+},
+BloodfireCombo:{
+  id:"BloodfireCombo",
+  name:"焚血連斬（Bloodfire Combo）",
+  desc:"多段物理連擊，HP 越低段數越多。基礎 2→5 段，HP <60% / <40% / <20% 各追加 1 段，單段倍率約 0.75→1.05，各段自損身體當前 HP 約 2%。冷卻偏長的爆發連打。",
+  acquisition:"point",
+  maxLv:20, tier:2, tree:"Berserker", type:"active", baseMp:14,
+  use(p,e,lv){
+    if(!e) return false;
+    const cost = calcSkillCost(p, this.baseMp);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
+    const baseHits = 2 + Math.floor((lv+2)/4);
+    const hpPct = (p.hp || 0) / Math.max(1, p.maxhp || 1);
+    let bonusHits = 0;
+    if(hpPct < 0.6) bonusHits++;
+    if(hpPct < 0.4) bonusHits++;
+    if(hpPct < 0.2) bonusHits++;
+    const totalHits = baseHits + bonusHits;
+    const skillBoost = consumeBloodUnleashSkillBoost();
+    let totalDmg = 0;
+    let realHits = 0;
+    for(let i=0;i<totalHits;i++){
+      if(p.hp <= 1) break;
+      const hpCostRate = 0.018 + 0.002*(lv-1);
+      const hpCost = Math.max(1, Math.floor(p.hp * hpCostRate));
+      const hitDmgBase = physicalSkillHit(p, e, 0.75, 1.05, lv);
+      const hitDmg = Math.max(1, Math.floor(hitDmgBase * skillBoost));
+      e.hp = clamp(e.hp - hitDmg, 0, e.maxhp);
+      p.hp = Math.max(1, p.hp - hpCost);
+      totalDmg += hitDmg;
+      realHits++;
+      affixOnHit(p, e, hitDmg);
+      if(e.hp<=0) break;
+    }
+    say(`🔥 <b>焚血連斬</b>展開 ${realHits} 段攻勢，總計造成 <span class="hp">-${totalDmg}</span>（每段消耗自身 HP）。`);
+    recoverManaOnAction(p);
+    recalcPlayerStats();
+    return true;
+  }
+},
+WildHowl:{
+  id:"WildHowl",
+  name:"野性之吼（Wild Howl）",
+  desc:"自身 Buff，提升物爆率、爆傷與行動值，持續數回合，但期間受到傷害增加。Lv.Max 5｜物爆率約 +8%→+16%、爆傷 +20%→+40%、行動值 +8%→+16%、承受傷害 +12%→+16%。",
+  acquisition:"point",
+  maxLv:5, tier:2, tree:"Berserker", type:"buff", baseMp:10,
+  use(p){
+    const cost = calcSkillCost(p, this.baseMp);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
+    const lv = skillLevel(this.id,1);
+    const critRate = 8 + 2*(lv-1);
+    const critDmg = 0.2 + 0.05*(lv-1);
+    const actionSpeed = 0.08 + 0.02*(lv-1);
+    const dmgTaken = 0.12 + 0.01*(lv-1);
+    const turns = 2 + Math.floor((lv+1)/2);
+    game.state.wildHowl = {turns, critRate, critDmg, actionSpeed, dmgTaken};
+    say(`🐺 你發出野性之吼（${turns} 回合）：物爆 +${critRate}%｜爆傷 +${Math.round(critDmg*100)}%｜行動值 +${Math.round(actionSpeed*100)}%｜受到傷害 +${Math.round(dmgTaken*100)}%。`);
+    recoverManaOnAction(p);
+    return true;
+  }
+},
+BloodUnleash:{
+  id:"BloodUnleash",
+  name:"怒血解放（Blood Unleash）",
+  desc:"短暫狂化：1 回合內大幅提升攻擊與行動值，下一個主動攻擊技能傷害額外乘上加成；期間受到的傷害提高，結束時扣除自身 HP。Lv.Max 5｜攻擊力 +25%→+45%｜行動值 +12%→+20%｜下一個攻擊技能 1.25→1.45 倍｜期間受傷 +18%→+26%，結束自損 8%→16% 最大 HP。",
+  acquisition:"point",
+  maxLv:5, tier:2, tree:"Berserker", type:"buff", baseMp:14,
+  use(p){
+    const cost = calcSkillCost(p, this.baseMp);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
+    const lv = skillLevel(this.id,1);
+    const atkBoost = 0.25 + 0.05*(lv-1);
+    const actionSpeed = 0.12 + 0.02*(lv-1);
+    const skillBoost = 1.25 + 0.05*(lv-1);
+    const dmgTaken = 0.18 + 0.02*(lv-1);
+    const hpPenalty = 0.08 + 0.02*(lv-1);
+    game.state.bloodUnleash = {turns:1, atkBoost, actionSpeed, skillBoost, dmgTaken, hpPenalty, skillConsumed:false};
+    say(`🩸 <b>怒血解放</b>啟動：攻擊 +${Math.round(atkBoost*100)}%｜行動值 +${Math.round(actionSpeed*100)}%｜下個主動攻擊 x${skillBoost.toFixed(2)}，期間受傷 +${Math.round(dmgTaken*100)}%，結束後損失 ${Math.round(hpPenalty*100)}% HP。`);
+    recoverManaOnAction(p);
+    return true;
+  }
+},
+BloodFrenzyBody:{
+  id:"BloodFrenzyBody",
+  name:"怒血之軀（Blood-Frenzy Body）",
+  desc:"被動：依當前 HP% 提升攻擊與物爆率。HP <70% 小幅增益，<50% 中量提升，<30% 大幅提升；等級越高加成越高。",
+  acquisition:"point",
+  maxLv:5, tier:2, tree:"Berserker", type:"passive"
+},
+WarDrivenInstinct:{
+  id:"WarDrivenInstinct",
+  name:"嗜戰本能（War-Driven Instinct）",
+  desc:"被動：同一場戰鬥內造成暴擊、受到傷害或擊殺時獲得 1 層「嗜戰」。每層提高攻擊與行動值，戰鬥結束清空。層數上限：Lv1=5｜Lv2=8｜Lv3=12｜Lv4=16｜Lv5=20。",
+  acquisition:"point",
+  maxLv:5, tier:2, tree:"Berserker", type:"passive"
 }
   };
 
@@ -946,7 +1092,13 @@ const SKILL_TIERS = {
   GuardCounter:1,
   VitalStrength:1,
   WeaponMastery:1,
-  SteadfastFooting:1
+  SteadfastFooting:1,
+  BloodshatterSlash:2,
+  BloodfireCombo:2,
+  WildHowl:2,
+  BloodUnleash:2,
+  BloodFrenzyBody:2,
+  WarDrivenInstinct:2
 };
 
   function skillTier(id){ return SKILL_TIERS[id] ?? 0; }
@@ -1253,7 +1405,7 @@ const MOUNTS={
       "小魔力藥水":10,
       "煙霧彈":1,
     },
-    state:{ inBattle:false, enemy:null, kills:{}, zoneId:"z-01", day:1, guardMitigation:{ratio:0,turns:0}, counterReady:false, playerShield:0 },
+    state:{ inBattle:false, enemy:null, kills:{}, zoneId:"z-01", day:1, guardMitigation:{ratio:0,turns:0}, counterReady:false, playerShield:0, wildHowl:{turns:0}, bloodUnleash:{turns:0}, warInstinctStacks:0 },
     quests:[], shop:{stock:[]},
     buffs:{ xpLayers:[] }, // 多層加倍，每層為剩餘日數
     uiFlags:{ classNotice:{} }
@@ -1693,6 +1845,59 @@ const ATTR_META = {
 
 function tierMultiplier(tier){ return 1 + 0.005 * (tier||0); }
 
+function warInstinctStackCap(){
+  const lv = skillLevel("WarDrivenInstinct",0);
+  if(lv<=0) return 0;
+  return [5,8,12,16,20][lv-1] || 0;
+}
+function gainWarInstinctStack(n=1){
+  const cap = warInstinctStackCap();
+  if(cap<=0) return;
+  game.state.warInstinctStacks = Math.min(cap, (game.state.warInstinctStacks||0) + n);
+  recalcPlayerStats();
+}
+function resetWarInstinctStacks(){
+  game.state.warInstinctStacks = 0;
+  recalcPlayerStats();
+}
+function activeWildHowl(){
+  const b = game.state?.wildHowl;
+  if(b && b.turns>0) return b;
+  return null;
+}
+function activeBloodUnleash(){
+  const b = game.state?.bloodUnleash;
+  if(b && b.turns>0) return b;
+  return null;
+}
+function consumeBloodUnleashSkillBoost(){
+  const b = activeBloodUnleash();
+  if(!b || b.skillConsumed) return 1;
+  b.skillConsumed = true;
+  return b.skillBoost || 1;
+}
+function berserkerActionSpeedBonus(){
+  let bonus = 0;
+  const howl = activeWildHowl();
+  if(howl) bonus += howl.actionSpeed || 0;
+  const unleash = activeBloodUnleash();
+  if(unleash) bonus += unleash.actionSpeed || 0;
+  return bonus;
+}
+function berserkerDamageTakenBonus(){
+  let ratio = 0;
+  const howl = activeWildHowl();
+  if(howl) ratio += howl.dmgTaken || 0;
+  const unleash = activeBloodUnleash();
+  if(unleash) ratio += unleash.dmgTaken || 0;
+  return ratio;
+}
+function berserkerAtkBuffMultiplier(){
+  const unleash = activeBloodUnleash();
+  if(unleash) return 1 + (unleash.atkBoost || 0);
+  return 1;
+}
+
 // 被動技能（白板層）
 function passiveFromSkills(p){
   const add={atk:0,def:0,hp:0,mp:0};
@@ -1714,6 +1919,33 @@ function passiveFromSkills(p){
   const insightLv = skillLevel("insight",0);
   misc.insight = insightLv;
   misc.actionSpeed = insightLv * 0.02;
+
+  const frenzyLv = skillLevel("BloodFrenzyBody",0);
+  if(frenzyLv>0){
+    const hpPct = (p.hp || 0) / Math.max(1, p.maxhp || 1);
+    let atkMul = 0, critBonus = 0;
+    if(hpPct < 0.3){
+      atkMul = 0.20 + 0.05*(frenzyLv-1);
+      critBonus = 10 + 3*(frenzyLv-1);
+    }else if(hpPct < 0.5){
+      atkMul = 0.12 + 0.03*(frenzyLv-1);
+      critBonus = 6 + 2*(frenzyLv-1);
+    }else if(hpPct < 0.7){
+      atkMul = 0.06 + 0.02*(frenzyLv-1);
+      critBonus = 3 + 1*(frenzyLv-1);
+    }
+    mul.atk += atkMul;
+    misc.critRate += critBonus;
+  }
+
+  const instinctLv = skillLevel("WarDrivenInstinct",0);
+  if(instinctLv>0){
+    const stacks = Math.min(game.state?.warInstinctStacks || 0, warInstinctStackCap());
+    const atkPer = [0.02,0.03,0.04,0.05,0.06][instinctLv-1];
+    const spdPer = [0.01,0.015,0.02,0.025,0.03][instinctLv-1];
+    mul.atk += stacks * atkPer;
+    misc.actionSpeed += stacks * spdPer;
+  }
 
   return { add, mul, misc };
 }
@@ -2293,6 +2525,9 @@ function equipRestrictionText(inst){
     game.state.guardMitigation={ratio:0,turns:0};
     game.state.counterReady=false;
     game.state.playerShield=0;
+    game.state.wildHowl={turns:0};
+    game.state.bloodUnleash={turns:0};
+    resetWarInstinctStacks();
     say(`⚔️ 在「${z.name}」遭遇 <b>${e.name}</b>（Lv.${e.lvl}｜HP ${e.hp}｜攻 ${e.atk}｜防 ${e.def}）。`);
     const insLv = game.player.insightLv || 0;
     if(insLv>0 && Array.isArray(e.drops)){
@@ -2306,11 +2541,13 @@ function equipRestrictionText(inst){
   }
   function playerAttack(){
     if(!game.state.inBattle){ say("現在沒有在戰鬥。"); return; }
+    recalcPlayerStats();
     const p=game.player, e=game.state.enemy;
     const effDef=effectiveEnemyDef(e,p);
     let out=Math.max(1, rnd(p.atk-2,p.atk+2)-effDef);
     out=critMaybe(p,out,"physical");
     out=applySpeedBonus(p,out);
+    out = Math.floor(out * berserkerAtkBuffMultiplier());
     e.hp=clamp(e.hp-out,0,e.maxhp); affixOnHit(p,e,out);
     say(`你進行普通攻擊，造成 <span class="hp">-${out}</span>。`);
     recoverManaOnAction(p);
@@ -2332,6 +2569,8 @@ function equipRestrictionText(inst){
     return false;
   }
 
+  recalcPlayerStats();
+
   const lv = skillLevel(id, 0);
   if(lv <= 0){
     say("尚未習得此技能。");
@@ -2352,6 +2591,29 @@ function equipRestrictionText(inst){
   return true;
 }
 
+  function tickPlayerBuffs(){
+    const p=game.player;
+    const state = game.state;
+    if(state?.wildHowl?.turns>0){
+      state.wildHowl.turns--;
+      if(state.wildHowl.turns<=0){
+        state.wildHowl={turns:0};
+        say(`🐺 <b>野性之吼</b>的效果消散。`);
+      }
+    }
+    if(state?.bloodUnleash?.turns>0){
+      state.bloodUnleash.turns--;
+      if(state.bloodUnleash.turns<=0){
+        const penaltyRate = state.bloodUnleash.hpPenalty || 0;
+        const hpLoss = Math.max(1, Math.floor(p.maxhp * penaltyRate));
+        p.hp = Math.max(1, p.hp - hpLoss);
+        state.bloodUnleash={turns:0};
+        say(`💔 <b>怒血解放</b>反噬，損失 <b>${hpLoss}</b> HP。`);
+        recalcPlayerStats();
+      }
+    }
+  }
+
   function enemyTurn(){
     const p=game.player, e=game.state.enemy;
       // ✅ 沒敵人就結束（避免 e.dot 取值報錯）
@@ -2359,6 +2621,8 @@ function equipRestrictionText(inst){
     game.state.inBattle = false;
     return;
   }
+
+    tickPlayerBuffs();
 
     // 持續傷害（毒 / 燃燒等，在敵方回合前結算）
   if(e.dot && e.dotTurns > 0){
@@ -2396,6 +2660,10 @@ function equipRestrictionText(inst){
   }
 
   let dmg=Math.max(1, rnd(enemyAtk-1,enemyAtk+3)-p.def);
+  const dmgTakenBonus = berserkerDamageTakenBonus();
+  if(dmgTakenBonus>0){
+    dmg = Math.max(1, Math.floor(dmg * (1 + dmgTakenBonus)));
+  }
   const guard = game.state.guardMitigation || {ratio:0,turns:0};
   if(guard.ratio>0){
     dmg = Math.max(0, Math.floor(dmg * (1-guard.ratio)));
@@ -2421,6 +2689,7 @@ function equipRestrictionText(inst){
   }
 
   p.hp=clamp(p.hp-dmg,0,p.maxhp);
+  gainWarInstinctStack(1);
   say(`<b>${e.name}</b> 攻擊了你，<span class="bad">-${dmg}</span>。`);
   if(p.hp<=0) return endBattle(false);
 
@@ -2441,6 +2710,9 @@ function equipRestrictionText(inst){
   }
   function endBattle(victory){
     const e=game.state.enemy; game.state.inBattle=false; game.state.enemy=null; $("#runBtn").disabled=true;
+    game.state.wildHowl={turns:0};
+    game.state.bloodUnleash={turns:0};
+    resetWarInstinctStacks();
     if(victory){
       const z=currentZone(); let gold=e.gold, exp=e.exp;
       const mult = 1 + activeXpBuffs(); // 每層 +100%，=1+層數
@@ -4057,7 +4329,7 @@ function addRandomAffixN(inst, n){
     return Math.max(1, Math.floor(base * (1 - reduce)));
   }
   function applySpeedBonus(p, base){
-    const haste = p?.actionSpeedBonus || 0;
+    const haste = (p?.actionSpeedBonus || 0) + berserkerActionSpeedBonus();
     return Math.max(1, Math.floor(base * (1 + haste)));
   }
   function recoverManaOnAction(p){
@@ -4071,8 +4343,16 @@ function addRandomAffixN(inst, n){
     const baseRate = type === "magic" ? (p?.magicCritRate || 0) : (p?.physCritRate || 0);
     let critRate=baseRate;
     if(w?.affix?.some(a=>a.key==="crit")) critRate+=5;
-    const critDmg = type === "magic" ? (p?.magicCritDmg || 1.8) : (p?.physCritDmg || 1.8);
+    let critDmg = type === "magic" ? (p?.magicCritDmg || 1.8) : (p?.physCritDmg || 1.8);
+    const howl = activeWildHowl();
+    if(howl && type === "physical"){
+      critRate += howl.critRate || 0;
+      critDmg += howl.critDmg || 0;
+    }
     const isCrit = Math.random()*100 < critRate;
+    if(isCrit && p === game.player){
+      gainWarInstinctStack(1);
+    }
     return isCrit ? Math.floor(base*critDmg) : base;
   }
   function tryCombo(p,e){
@@ -5185,11 +5465,15 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
     refreshSkillPointBuckets();
     const box=$("#skillList"); box.innerHTML="";
     const playerRootJob = rootJobOf(game.player?.job);
+    const playerJob = game.player?.job;
     const entries = Object.keys(SKILL).filter(id=>{
       const sk = SKILL[id];
       if(!sk) return false;
       if(skillTier(id) !== currentSkillTierTab) return false;
-      if(sk.tree && sk.tree !== playerRootJob) return false;
+      if(sk.tree){
+        const allowedTree = sk.tree === playerRootJob || isJobInLineage(playerJob, sk.tree);
+        if(!allowedTree) return false;
+      }
       return true;
     });
     const points = freeSkillPointsForTier(currentSkillTierTab);
