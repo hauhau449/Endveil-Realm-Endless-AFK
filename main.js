@@ -1824,7 +1824,7 @@ function attributesToStats(attr={}){
 
   return {
     // 4 大屬性皆能帶來一定的防禦成長，讓坦度隨著養成自然提升
-    def:  str * 2 + agi * 1 + intl * 0.5 + spi * 0.5,
+    def:  str * 0.5 + agi * 0.35 + intl * 0.25 + spi * 0.25,
     physCritRate: agi * 0.3,
     physCritDmg:  agi * 0.005,
     magicCritRate: spi * 0.3,
