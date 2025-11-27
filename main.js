@@ -2451,7 +2451,12 @@ function equipRestrictionText(inst){
   function adaptiveDifficultyScale(playerPower, enemyPower){
     if(enemyPower <= 0) return 1;
     const ratio = playerPower / enemyPower;
-    return clampValue(1 + (ratio - 1) * 0.5, 0.75, 1.6);
+    if(ratio < 1){
+      const eased = 0.45 + 0.55 * Math.sqrt(Math.max(ratio, 0));
+      return clampValue(eased, 0.45, 1);
+    }
+    const softened = 1 + (ratio - 1) * 0.35;
+    return clampValue(softened, 0.9, 1.5);
   }
 
   /* ========= 地圖 / 戰鬥 ========= */
@@ -2480,7 +2485,7 @@ function equipRestrictionText(inst){
   const base = JSON.parse(JSON.stringify(basePick.base));
   const dayScale=1+(Math.min(60,game.state.day)-1)*0.01;
   const lvl=rnd(z.suggest[0],z.suggest[1]);
-  const sc = 1 + (lvl - bandMid)*0.03;
+  const sc = 1 + (lvl - bandMid)*0.02;
   const p=game.player;
   const tierScale = 1 + p.tier*0.15 + Math.max(0, (p.lvl - bandMid))*0.01;
   const playerPower = combatPowerScore({ atk:p.atk, def:p.def, hp:p.maxhp, mp:p.maxmp });
