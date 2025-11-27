@@ -5503,7 +5503,8 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
       const row=document.createElement("div"); row.className="row";
       const typeLabel = skillTypeLabel(sk);
       const tierAllowed = allowedTiers.includes(skillTier(id));
-      const treeAllowed = !sk.tree || !sk.tier || sk.tier <= 0 || playerRootJob === sk.tree;
+      const treeAllowed = !sk.tree || !sk.tier || sk.tier <= 0 ||
+        playerRootJob === sk.tree || isJobInLineage(playerJob, sk.tree);
       const statusNotes = [];
       if(!tierAllowed) statusNotes.push("未解鎖該轉職階段");
       if(!treeAllowed) statusNotes.push(`僅限 ${jobName(sk.tree)} 系`);
