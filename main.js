@@ -1823,6 +1823,8 @@ function attributesToStats(attr={}){
   const spi = Math.max(0, attr.spi || 0);
 
   return {
+    // 4 大屬性皆能帶來一定的防禦成長，讓坦度隨著養成自然提升
+    def:  str * 0.4 + agi * 0.3 + intl * 0.25 + spi * 0.35,
     physCritRate: agi * 0.3,
     physCritDmg:  agi * 0.005,
     magicCritRate: spi * 0.3,
@@ -1999,7 +2001,7 @@ function recalcPlayerStats(){
   let maxhp = 100 + p.str * 8 + p.agi * 4;
   let maxmp = 30 + p.int * 5 + p.str * 1 + p.agi * 1;
   let atk   = p.str * 2 + p.agi * 1;
-  let def   = p.str * 1 + p.agi * 0.5 + (p.lvl||1) * 0.2;
+  let def   = p.str * 1 + p.agi * 0.5 + (p.lvl||1) * 0.2 + (attrStats.def || 0);
   let magicAtk = attrStats.magicAtk || atk;
 
   maxhp += eq.hp || 0;
