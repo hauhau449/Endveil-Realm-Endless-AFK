@@ -5077,23 +5077,15 @@ function refreshQuestsIfAllRewarded(){
   p.tier = t + 1;
   cls.start.forEach(id=>{ if(!(id in p.learned)) p.learned[id]=0; });
 
-  // ③ 設定/疊加轉職獎勵（可自行調整）
-  //    建議：第一段轉職就送這個倍率；之後每次轉職都「疊加」。
- /*
-    const ADD = { hp:1.10, mp:1.10, atk:1.05, def:1.05 }; // ← 想調整就改這裡
-  p.jobBonus = p.jobBonus || {hp:0, mp:0, atk:0, def:0};
-  p.jobBonus.hp  += ADD.hp;
-  p.jobBonus.mp  += ADD.mp;
-  p.jobBonus.atk += ADD.atk;
-  p.jobBonus.def += ADD.def;
-*/
-  // 重新計算，並依比例恢復血魔
+  // 清除舊版紀錄的轉職倍率（已取消）
+  if (p.jobBonus) delete p.jobBonus;
+
+  // ③ 重新計算，並依比例恢復血魔（不再額外給轉職倍率）
   recomputeStats(false);
   p.hp = clamp(Math.floor(p.maxhp * hpRatio), 1, p.maxhp);
   p.mp = clamp(Math.floor(p.maxmp * mpRatio), 0, p.maxmp);
 
-  say(`🏷️ 你成為了 <b>${cls.name}</b>！
-✅ 屬性獎勵：HP +${Math.round(ADD.hp*100)}%、MP +${Math.round(ADD.mp*100)}%、攻防 +${Math.round(ADD.atk*100)}% / +${Math.round(ADD.def*100)}%（可累積）；新職業技能已解鎖，使用技能點數即可學習。`);
+  say(`🏷️ 你成為了 <b>${cls.name}</b>！新職業技能已解鎖，使用技能點數即可學習。`);
   $("#classBtn").disabled=true;
   classDlg.close();
   render(); autosave();
