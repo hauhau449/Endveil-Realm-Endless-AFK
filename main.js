@@ -2502,6 +2502,11 @@ function equipRestrictionText(inst){
   const dynScale = adaptiveDifficultyScale(playerPower, enemyPower);
   ["hp","mp","atk","def"].forEach(k=> base[k]=Math.max(1, Math.round(base[k]*dayScale*sc*tierScale*dynScale)));
 
+  if (basePick.isBoss) {
+    const playerMaxHp = Math.max(1, game.player?.maxhp || 0);
+    base.hp = Math.max(1, Math.round(playerMaxHp * 50));
+  }
+
   const e = {
     name: basePick.name,
     lvl,
