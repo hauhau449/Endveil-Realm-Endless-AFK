@@ -1161,7 +1161,6 @@ const XP_SCROLL_RATE = 2.0;
     "技能書：連擊":{type:"book", skill:"flurry"},
     "技能書：破甲斬":{type:"book", skill:"armorbreak"},
   //  "技能書：猛擊":{type:"book", skill:"armorbreak"},
-    "秘傳：萬斬":{type:"book", skill:"omnislash"},
     "ㄅㄅㄐ之錘":{type:"consum",desc:"本次神器強化每使用1槌 +1% 成功率（可疊加，強化後歸零）。",use:(p)=>{if(!game.buffs) game.buffs={xpLayers:[],artiHammer:0};game.buffs.artiHammer = (game.buffs.artiHammer||0) + 1;
     decInv("ㄅㄅㄐ之錘",1);
     say(`🔧 你使用了 ㄅㄅㄐ之錘，神器強化成功率加成：+${game.buffs.artiHammer}%`);
@@ -1372,11 +1371,6 @@ const MOUNTS={
       {equip:"腰鍊",rate:0.02},
       {equip:"耳環",rate:0.02}
     );
-  }
-
-  // Boss / Mimic 額外掉落
-  if(tag==="boss" || tag==="mimic"){
-    base.push({item:"秘傳：萬斬",rate:0.08});
   }
 
   return base;
@@ -1803,9 +1797,6 @@ function bossPoolForTier(t,isFinal=false){
 
   // 🔧 ㄅㄅㄐ之錘：Boss 額外 10% 掉落（搭配全地圖 1% 稀有）
   base.drops.push({ item:"ㄅㄅㄐ之錘", rate:0.10 });
-
-  // 📜 萬斬
-  base.drops.push({ item:"秘傳：萬斬", rate:0.05 });
 
   return [{ name, base, isBoss:true }];
 }
