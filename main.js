@@ -3072,15 +3072,42 @@ function rollArtifactStatsForSlot() {
   const invDlg=$("#invDlg"), invList=$("#invList"), invFilters=$("#invFilters"), equipCompare=$("#equipCompare");
 
   const invCats=[
-    {key:"all",name:"全部"}, {key:"consum",name:"消耗"}, {key:"equip",name:"裝備"}, {key:"book",name:"技能書"}, {key:"mount",name:"坐騎"}
+    {key:"all",name:"全部"},
+    {key:"weapon",name:"武器"},
+    {key:"equip",name:"防具/飾品"},
+    {key:"consum",name:"消耗品"},
+    {key:"mount",name:"坐騎"},
+    {key:"enh",name:"強化道具"}
   ];
-let invFilter="all";
-function openInventory(){
-  if(equipCompare) equipCompare.innerHTML = "";   // 打開背包先清空比較
-  renderInvFilters();
-  renderInventoryList();
-  invDlg.showModal();
-}
+  let invFilter="all";
+  function invCategory(name, meta){
+    // 強化道具：獨立分類（比其他優先）
+    const isEnh = meta.type === "enh" || /錘|鎚|強化|神器碎片/.test(name);
+    if(isEnh) return "enh";
+
+    // 裝備：依槽位拆分「武器」與「防具/飾品」
+    if(meta.type === "equip"){
+      const eq = getEquipInstance(name);
+      if(eq?.slot === "weapon") return "weapon";
+      return "equip";
+    }
+
+    // 坐騎：對應 shop 類別
+    if(meta.type === "mount") return "mount";
+
+    // 可使用道具（包含技能書）：歸到消耗品
+    if(meta.type === "consum" || meta.type === "book") return "consum";
+
+    // 其他：保留原型別，至少能在「全部」裡看見
+    return meta.type || "misc";
+  }
+
+  function openInventory(){
+    if(equipCompare) equipCompare.innerHTML = "";   // 打開背包先清空比較
+    renderInvFilters();
+    renderInventoryList();
+    invDlg.showModal();
+  }
 
   function renderInvFilters(){
     invFilters.innerHTML="";
@@ -3100,7 +3127,7 @@ function openInventory(){
       renderSkillList();
     }
   }
-    function renderInventoryList(){
+  function renderInventoryList(){
     // 舊版存檔可能把「裝備模板名稱」直接塞進背包，導致沒有 E# 實例而無法比較
     const entries = Object.entries(game.inv);
     let convertedLegacyEquip = false;
@@ -3136,12 +3163,13 @@ function openInventory(){
     // 先把道具轉成含 meta 的陣列
     let arr = sorted.map(([name, count])=>{
       const meta = invMeta(name);
-      return { name, count, meta };
+      const cat  = invCategory(name, meta);
+      return { name, count, meta, cat };
     });
 
-    // 依目前的分類過濾（全部 / 裝備 / 消耗品 / 技能書 / 坐騎 / 其他）
+    // 依目前的分類過濾（與商店一致）
     if(invFilter !== "all"){
-      arr = arr.filter(e => e.meta.type === invFilter);
+      arr = arr.filter(e => e.cat === invFilter);
     }
 
     if(arr.length === 0){
@@ -3149,15 +3177,15 @@ function openInventory(){
       return;
     }
 
-    // 類型排序優先順序：裝備→坐騎→消耗品→技能書→其他
-    const typeOrder = { equip:0, mount:1, consum:2, book:3, misc:4 };
+    // 類型排序優先順序：武器→防具/飾品→坐騎→消耗品（含技能書）→強化道具→其他
+    const typeOrder = { weapon:0, equip:1, mount:2, consum:3, enh:4, misc:5 };
 
     // ✅ 排序規則：
     // 1) 依 typeOrder
     // 2) 同類型再依 displayInvName 的字母/中文字排序
     arr.sort((a, b)=>{
-      const ta = typeOrder[a.meta.type] ?? 99;
-      const tb = typeOrder[b.meta.type] ?? 99;
+      const ta = typeOrder[a.cat] ?? 99;
+      const tb = typeOrder[b.cat] ?? 99;
       if(ta !== tb) return ta - tb;
 
       const da = displayInvName(a.name);
