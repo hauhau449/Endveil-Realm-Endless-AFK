@@ -1645,7 +1645,7 @@ function ensureNoviceSkillDefaults(){
     refreshSkillPointBuckets();
   }
 
-  function ensurePlayerStatDefaults(){
+function ensurePlayerStatDefaults(){
     const p = game.player;
 
     // 舊版存檔兼容：若有舊的 attributes / attrPoints，轉入新欄位
@@ -1664,6 +1664,13 @@ function ensureNoviceSkillDefaults(){
       const legacy = typeof p.attrPoints === "number" ? p.attrPoints : null;
       const lvl = p.lvl || 1;
       p.freeStatPoints = Math.max(0, legacy!==null ? legacy : (lvl-1)*5);
+    }
+
+    // 舊存檔兼容：若缺少轉職段數，依職業樹修正（避免無法點高階技能）
+    const jobNode = JOB_TREE.find(j=>j.key===p.job);
+    const inferredTier = jobNode ? jobNode.tier : 0;
+    if(typeof p.tier !== "number" || p.tier < inferredTier){
+      p.tier = inferredTier;
     }
 
     ["str","agi","int","spi"].forEach(k=>{
