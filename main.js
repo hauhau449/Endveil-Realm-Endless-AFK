@@ -1271,7 +1271,7 @@ const MOUNTS={
 
   // 小怪（不能無腦，需要補品）
   let hp = 60 + lvl * 25;
-  let atk = 7 + lvl * 2.5;
+  let atk = 7 + lvl * 1.5;
   let def = lvl * 0.8;
   let mdef = lvl * 0.7;
   let speed = lvl * 0.25;
@@ -1289,7 +1289,7 @@ const MOUNTS={
     hp = lvl * lvl * 120 + 20000;
 
     // 攻擊輸出更高：逼玩家開技能＋補品
-    atk *= 2.5;
+    atk *= 2.0;
 
     // 防禦更高：避免玩家爆擊秒殺
     def *= 2.0;
@@ -2492,7 +2492,7 @@ function equipRestrictionText(inst){
   const bandMid = Math.floor((z.suggest[0]+z.suggest[1])/2);
   const basePick = z.pool[rnd(0,z.pool.length-1)];
   const base = JSON.parse(JSON.stringify(basePick.base));
-  const dayScale=1+(Math.min(60,game.state.day)-1)*0.01;
+  const dayScale=1+(Math.min(60,game.state.day)-1)*0.001;
   const lvl=rnd(z.suggest[0],z.suggest[1]);
   const sc = 1 + (lvl - bandMid)*0.02;
   const p=game.player;
