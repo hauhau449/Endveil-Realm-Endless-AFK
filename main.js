@@ -375,13 +375,14 @@ function ensureUniqueName(name){
   function inferEquipSeries(inst){
     if(!inst) return null;
     const name = inst.name || inst.weapon;
+    const tplSeries = EQUIPS[name]?.bindSeries || null;
     for(const [series, names] of Object.entries(CLASS_ARMORS)){
       if(names.includes(name)) return series;
     }
     for(const [series, names] of Object.entries(CLASS_ACCESSORIES)){
       if(names.includes(name)) return series;
     }
-    return inst.bindSeries || null;
+    return inst.bindSeries || tplSeries || null;
   }
 
 
@@ -2910,7 +2911,7 @@ function createBossArtifact(bossName){
         hp:  roll.stats.hp  * 4,
         mp:  roll.stats.mp  * 3
       };
-      const id = makeEquipInstance(`[神器_${genName}]`,"神器",roll.slot,roll.weapon,base);
+      const id = makeEquipInstance(`[神器_${genName}]`,"神器",roll.slot,roll.weapon,base,null);
       const inst = getEquipInstance(id);
       if(typeof addRandomAffixN === "function")      addRandomAffixN(inst,2);
       else if(typeof addRandomAffix === "function"){ addRandomAffix(inst); addRandomAffix(inst); }
@@ -2921,7 +2922,7 @@ function createBossArtifact(bossName){
 
 // 內部只存「Boss名·武器名」，不要含[神器_]，顯示時再組
 const innerName = `${bossName}·${def.name}`;
-const id = makeEquipInstance(innerName,"神器",def.slot,def.weapon||null,def.base);
+const id = makeEquipInstance(innerName,"神器",def.slot,def.weapon||null,def.base, def.bindSeries || null);
 
   const inst = getEquipInstance(id);
 
@@ -3191,7 +3192,7 @@ function rollArtifactStatsForSlot() {
         const id = makeEquipInstance(name, tpl.qual, tpl.slot, tpl.weapon||null, {
           atk:tpl.atk, def:tpl.def, hp:tpl.hp, mp:tpl.mp,
           str:tpl.str, agi:tpl.agi, int:tpl.int, spi:tpl.spi
-        });
+        }, tpl.bindSeries || null);
         game.inv[id] = (game.inv[id] || 0) + 1;
       }
       convertedLegacyEquip = true;
@@ -3623,11 +3624,11 @@ function upgradeSkillByPoint(id){
     const id = makeEquipInstance(baseName, qual, tpl.slot, tpl.weapon||null, {
       atk:tpl.atk,def:tpl.def,hp:tpl.hp,mp:tpl.mp,
       str:tpl.str,agi:tpl.agi,int:tpl.int,spi:tpl.spi
-    });
+    }, tpl.bindSeries || null);
     addInv(id,1);
     say(`🗡️ 獲得裝備：${fmtItem(baseName,qual)}。`);
   }
-  function makeEquipInstance(name, qual, slot, weapon, stats){
+  function makeEquipInstance(name, qual, slot, weapon, stats, bindSeries=null){
     // 先用模板給的原始素質當 base
     let base = { ...(stats || {}) };
     // 白 / 綠 / 藍 → 用「固定素質表」覆蓋（依部位＋品質）
@@ -3651,6 +3652,7 @@ function upgradeSkillByPoint(id){
       agi: Math.round(base.agi || 0),
       int: Math.round(base.int || 0),
       spi: Math.round(base.spi || 0),
+      bindSeries: bindSeries || null,
       plus:  0,
       stars: 0,
       affix: []
@@ -3681,7 +3683,7 @@ function upgradeSkillByPoint(id){
       const newId = makeEquipInstance(name, tpl.qual, tpl.slot, tpl.weapon||null, {
         atk:tpl.atk, def:tpl.def, hp:tpl.hp, mp:tpl.mp,
         str:tpl.str, agi:tpl.agi, int:tpl.int, spi:tpl.spi
-      });
+      }, tpl.bindSeries || null);
       p.equip[slot] = newId;
     });
   }
@@ -3980,7 +3982,7 @@ function equipItem(id){
       mp : grow(base.mp,  baseWhite.mp),
     };
 
-    const newId = makeEquipInstance(inst.name, next, inst.slot, inst.weapon || null, newStats);
+    const newId = makeEquipInstance(inst.name, next, inst.slot, inst.weapon || null, newStats, inst.bindSeries || null);
     addInv(newId, 1);
 
     say(
