@@ -3083,7 +3083,7 @@ function rollArtifactStatsForSlot() {
 }
 //===========================================
   /* ========= 背包 / 裝備 / 強化 / 合成 ========= */
-  const invDlg=$("#invDlg"), invList=$("#invList"), invFilters=$("#invFilters"), equipCompare=$("#equipCompare");
+  const invDlg=$("#invDlg"), invList=$("#invList"), invFilters=$("#invFilters"), invJobRow=$("#invJobRow"), equipCompare=$("#equipCompare");
 
   const invCats=[
     {key:"all",name:"全部"},
@@ -3094,6 +3094,14 @@ function rollArtifactStatsForSlot() {
     {key:"enh",name:"強化道具"}
   ];
   let invFilter="all";
+  const INV_JOB_FILTERS = [
+    { key:"all",      name:"不限" },
+    { key:"Warrior",  name:"戰士系" },
+    { key:"Mage",     name:"法師系" },
+    { key:"Assassin", name:"刺客系" },
+    { key:"Ranger",   name:"弓手系" }
+  ];
+  let invJobFilter = "all";
   function invCategory(name, meta){
     // 強化道具：獨立分類（比其他優先）
     const isEnh = meta.type === "enh" || /錘|鎚|強化|神器碎片/.test(name);
@@ -3119,6 +3127,7 @@ function rollArtifactStatsForSlot() {
   function openInventory(){
     if(equipCompare) equipCompare.innerHTML = "";   // 打開背包先清空比較
     renderInvFilters();
+    renderInvJobFilters();
     renderInventoryList();
     invDlg.showModal();
   }
@@ -3126,10 +3135,36 @@ function rollArtifactStatsForSlot() {
   function renderInvFilters(){
     invFilters.innerHTML="";
     invCats.forEach(c=>{
-      const b=btn(`${c.name}`,()=>{ invFilter=c.key; renderInventoryList(); });
+      const b=btn(`${c.name}`,()=>{ invFilter=c.key; updateInvJobFilterVisibility(); renderInventoryList(); });
       if(invFilter===c.key) b.classList.add("active");
       invFilters.appendChild(b);
     });
+    updateInvJobFilterVisibility();
+  }
+  function renderInvJobFilters(){
+    if(!invJobRow) return;
+    const btns = [...invJobRow.querySelectorAll(".invJobBtn")];
+    if(btns.length === 0){
+      INV_JOB_FILTERS.forEach(opt=>{
+        const b = btn(opt.name, ()=>{});
+        b.classList.add("invJobBtn");
+        b.dataset.job = opt.key;
+        invJobRow.appendChild(b);
+      });
+    }
+
+    invJobRow.querySelectorAll(".invJobBtn").forEach(b=>{
+      const job = b.getAttribute("data-job") || "all";
+      b.classList.toggle("active", invJobFilter === job);
+    });
+    updateInvJobFilterVisibility();
+  }
+  function shouldShowInvJobFilter(cat){
+    return cat === "weapon" || cat === "equip";
+  }
+  function updateInvJobFilterVisibility(){
+    if(!invJobRow) return;
+    invJobRow.style.display = shouldShowInvJobFilter(invFilter) ? "flex" : "none";
   }
   function refreshInventoryListIfOpen(){
     if(invDlg && invDlg.open){
@@ -3184,6 +3219,11 @@ function rollArtifactStatsForSlot() {
     // 依目前的分類過濾（與商店一致）
     if(invFilter !== "all"){
       arr = arr.filter(e => e.cat === invFilter);
+    }
+
+    // 依職業系列過濾（僅對裝備生效，邏輯與商店一致）
+    if(invJobFilter !== "all"){
+      arr = arr.filter(e => matchInvJob(e, invJobFilter));
     }
 
     if(arr.length === 0){
@@ -3322,6 +3362,16 @@ function rollArtifactStatsForSlot() {
       row.append(right);
       invList.appendChild(row);
     });
+  }
+  function matchInvJob(entry, job){
+    if(job === "all") return true;
+    if(entry.meta.type !== "equip") return true;
+
+    const inst = entry.name.startsWith("E#") ? getEquipInstance(entry.name) : null;
+    const tplSeries = inst ? inferEquipSeries(inst) : (EQUIPS[entry.name]?.bindSeries || null);
+
+    if(!tplSeries) return true;
+    return tplSeries === job;
   }
   // 顯示裝備比較（背包選取 vs 身上裝備）
   function showEquipCompare(id, eq){
@@ -5297,6 +5347,7 @@ function doRebirth(){
         shopTabs=[...document.querySelectorAll("#shopDlg .tab")],
         shopCatBtns=[...document.querySelectorAll(".shopCatBtn")],
         shopJobBtns=[...document.querySelectorAll(".shopJobBtn")],
+        invJobBtns=[...document.querySelectorAll(".invJobBtn")],
         shopJobRow=$("#shopJobRow"),
         bulkSellFilter=$("#bulkSellFilter"),
         bulkSellBtn=$("#bulkSellBtn"),
@@ -5390,6 +5441,19 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
       };
     });
     updateShopJobFilterVisibility();
+  }
+
+  if(invJobBtns && invJobBtns.length){
+    invJobBtns.forEach(b=>{
+      b.onclick = ()=>{
+        invJobBtns.forEach(x=>x.classList.remove("active"));
+        b.classList.add("active");
+        invJobFilter = b.getAttribute("data-job") || "all";
+        updateInvJobFilterVisibility();
+        renderInventoryList();
+      };
+    });
+    updateInvJobFilterVisibility();
   }
 
   // 一鍵賣出按鈕
