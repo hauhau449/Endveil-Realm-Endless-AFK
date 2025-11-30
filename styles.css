@@ -235,6 +235,7 @@ dialog{
 /* 10) 商店價格/庫存行：數字更醒目 */
 #shopDlg .list .row .tag{ color:#c8d3e0; }
 #shopGold{ color: var(--gold-strong); }
+.shop-actions{ margin-left:auto; display:flex; gap:6px; align-items:center; }
 
 /* 11) 分隔線更可見但不刺眼 */
 .sep{ background: #334155; }

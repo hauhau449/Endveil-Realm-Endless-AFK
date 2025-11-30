@@ -4470,6 +4470,7 @@ function addRandomAffixN(inst, n){
 
   // 商店目前的顯示分類（all / weapon / equip / consum / mount / enh）
   let shopCategory = "all";
+  let shopJobFilter = "all";
 
   // 開啟商店：只要初始化一次商品清單即可，之後不限制庫存
   function openShop(){
@@ -4523,12 +4524,35 @@ function addRandomAffixN(inst, n){
     return true;
   }
 
+  function matchShopJob(s, job){
+    if(job === "all") return true;
+    if(s.type !== "weapon" && s.type !== "equip") return true;
+
+    const tpl = EQUIPS[s.name];
+    const series = tpl?.bindSeries;
+    if(!series) return true;
+
+    return series === job;
+  }
+
+  function shouldShowJobFilter(cat){
+    return cat === "weapon" || cat === "equip";
+  }
+
+  function updateShopJobFilterVisibility(){
+    if(!shopJobRow) return;
+    shopJobRow.style.display = shouldShowJobFilter(shopCategory) ? "flex" : "none";
+  }
+
   function renderShop(){
+    updateShopJobFilterVisibility();
     $("#shopGold").textContent = game.player.gold;
     buyList.innerHTML = "";
 
     // 依目前分類篩選
-    const list = (game.shop.stock || []).filter(s => matchShopCategory(s, shopCategory));
+    const list = (game.shop.stock || [])
+      .filter(s => matchShopCategory(s, shopCategory))
+      .filter(s => matchShopJob(s, shopJobFilter));
 
     if(list.length === 0){
       buyList.innerHTML = `<div class="row"><span class="muted">目前沒有此分類的商品。</span></div>`;
@@ -4571,7 +4595,10 @@ function addRandomAffixN(inst, n){
 
         const buyBtn = btn("購買", ()=>buyFromShop(s,1));
         const bulkBtn = btn("批量購買", ()=>promptBulkBuyFromShop(s));
-        row.append(buyBtn, bulkBtn);
+        const actions = document.createElement("div");
+        actions.className = "shop-actions";
+        actions.append(bulkBtn, buyBtn);
+        row.append(actions);
         buyList.appendChild(row);
       });
     }
@@ -5269,6 +5296,8 @@ function doRebirth(){
         shopClose1=$("#closeShop"), shopClose2=$("#closeShop2"),
         shopTabs=[...document.querySelectorAll("#shopDlg .tab")],
         shopCatBtns=[...document.querySelectorAll(".shopCatBtn")],
+        shopJobBtns=[...document.querySelectorAll(".shopJobBtn")],
+        shopJobRow=$("#shopJobRow"),
         bulkSellFilter=$("#bulkSellFilter"),
         bulkSellBtn=$("#bulkSellBtn"),
         helpDlg=$("#helpDlg");
@@ -5349,6 +5378,18 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
         renderShop();
       };
     });
+  }
+
+  if(shopJobBtns && shopJobBtns.length){
+    shopJobBtns.forEach(b=>{
+      b.onclick = ()=>{
+        shopJobBtns.forEach(x=>x.classList.remove("active"));
+        b.classList.add("active");
+        shopJobFilter = b.getAttribute("data-job") || "all";
+        renderShop();
+      };
+    });
+    updateShopJobFilterVisibility();
   }
 
   // 一鍵賣出按鈕
