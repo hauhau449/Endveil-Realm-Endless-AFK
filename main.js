@@ -410,6 +410,152 @@ function ensureUniqueName(name){
     return Math.max(1, dmg);
   }
 
+  // ==========================================
+  // Stealth RPG KPI - 3轉：血焰狂刃
+  // 技能等級成長模板
+  // ==========================================
+  const BLOODFLAME_REAVER_SKILLS = {
+    // 1️⃣ 主動技能：裂魂連斬（多段破甲遞增斬）
+    "裂魂連斬": {
+      id: "裂魂連斬",
+      type: "active",
+      isBloodSkill: true,
+      maxLevel: 15,
+      levels: [
+        { lv: 1,  dmgFirst: 1.0, dmgLast: 1.4, hpCostRate: 0.05, armorBreakRate: 0.10, armorBreakTurns: 2 },
+        { lv: 2,  dmgFirst: 1.05, dmgLast: 1.5, hpCostRate: 0.05, armorBreakRate: 0.11, armorBreakTurns: 2 },
+        { lv: 3,  dmgFirst: 1.1, dmgLast: 1.6, hpCostRate: 0.05, armorBreakRate: 0.12, armorBreakTurns: 2 },
+        { lv: 4,  dmgFirst: 1.15, dmgLast: 1.7, hpCostRate: 0.05, armorBreakRate: 0.13, armorBreakTurns: 2 },
+        { lv: 5,  dmgFirst: 1.2, dmgLast: 1.8, hpCostRate: 0.05, armorBreakRate: 0.14, armorBreakTurns: 3 },
+        { lv: 6,  dmgFirst: 1.25, dmgLast: 1.9, hpCostRate: 0.05, armorBreakRate: 0.15, armorBreakTurns: 3 },
+        { lv: 7,  dmgFirst: 1.3, dmgLast: 2.0, hpCostRate: 0.05, armorBreakRate: 0.16, armorBreakTurns: 3 },
+        { lv: 8,  dmgFirst: 1.35, dmgLast: 2.1, hpCostRate: 0.05, armorBreakRate: 0.17, armorBreakTurns: 3 },
+        { lv: 9,  dmgFirst: 1.4, dmgLast: 2.2, hpCostRate: 0.05, armorBreakRate: 0.18, armorBreakTurns: 3 },
+        { lv: 10, dmgFirst: 1.45, dmgLast: 2.3, hpCostRate: 0.05, armorBreakRate: 0.19, armorBreakTurns: 4 },
+        { lv: 11, dmgFirst: 1.5, dmgLast: 2.4, hpCostRate: 0.05, armorBreakRate: 0.20, armorBreakTurns: 4 },
+        { lv: 12, dmgFirst: 1.55, dmgLast: 2.5, hpCostRate: 0.05, armorBreakRate: 0.21, armorBreakTurns: 4 },
+        { lv: 13, dmgFirst: 1.6, dmgLast: 2.6, hpCostRate: 0.05, armorBreakRate: 0.22, armorBreakTurns: 4 },
+        { lv: 14, dmgFirst: 1.65, dmgLast: 2.7, hpCostRate: 0.05, armorBreakRate: 0.23, armorBreakTurns: 4 },
+        { lv: 15, dmgFirst: 1.7, dmgLast: 2.8, hpCostRate: 0.05, armorBreakRate: 0.25, armorBreakTurns: 5 },
+      ]
+    },
+
+    // 2️⃣ 主動技能：深傷撕裂（單體高傷＋撕裂 DOT）
+    "深傷撕裂": {
+      id: "深傷撕裂",
+      type: "active",
+      isBloodSkill: false,
+      maxLevel: 15,
+      levels: [
+        { lv: 1,  baseMul: 1.6, dotMaxHpRate: 0.02, dotTurns: 3, brokenBonus: 0.20 },
+        { lv: 2,  baseMul: 1.7, dotMaxHpRate: 0.021, dotTurns: 3, brokenBonus: 0.22 },
+        { lv: 3,  baseMul: 1.8, dotMaxHpRate: 0.022, dotTurns: 3, brokenBonus: 0.24 },
+        { lv: 4,  baseMul: 1.9, dotMaxHpRate: 0.023, dotTurns: 3, brokenBonus: 0.26 },
+        { lv: 5,  baseMul: 2.0, dotMaxHpRate: 0.024, dotTurns: 4, brokenBonus: 0.28 },
+        { lv: 6,  baseMul: 2.1, dotMaxHpRate: 0.025, dotTurns: 4, brokenBonus: 0.30 },
+        { lv: 7,  baseMul: 2.2, dotMaxHpRate: 0.026, dotTurns: 4, brokenBonus: 0.32 },
+        { lv: 8,  baseMul: 2.3, dotMaxHpRate: 0.027, dotTurns: 4, brokenBonus: 0.34 },
+        { lv: 9,  baseMul: 2.4, dotMaxHpRate: 0.028, dotTurns: 4, brokenBonus: 0.36 },
+        { lv: 10, baseMul: 2.5, dotMaxHpRate: 0.029, dotTurns: 5, brokenBonus: 0.38 },
+        { lv: 11, baseMul: 2.6, dotMaxHpRate: 0.030, dotTurns: 5, brokenBonus: 0.40 },
+        { lv: 12, baseMul: 2.7, dotMaxHpRate: 0.031, dotTurns: 5, brokenBonus: 0.42 },
+        { lv: 13, baseMul: 2.8, dotMaxHpRate: 0.032, dotTurns: 5, brokenBonus: 0.44 },
+        { lv: 14, baseMul: 2.9, dotMaxHpRate: 0.033, dotTurns: 5, brokenBonus: 0.46 },
+        { lv: 15, baseMul: 3.0, dotMaxHpRate: 0.035, dotTurns: 6, brokenBonus: 0.50 },
+      ]
+    },
+
+    // 3️⃣ 主動技能：燃血解放（小大招）
+    "燃血解放": {
+      id: "燃血解放",
+      type: "active-ultimate",
+      isBloodSkill: true,
+      maxLevel: 5,
+      levels: [
+        { lv: 1, burnRate: 0.90, baseMul: 2.4, extraPer10MaxHp: 0.05, frenzyAtkUp: 0.20, frenzySpeedUp: 0.15, frenzyCritUp: 0.20, frenzyCritDmgUp: 0.30 },
+        { lv: 2, burnRate: 0.80, baseMul: 2.7, extraPer10MaxHp: 0.06, frenzyAtkUp: 0.24, frenzySpeedUp: 0.18, frenzyCritUp: 0.23, frenzyCritDmgUp: 0.34 },
+        { lv: 3, burnRate: 0.70, baseMul: 3.0, extraPer10MaxHp: 0.07, frenzyAtkUp: 0.28, frenzySpeedUp: 0.21, frenzyCritUp: 0.26, frenzyCritDmgUp: 0.38 },
+        { lv: 4, burnRate: 0.60, baseMul: 3.3, extraPer10MaxHp: 0.08, frenzyAtkUp: 0.32, frenzySpeedUp: 0.24, frenzyCritUp: 0.29, frenzyCritDmgUp: 0.42 },
+        { lv: 5, burnRate: 0.50, baseMul: 3.6, extraPer10MaxHp: 0.10, frenzyAtkUp: 0.36, frenzySpeedUp: 0.27, frenzyCritUp: 0.32, frenzyCritDmgUp: 0.48 },
+      ]
+    },
+
+    // 4️⃣ Buff：血性戰意（開關型）
+    "血性戰意": {
+      id: "血性戰意",
+      type: "buff-toggle",
+      maxLevel: 10,
+      levels: [
+        { lv: 1,  atkUp: 0.08, speedUp: 0.05, critUp: 0.05, critDmgUp: 0.10, hpDrainRate: 0.02, dmgTakenUp: 0.10 },
+        { lv: 2,  atkUp: 0.09, speedUp: 0.06, critUp: 0.06, critDmgUp: 0.12, hpDrainRate: 0.022, dmgTakenUp: 0.11 },
+        { lv: 3,  atkUp: 0.10, speedUp: 0.07, critUp: 0.07, critDmgUp: 0.14, hpDrainRate: 0.024, dmgTakenUp: 0.12 },
+        { lv: 4,  atkUp: 0.11, speedUp: 0.08, critUp: 0.08, critDmgUp: 0.16, hpDrainRate: 0.026, dmgTakenUp: 0.13 },
+        { lv: 5,  atkUp: 0.12, speedUp: 0.09, critUp: 0.09, critDmgUp: 0.18, hpDrainRate: 0.028, dmgTakenUp: 0.14 },
+        { lv: 6,  atkUp: 0.13, speedUp: 0.10, critUp: 0.10, critDmgUp: 0.20, hpDrainRate: 0.030, dmgTakenUp: 0.16 },
+        { lv: 7,  atkUp: 0.14, speedUp: 0.11, critUp: 0.11, critDmgUp: 0.22, hpDrainRate: 0.032, dmgTakenUp: 0.18 },
+        { lv: 8,  atkUp: 0.15, speedUp: 0.12, critUp: 0.12, critDmgUp: 0.24, hpDrainRate: 0.034, dmgTakenUp: 0.20 },
+        { lv: 9,  atkUp: 0.16, speedUp: 0.13, critUp: 0.13, critDmgUp: 0.27, hpDrainRate: 0.036, dmgTakenUp: 0.22 },
+        { lv: 10, atkUp: 0.18, speedUp: 0.15, critUp: 0.15, critDmgUp: 0.30, hpDrainRate: 0.040, dmgTakenUp: 0.25 },
+      ]
+    },
+
+    // 5️⃣ 被動：怒血之軀・解放
+    "怒血之軀・解放": {
+      id: "怒血之軀・解放",
+      type: "passive",
+      maxLevel: 10,
+      levels: [
+        { lv: 1,  lowHp70: 0.03, lowHp50: 0.04, lowHp30: 0.06, ragePerHit: 0.02, rageMaxStacks: 5, bloodSkillAtkPerUse: 0.01, bloodSkillAtkMaxStacks: 5 },
+        { lv: 2,  lowHp70: 0.035, lowHp50: 0.05, lowHp30: 0.07, ragePerHit: 0.022, rageMaxStacks: 5, bloodSkillAtkPerUse: 0.01, bloodSkillAtkMaxStacks: 6 },
+        { lv: 3,  lowHp70: 0.04, lowHp50: 0.06, lowHp30: 0.08, ragePerHit: 0.024, rageMaxStacks: 5, bloodSkillAtkPerUse: 0.012, bloodSkillAtkMaxStacks: 6 },
+        { lv: 4,  lowHp70: 0.045, lowHp50: 0.07, lowHp30: 0.09, ragePerHit: 0.026, rageMaxStacks: 6, bloodSkillAtkPerUse: 0.012, bloodSkillAtkMaxStacks: 7 },
+        { lv: 5,  lowHp70: 0.05, lowHp50: 0.08, lowHp30: 0.10, ragePerHit: 0.028, rageMaxStacks: 6, bloodSkillAtkPerUse: 0.014, bloodSkillAtkMaxStacks: 7 },
+        { lv: 6,  lowHp70: 0.055, lowHp50: 0.09, lowHp30: 0.11, ragePerHit: 0.030, rageMaxStacks: 6, bloodSkillAtkPerUse: 0.014, bloodSkillAtkMaxStacks: 8 },
+        { lv: 7,  lowHp70: 0.06, lowHp50: 0.10, lowHp30: 0.12, ragePerHit: 0.032, rageMaxStacks: 7, bloodSkillAtkPerUse: 0.016, bloodSkillAtkMaxStacks: 8 },
+        { lv: 8,  lowHp70: 0.065, lowHp50: 0.11, lowHp30: 0.13, ragePerHit: 0.034, rageMaxStacks: 7, bloodSkillAtkPerUse: 0.016, bloodSkillAtkMaxStacks: 9 },
+        { lv: 9,  lowHp70: 0.07, lowHp50: 0.12, lowHp30: 0.14, ragePerHit: 0.036, rageMaxStacks: 7, bloodSkillAtkPerUse: 0.018, bloodSkillAtkMaxStacks: 9 },
+        { lv: 10, lowHp70: 0.08, lowHp50: 0.14, lowHp30: 0.15, ragePerHit: 0.05,  rageMaxStacks: 7, bloodSkillAtkPerUse: 0.02,  bloodSkillAtkMaxStacks: 10 },
+      ]
+    },
+
+    // 6️⃣ 被動：拳套／巨劍熟練
+    "拳套巨劍熟練": {
+      id: "拳套巨劍熟練",
+      type: "passive",
+      maxLevel: 1,
+      levels: [
+        { lv: 1, strUp: 0.10, agiUp: 0.05, critUp: 0.05, critDmgUp: 0.10 }
+      ]
+    },
+
+    // 7️⃣ 被動：噬血心法（試煉習得）
+    "噬血心法": {
+      id: "噬血心法",
+      type: "passive",
+      maxLevel: 1,
+      levels: [
+        { lv: 1, effLifeSteal: 0.02 }
+      ]
+    },
+
+    // 8️⃣ 被動：裂傷精通（提升撕裂效果）
+    "裂傷精通": {
+      id: "裂傷精通",
+      type: "passive",
+      maxLevel: 5,
+      levels: [
+        { lv: 1, dotMulBonus: 0.08, extraDotTurns: 1, brokenExtraBonus: 0.03 },
+        { lv: 2, dotMulBonus: 0.15, extraDotTurns: 2, brokenExtraBonus: 0.06 },
+        { lv: 3, dotMulBonus: 0.23, extraDotTurns: 3, brokenExtraBonus: 0.09 },
+        { lv: 4, dotMulBonus: 0.32, extraDotTurns: 3, brokenExtraBonus: 0.12 },
+        { lv: 5, dotMulBonus: 0.45, extraDotTurns: 3, brokenExtraBonus: 0.15 },
+      ]
+    }
+  };
+
+  const SKILL_CONFIG = { ...BLOODFLAME_REAVER_SKILLS };
+  const SKILL_DATA = { ...SKILL_CONFIG };
+
   const SKILL={
  // ===== 初心者：主動技能 =====
     basicSlash:{
