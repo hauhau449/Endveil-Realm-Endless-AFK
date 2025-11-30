@@ -232,6 +232,14 @@
   <div class="dlg">
     <h4>🎒 背包</h4>
     <div class="row" id="invFilters"></div>
+    <div class="row" id="invJobRow" style="gap:4px;margin:4px 0 8px 0">
+      <span class="muted">職業：</span>
+      <button class="btn small invJobBtn active" data-job="all">不限</button>
+      <button class="btn small invJobBtn" data-job="Warrior">戰士系</button>
+      <button class="btn small invJobBtn" data-job="Mage">法師系</button>
+      <button class="btn small invJobBtn" data-job="Assassin">刺客系</button>
+      <button class="btn small invJobBtn" data-job="Ranger">弓手系</button>
+    </div>
     <!-- ⬇ 新增：裝備比較顯示區 ⬇ -->
     <div id="equipCompare" class="hint" style="margin:4px 0 6px 0"></div>
     <div class="list" id="invList"></div>
