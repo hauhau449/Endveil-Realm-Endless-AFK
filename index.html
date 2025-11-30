@@ -33,6 +33,7 @@
         <option value="stealthBtn">🕶️ 偽裝</option>
         <option value="saveBtn">💾 存檔</option>
         <option value="resetBtn">🗑️ 重開</option>
+        <option value="settingsBtn">⚙️ 設置</option>
       </select>
 
       <!-- 次要按鈕：桌機顯示，手機會縮到「更多功能…」裡 -->
@@ -42,6 +43,7 @@
       <button class="btn small secondary-btn" id="stealthBtn">🕶️ 偽裝 <span class="hint">(Esc)</span></button>
       <button class="btn small secondary-btn" id="saveBtn">💾 存檔</button>
       <button class="btn small secondary-btn" id="resetBtn">🗑️ 重開</button>
+      <button class="btn small secondary-btn" id="settingsBtn">⚙️ 設置</button>
     </div>
   </div>
 
@@ -659,6 +661,28 @@
         <input type="checkbox" id="introDontShow"> 不再顯示
       </label>
       <button class="btn small" id="introStartBtn" autofocus>開始遊戲</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- 設置 -->
+<dialog id="settingsDlg">
+  <div class="dlg">
+    <h4>⚙️ 設置</h4>
+    <div class="list" style="padding:10px">
+      <div class="row settings-row">
+        <div class="settings-meta">
+          <div class="setting-title">🎫 序號</div>
+          <div class="hint">輸入序號兌換專屬獎勵。</div>
+        </div>
+        <div class="row" style="margin-left:auto;gap:6px;align-items:center">
+          <input id="serialInput" class="text-input" type="text" placeholder="請輸入序號" autocomplete="off" />
+          <button class="btn small" id="serialSubmitBtn">兌換</button>
+        </div>
+      </div>
+    </div>
+    <div class="row" style="justify-content:flex-end;margin-top:8px">
+      <button class="btn small" id="closeSettings">關閉</button>
     </div>
   </div>
 </dialog>

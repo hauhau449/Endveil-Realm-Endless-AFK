@@ -53,8 +53,9 @@ function toggleUpdateLog(){
 (function(){
   const $=s=>document.querySelector(s), LKEY="stealth_rpg_full_v4";
   const log=$("#log"), statsBox=$("#stats"), invBox=$("#inv");
-  let skillDlg;
+  let skillDlg, settingsDlg;
   let classNoticeDlg, classNoticeText;
+  let serialInput;
   let currentSkillTierTab=0;
   const enemyUI={name:$("#eName"),lvl:$("#eLvl"),atk:$("#eAtk"),def:$("#eDef"),hpTxt:$("#eHpTxt"),mpTxt:$("#eMpTxt"),hpBar:$("#eHpBar"),mpBar:$("#eMpBar")};
   const battleStatusUI={
@@ -1284,7 +1285,14 @@ const SKILL_TIERS = {
 // 1.00 = 每層 +100%（原本行為）
 // 0.50 = 每層 +50%（建議）
 // 0.75 = 每層 +75% ……自行調整
-const XP_SCROLL_RATE = 2.0; 
+const XP_SCROLL_RATE = 2.0;
+
+const LEVEL_JUMP_ITEMS = [
+  { level: 10, name: "直升券：Lv10" },
+  { level: 30, name: "直升券：Lv30" },
+  { level: 70, name: "直升券：Lv70" },
+  { level: 120, name: "直升券：Lv120" }
+];
 
   // 物品 / 裝備 / 坐騎 / 加倍捲
   const itemDefs={
@@ -1333,6 +1341,14 @@ const XP_SCROLL_RATE = 2.0;
 },
 
   };
+
+  LEVEL_JUMP_ITEMS.forEach(({level, name})=>{
+    itemDefs[name] = {
+      type: "consum",
+      desc: `使用後直接升至 Lv.${level}（若尚未達到）。`,
+      use: ()=>useLevelVoucher(level, name)
+    };
+  });
 
   const EQUIPS={
     "新手武器":{slot:"weapon", qual:"白", str:1, agi:1, int:1, spi:1},
@@ -1555,7 +1571,7 @@ const MOUNTS={
       "小魔力藥水":10,
       "煙霧彈":1,
     },
-    state:{ inBattle:false, enemy:null, kills:{}, zoneId:"z-01", day:1, guardMitigation:{ratio:0,turns:0}, counterReady:false, playerShield:0, wildHowl:{turns:0}, bloodUnleash:{turns:0}, warInstinctStacks:0 },
+    state:{ inBattle:false, enemy:null, kills:{}, zoneId:"z-01", day:1, guardMitigation:{ratio:0,turns:0}, counterReady:false, playerShield:0, wildHowl:{turns:0}, bloodUnleash:{turns:0}, warInstinctStacks:0, redeemedSerials:{} },
     quests:[], shop:{stock:[]},
     buffs:{ xpLayers:[] }, // 多層加倍，每層為剩餘日數
     uiFlags:{ classNotice:{} }
@@ -1765,6 +1781,7 @@ function qualWithStars(inst){
         Object.assign(game.player, data.player||{});
         game.inv=data.inv||game.inv;
         game.state={...game.state, ...(data.state||{})};
+        if(!game.state.redeemedSerials) game.state.redeemedSerials = {};
                 // 任務：舊存檔兼容＆新格式初始化
         game.quests=data.quests||[];
         if(!Array.isArray(game.quests)) game.quests=[];
@@ -2941,6 +2958,43 @@ function equipRestrictionText(inst){
     }
   }
 
+  function jumpToLevel(targetLv){
+    const p = game.player;
+    if(!p) return 0;
+
+    const before = p.lvl;
+    let safety = 0;
+    while(p.lvl < targetLv && safety < 500){
+      const need = expNeedForLevel(p.lvl);
+      if(!need || need <= 0){
+        p.lvl = targetLv;
+        p.exp = 0;
+        recalcPlayerStats();
+        break;
+      }
+      gainExp(need);
+      safety++;
+    }
+
+    p.exp = 0; // 直升道具重置經驗條
+    return Math.max(0, p.lvl - before);
+  }
+
+  function useLevelVoucher(targetLv, itemName){
+    const p = game.player;
+    if(!p) return;
+
+    if(p.lvl >= targetLv){
+      say(`🎟️ 你已經超過 <b>Lv.${targetLv}</b>，<b>${itemName||"直升券"}</b> 沒有效果。`);
+      return;
+    }
+
+    const gained = jumpToLevel(targetLv);
+    if(gained > 0){
+      say(`🎟️ 使用 <b>${itemName||"直升券"}</b>，等級直升至 <b>Lv.${p.lvl}</b>！`);
+    }
+  }
+
   function updatePassivesOnKill(){
     const job=game.player.job;
     game.player.passiveKills[job]=(game.player.passiveKills[job]||0)+1;
@@ -3765,6 +3819,37 @@ function upgradeSkillByPoint(id){
 }
   function addInv(name,c=1){ game.inv[name]=(game.inv[name]||0)+c; autosave(); }
   function decInv(name,c=1){ if(!game.inv[name]) return; game.inv[name]-=c; if(game.inv[name]<=0) delete game.inv[name]; autosave(); }
+
+  function openSettings(){
+    if(!settingsDlg) return;
+    if(serialInput) serialInput.value = "";
+    settingsDlg.showModal();
+    if(serialInput) serialInput.focus();
+  }
+
+  function redeemSerial(codeRaw){
+    const code = String(codeRaw||"").trim();
+    if(!code){ say("請先輸入序號。"); return; }
+
+    if(!game.state.redeemedSerials) game.state.redeemedSerials = {};
+
+    if(code === "999"){
+      if(game.state.redeemedSerials[code]){
+        say("此序號已兌換過，無法重複使用。");
+        return;
+      }
+
+      LEVEL_JUMP_ITEMS.forEach(({name})=>addInv(name,1));
+      game.state.redeemedSerials[code] = true;
+      say("🎁 序號兌換成功：獲得 Lv.10 / Lv.30 / Lv.70 / Lv.120 直升券各 1 張！");
+      render();
+      autosave();
+      if(serialInput) serialInput.value = "";
+      return;
+    }
+
+    say("❌ 序號無效，請確認後再試。");
+  }
   function addEquipToInv(baseName,qual="白"){
     const tpl=EQUIPS[baseName]; if(!tpl) return;
     const id = makeEquipInstance(baseName, qual, tpl.slot, tpl.weapon||null, {
@@ -5499,7 +5584,11 @@ function doRebirth(){
         shopJobRow=$("#shopJobRow"),
         bulkSellFilter=$("#bulkSellFilter"),
         bulkSellBtn=$("#bulkSellBtn"),
-        helpDlg=$("#helpDlg");
+        helpDlg=$("#helpDlg"),
+        serialSubmitBtn=$("#serialSubmitBtn");
+
+  settingsDlg = $("#settingsDlg");
+  serialInput = $("#serialInput");
 
   classNoticeDlg = $("#classNoticeDlg");
   classNoticeText = $("#classNoticeText");
@@ -5521,7 +5610,7 @@ $("#saveBtn").onclick = ()=>{
   say("💾 存檔成功！");
 };
 $("#resetBtn").onclick=()=>{ if(confirm("確定要重開？會清除存檔與商店庫存。")){ localStorage.removeItem(LKEY); location.reload(); } };
-$("#questBtn").onclick=()=>{ renderQuestList(); questDlg.showModal(); };
+  $("#questBtn").onclick=()=>{ renderQuestList(); questDlg.showModal(); };
 
  const rebirthDlg = $("#rebirthDlg");
 const doRebirthBtn = $("#doRebirthBtn");
@@ -5529,6 +5618,7 @@ const doRebirthBtn = $("#doRebirthBtn");
   $("#shopBtn").onclick=()=>openShop();
   $("#mapBtn").onclick=()=>openMap();
   $("#skillBookBtn").onclick=()=>{ renderSkillList(); skillDlg.showModal(); };
+  $("#settingsBtn").onclick=()=>openSettings();
   skillTabButtons.forEach(btn=>{
     btn.onclick=()=>{
       currentSkillTierTab = Number(btn.dataset.tier||0);
@@ -5549,9 +5639,19 @@ const doRebirthBtn = $("#doRebirthBtn");
   $("#closeSkill").onclick=()=>skillDlg.close();
   $("#closeHelp").onclick=()=>helpDlg.close();
   $("#closeEnh").onclick=()=>enhDlg.close();
+  $("#closeSettings").onclick=()=>settingsDlg?.close();
 $("#rebirthBtn").onclick = ()=>{ rebirthDlg.showModal(); };
 $("#closeRebirth").onclick = ()=>{ rebirthDlg.close(); };
 doRebirthBtn.onclick = ()=>{ doRebirth(); };
+
+  if(serialSubmitBtn){
+    serialSubmitBtn.onclick = ()=>redeemSerial(serialInput?.value);
+  }
+  if(serialInput){
+    serialInput.addEventListener("keydown", e=>{
+      if(e.key === "Enter") redeemSerial(serialInput.value);
+    });
+  }
 
   document.querySelectorAll(".unequip-btn").forEach(btn=>{
     btn.onclick = ()=>unequipSlot(btn.dataset.unequip);
