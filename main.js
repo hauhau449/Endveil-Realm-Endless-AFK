@@ -196,6 +196,7 @@ const ARTIFACT_NAME_LIB = {
     weapon: {
       blade:  ["審判長劍","斬裂之刃","白狼細劍","破曉闊劍","裁決大劍"],
       dagger: ["夜行匕首","蛇牙短刃","影縫之刺","無聲之刃","獵月短刀"],
+      fist:   ["裂空鐵拳","蒼狼拳套","星紋護拳","炎脈戰拳"],
       staff:  ["星吟法杖","霜語長杖","魂燈權杖","靈潮長杖","雷唱權杖"],
       focus:  ["星核吊墜","靈紋水晶","霜心魔球","燼脈法核"],
       tome:   ["星痕魔典","虛織咒頁","霜符古籍","深淵啟示錄"],
@@ -214,6 +215,8 @@ const WEAPON_SPEED = {
   "法杖": "慢",
   "短劍盾": "快",
   "長劍盾": "慢",
+  "巨劍": "慢",
+  "拳套": "快",
   "雙刀": "快",
   "刺刀": "慢",
   "爪": "快",
@@ -224,7 +227,7 @@ const WEAPON_SPEED = {
   "重弩": "慢"
 };
 const CLASS_WEAPONS = {
-  Warrior:["短劍盾","長劍盾"],
+  Warrior:["短劍盾","長劍盾","巨劍","拳套"],
   Mage:["吊墜","水晶球","魔法書","法杖"],
   Assassin:["雙刀","刺刀","爪","暗器"],
   Ranger:["長弓","短弓","手弩","重弩"]
@@ -244,6 +247,8 @@ const CLASS_ACCESSORIES = {
 const ARTIFACT_WEAPON_KEY = {
   "短劍盾": "blade",
   "長劍盾": "blade",
+  "巨劍": "blade",
+  "拳套": "fist",
   "吊墜": "focus",
   "水晶球": "focus",
   "魔法書": "tome",
@@ -1194,6 +1199,8 @@ const XP_SCROLL_RATE = 2.0;
 
     "短劍盾":{slot:"weapon", weapon:"短劍盾", qual:"白", atk:3, def:1, str:1, agi:1, bindSeries:"Warrior"},
     "長劍盾":{slot:"weapon", weapon:"長劍盾", qual:"白", atk:4, def:2, str:2, bindSeries:"Warrior"},
+    "巨劍":{slot:"weapon", weapon:"巨劍", qual:"白", atk:5, def:1, str:3, bindSeries:"Warrior"},
+    "拳套":{slot:"weapon", weapon:"拳套", qual:"白", atk:3, str:1, agi:2, bindSeries:"Warrior"},
 
     "雙刀":{slot:"weapon", weapon:"雙刀", qual:"白", atk:3, str:1, agi:2, bindSeries:"Assassin"},
     "刺刀":{slot:"weapon", weapon:"刺刀", qual:"白", atk:4, str:2, agi:1, bindSeries:"Assassin"},
@@ -1237,6 +1244,8 @@ const MOUNTS={
     {name:"經驗加倍捲",type:"consum",price:100}, // [NEW]
     {name:"短劍盾",type:"weapon",price:24},
     {name:"長劍盾",type:"weapon",price:28},
+    {name:"巨劍",type:"weapon",price:32},
+    {name:"拳套",type:"weapon",price:26},
     {name:"吊墜",type:"weapon",price:26},
     {name:"水晶球",type:"weapon",price:30},
     {name:"魔法書",type:"weapon",price:25},
