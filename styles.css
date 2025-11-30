@@ -125,8 +125,9 @@
   .dlg{padding:12px}
   .dlg h4{margin:0 0 8px 0;color:var(--muted)}
   .list{max-height:380px;overflow:auto;border:1px dashed var(--dash);border-radius:10px}
-  .list .row{justify-content:space-between;border-bottom:1px dotted var(--dash);padding:8px}
+  .list .row{justify-content:flex-start;border-bottom:1px dotted var(--dash);padding:8px}
   .list .row:last-child{border-bottom:none}
+  .list .row > :first-child{flex:1 1 0;min-width:0}
   .tag{font-size:12px;opacity:.85}
   .right{margin-left:auto;display:flex;gap:6px}
   .tabs{display:flex;gap:6px;margin-bottom:8px}
