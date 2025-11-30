@@ -1131,7 +1131,9 @@ BloodfireCombo:{
     const totalHits = baseHits + bonusHits;
     const skillBoost = consumeBloodUnleashSkillBoost();
     let totalDmg = 0;
+    let totalHpCost = 0;
     let realHits = 0;
+    const hitLogs = [];
     for(let i=0;i<totalHits;i++){
       if(p.hp <= 1) break;
       const hpCostRate = 0.018 + 0.002*(lv-1);
@@ -1141,11 +1143,16 @@ BloodfireCombo:{
       e.hp = clamp(e.hp - hitDmg, 0, e.maxhp);
       p.hp = Math.max(1, p.hp - hpCost);
       totalDmg += hitDmg;
+      totalHpCost += hpCost;
       realHits++;
       affixOnHit(p, e, hitDmg);
+      hitLogs.push(`第 ${i+1} 段：<span class="hp">-${hitDmg}</span>｜自損 <b>${hpCost}</b> HP`);
       if(e.hp<=0) break;
     }
-    say(`🔥 <b>焚血連斬</b>展開 ${realHits} 段攻勢，總計造成 <span class="hp">-${totalDmg}</span>（每段消耗自身 HP）。`);
+    if(hitLogs.length){
+      say(`🔥 <b>焚血連斬</b>展開 ${realHits} 段攻勢：<br>${hitLogs.map(h=>`・${h}`).join("<br>")}`);
+    }
+    say(`🩸 本次連斬共消耗 <b>${totalHpCost}</b> HP，總計造成 <span class="hp">-${totalDmg}</span>。`);
     recoverManaOnAction(p);
     recalcPlayerStats();
     return true;
@@ -2754,51 +2761,88 @@ function equipRestrictionText(inst){
   }
 
   function randomEnemy(){
-  const z=currentZone();
-  const pool = Array.isArray(z.pool) && z.pool.length>0 ? z.pool : (zones[0]?.pool || []);
-  const safePool = pool.length>0 ? pool : [{ name:"未知敵人", base: monsterTemplate(z.suggest?.[0]||1,""), isBoss:false }];
-  const bandMid = Math.floor((z.suggest[0]+z.suggest[1])/2);
-  const basePick = safePool[rnd(0,safePool.length-1)];
-  const base = JSON.parse(JSON.stringify(basePick?.base || monsterTemplate(z.suggest?.[0]||1,"")));
-  const ensureStat = (v, min=0)=> Number.isFinite(v) ? v : min;
-  base.hp = ensureStat(base.hp, 1);
-  base.mp = ensureStat(base.mp, 0);
-  base.atk = ensureStat(base.atk, 1);
-  base.def = ensureStat(base.def, 0);
-  const dayScale=1+(Math.min(60,game.state.day)-1)*0.001;
-  const lvl=rnd(z.suggest[0],z.suggest[1]);
-  const sc = 1 + (lvl - bandMid)*0.02;
-  const p=game.player;
-  const tierScale = 1 + p.tier*0.15 + Math.max(0, (p.lvl - bandMid))*0.01;
-  const playerPower = combatPowerScore({ atk:p.atk, def:p.def, hp:p.maxhp, mp:p.maxmp });
-  const enemyPower = combatPowerScore(base);
-  const dynScale = adaptiveDifficultyScale(playerPower, enemyPower);
-  ["hp","mp","atk","def"].forEach(k=> base[k]=Math.max(1, Math.round(base[k]*dayScale*sc*tierScale*dynScale)));
+    const z=currentZone();
+    const pool = Array.isArray(z.pool) && z.pool.length>0 ? z.pool : (zones[0]?.pool || []);
+    const safePool = pool.length>0 ? pool : [{ name:"未知敵人", base: monsterTemplate(z.suggest?.[0]||1,""), isBoss:false }];
+    const bandMid = Math.floor((z.suggest[0]+z.suggest[1])/2);
+    const basePick = safePool[rnd(0,safePool.length-1)];
+    const base = JSON.parse(JSON.stringify(basePick?.base || monsterTemplate(z.suggest?.[0]||1,"")));
+    const ensureStat = (v, min=0)=> Number.isFinite(v) ? v : min;
+    base.hp = ensureStat(base.hp, 1);
+    base.mp = ensureStat(base.mp, 0);
+    base.atk = ensureStat(base.atk, 1);
+    base.def = ensureStat(base.def, 0);
+    const dayScale=1+(Math.min(60,game.state.day)-1)*0.001;
+    const lvl=rnd(z.suggest[0],z.suggest[1]);
+    const sc = 1 + (lvl - bandMid)*0.02;
+    const p=game.player;
+    const tierScale = 1 + p.tier*0.15 + Math.max(0, (p.lvl - bandMid))*0.01;
+    const playerPower = combatPowerScore({ atk:p.atk, def:p.def, hp:p.maxhp, mp:p.maxmp });
+    const enemyPower = combatPowerScore(base);
+    const dynScale = adaptiveDifficultyScale(playerPower, enemyPower);
+    ["hp","mp","atk","def"].forEach(k=> base[k]=Math.max(1, Math.round(base[k]*dayScale*sc*tierScale*dynScale)));
 
-  if (basePick.isBoss) {
-    const playerMaxHp = Math.max(1, game.player?.maxhp || 0);
-    base.hp = Math.max(1, Math.round(playerMaxHp * 50));
+    if (basePick.isBoss) {
+      const playerMaxHp = Math.max(1, game.player?.maxhp || 0);
+      base.hp = Math.max(1, Math.round(playerMaxHp * 50));
+    }
+
+    const e = {
+      name: basePick?.name || "未知敵人",
+      lvl,
+      maxhp: base.hp || 1, hp: base.hp || 1,
+      maxmp: base.mp || 0, mp: base.mp || 0,
+      atk: base.atk || 1, def: base.def || 0,
+      gold: Math.round(rnd(...(base.gold || [1,1]))),
+      exp:  Math.round(rnd(...(base.exp  || [1,1]))),
+      drops: Array.isArray(base.drops) ? base.drops : [],            // ⬅️ 這一行是關鍵：把掉落表帶進敵人物件
+      isBoss: !!basePick?.isBoss,
+      tag: base.tag || "",
+      dot: 0, dotTurns: 0,
+      defDown: 0, defDownTurns: 0,   // 防禦 Debuff 用
+      atkDown:0, atkDownTurns:0,
+      hitDown:0, hitDownTurns:0
+    };
+
+    return e;
   }
 
-  const e = {
-    name: basePick?.name || "未知敵人",
-    lvl,
-    maxhp: base.hp || 1, hp: base.hp || 1,
-    maxmp: base.mp || 0, mp: base.mp || 0,
-    atk: base.atk || 1, def: base.def || 0,
-    gold: Math.round(rnd(...(base.gold || [1,1]))),
-    exp:  Math.round(rnd(...(base.exp  || [1,1]))),
-    drops: Array.isArray(base.drops) ? base.drops : [],            // ⬅️ 這一行是關鍵：把掉落表帶進敵人物件
-    isBoss: !!basePick?.isBoss,
-    tag: base.tag || "",
-    dot: 0, dotTurns: 0,
-    defDown: 0, defDownTurns: 0,   // 防禦 Debuff 用
-    atkDown:0, atkDownTurns:0,
-    hitDown:0, hitDownTurns:0
-  };
+  function normalizeEnemy(enemy, zone){
+    const z = zone || currentZone();
+    const fallbackLvl = z?.suggest?.[0] || 1;
+    const tpl = monsterTemplate(fallbackLvl, enemy?.tag || "");
+    const ensure = (val, min)=> Number.isFinite(val) ? val : min;
+    const lvl = ensure(enemy?.lvl, fallbackLvl);
+    const baseHp = ensure(enemy?.maxhp ?? enemy?.hp, tpl.hp || 1);
+    const baseMp = ensure(enemy?.maxmp ?? enemy?.mp, tpl.mp || 0);
 
-  return e;
-}
+    const normalized = {
+      name: enemy?.name || "未知敵人",
+      lvl,
+      maxhp: ensure(enemy?.maxhp, baseHp),
+      maxmp: ensure(enemy?.maxmp, baseMp),
+      atk: ensure(enemy?.atk, tpl.atk || 1),
+      def: ensure(enemy?.def, tpl.def || 0),
+      gold: ensure(enemy?.gold, tpl.gold?.[0] || 0),
+      exp: ensure(enemy?.exp, tpl.exp?.[0] || 0),
+      drops: Array.isArray(enemy?.drops) ? enemy.drops : [],
+      isBoss: !!enemy?.isBoss,
+      tag: enemy?.tag || tpl.tag || "",
+      dot: enemy?.dot || 0,
+      dotTurns: enemy?.dotTurns || 0,
+      defDown: enemy?.defDown || 0,
+      defDownTurns: enemy?.defDownTurns || 0,
+      atkDown: enemy?.atkDown || 0,
+      atkDownTurns: enemy?.atkDownTurns || 0,
+      hitDown: enemy?.hitDown || 0,
+      hitDownTurns: enemy?.hitDownTurns || 0,
+    };
+
+    normalized.hp = clamp(ensure(enemy?.hp, baseHp), 0, normalized.maxhp || baseHp);
+    normalized.mp = clamp(ensure(enemy?.mp, baseMp), 0, normalized.maxmp || baseMp);
+
+    return normalized;
+  }
 
   function startBloodDevourGuardianBattle(){
     recalcPlayerStats();
@@ -2832,7 +2876,9 @@ function equipRestrictionText(inst){
   function startBattle(customEnemy=null){
     if(game.state.inBattle){ say("你還在戰鬥中！"); return; }
     const z=currentZone();
-    const e= customEnemy ? { ...customEnemy } : randomEnemy(); game.state.enemy=e; game.state.inBattle=true;
+    const eRaw = customEnemy ? { ...customEnemy } : randomEnemy();
+    const e = normalizeEnemy(eRaw, z);
+    game.state.enemy=e; game.state.inBattle=true;
     game.state.trialSkill = customEnemy?.trialSkillId || null;
     if(customEnemy?.trialSkillId){
       game.state.zoneBeforeTrial = game.state.zoneId;
