@@ -3136,7 +3136,7 @@ function rollArtifactStatsForSlot() {
   function renderInvFilters(){
     invFilters.innerHTML="";
     invCats.forEach(c=>{
-      const b=btn(`${c.name}`,()=>{ invFilter=c.key; updateInvJobFilterVisibility(); renderInventoryList(); });
+      const b=btn(`${c.name}`,()=>{ invFilter=c.key; renderInvFilters(); renderInventoryList(); });
       if(invFilter===c.key) b.classList.add("active");
       invFilters.appendChild(b);
     });
