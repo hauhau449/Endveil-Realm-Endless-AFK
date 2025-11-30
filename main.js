@@ -5839,7 +5839,9 @@ function doRebirth(){
 
   $("#exploreBtn").onclick=explore;
   $("#restBtn").onclick=rest;
-  $("#battleBtn").onclick=startBattle;
+  // ⚠️ 直接將 startBattle 指派給 onclick 會把點擊事件物件當成 customEnemy 傳入，
+  // 造成敵人名稱顯示為「未知」。改用包裝函式確保不帶任何參數。
+  $("#battleBtn").onclick=()=>startBattle();
   $("#attackBtn").onclick=playerAttack;
   $("#skillBtn").onclick=useActiveSkill;
   $("#invBtn").onclick=()=>openInventory();
