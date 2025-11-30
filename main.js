@@ -1642,7 +1642,7 @@ const MOUNTS={
       "小魔力藥水":10,
       "煙霧彈":1,
     },
-    state:{ inBattle:false, enemy:null, kills:{}, zoneId:"z-01", day:1, guardMitigation:{ratio:0,turns:0}, counterReady:false, playerShield:0, wildHowl:{turns:0}, bloodUnleash:{turns:0}, warInstinctStacks:0, redeemedSerials:{} },
+    state:{ inBattle:false, enemy:null, kills:{}, zoneId:"z-01", day:1, guardMitigation:{ratio:0,turns:0}, counterReady:false, playerShield:0, wildHowl:{turns:0}, bloodUnleash:{turns:0}, warInstinctStacks:0, redeemedSerials:{}, inTrial:false, zoneBeforeTrial:null },
     quests:[], shop:{stock:[]},
     buffs:{ xpLayers:[] }, // 多層加倍，每層為剩餘日數
     uiFlags:{ classNotice:{} }
@@ -2733,9 +2733,11 @@ function equipRestrictionText(inst){
 
   function randomEnemy(){
   const z=currentZone();
+  const pool = Array.isArray(z.pool) && z.pool.length>0 ? z.pool : (zones[0]?.pool || []);
+  const safePool = pool.length>0 ? pool : [{ name:"未知敵人", base: monsterTemplate(z.suggest?.[0]||1,""), isBoss:false }];
   const bandMid = Math.floor((z.suggest[0]+z.suggest[1])/2);
-  const basePick = z.pool[rnd(0,z.pool.length-1)];
-  const base = JSON.parse(JSON.stringify(basePick.base));
+  const basePick = safePool[rnd(0,safePool.length-1)];
+  const base = JSON.parse(JSON.stringify(basePick?.base || monsterTemplate(z.suggest?.[0]||1,"")));
   const dayScale=1+(Math.min(60,game.state.day)-1)*0.001;
   const lvl=rnd(z.suggest[0],z.suggest[1]);
   const sc = 1 + (lvl - bandMid)*0.02;
@@ -2752,15 +2754,15 @@ function equipRestrictionText(inst){
   }
 
   const e = {
-    name: basePick.name,
+    name: basePick?.name || "未知敵人",
     lvl,
-    maxhp: base.hp, hp: base.hp,
-    maxmp: base.mp, mp: base.mp,
-    atk: base.atk, def: base.def,
-    gold: Math.round(rnd(...base.gold)),
-    exp:  Math.round(rnd(...base.exp)),
-    drops: base.drops,            // ⬅️ 這一行是關鍵：把掉落表帶進敵人物件
-    isBoss: !!basePick.isBoss,
+    maxhp: base.hp || 1, hp: base.hp || 1,
+    maxmp: base.mp || 0, mp: base.mp || 0,
+    atk: base.atk || 1, def: base.def || 0,
+    gold: Math.round(rnd(...(base.gold || [1,1]))),
+    exp:  Math.round(rnd(...(base.exp  || [1,1]))),
+    drops: Array.isArray(base.drops) ? base.drops : [],            // ⬅️ 這一行是關鍵：把掉落表帶進敵人物件
+    isBoss: !!basePick?.isBoss,
     tag: base.tag || "",
     dot: 0, dotTurns: 0,
     defDown: 0, defDownTurns: 0,   // 防禦 Debuff 用
@@ -2805,6 +2807,10 @@ function equipRestrictionText(inst){
     const z=currentZone();
     const e= customEnemy ? { ...customEnemy } : randomEnemy(); game.state.enemy=e; game.state.inBattle=true;
     game.state.trialSkill = customEnemy?.trialSkillId || null;
+    if(customEnemy?.trialSkillId){
+      game.state.zoneBeforeTrial = game.state.zoneId;
+      game.state.inTrial = true;
+    }
     game.state.guardMitigation={ratio:0,turns:0};
     game.state.counterReady=false;
     game.state.playerShield=0;
@@ -3001,7 +3007,8 @@ function equipRestrictionText(inst){
   render();
   }
   function endBattle(victory){
-    const e=game.state.enemy; const trialSkill = game.state.trialSkill; game.state.inBattle=false; game.state.enemy=null; $("#runBtn").disabled=true; game.state.trialSkill=null;
+    const e=game.state.enemy; const trialSkill = game.state.trialSkill; const wasTrial = game.state.inTrial; const zoneBeforeTrial = game.state.zoneBeforeTrial;
+    game.state.inBattle=false; game.state.enemy=null; $("#runBtn").disabled=true; game.state.trialSkill=null;
     game.state.wildHowl={turns:0};
     game.state.bloodUnleash={turns:0};
     resetWarInstinctStacks();
@@ -3027,6 +3034,12 @@ function equipRestrictionText(inst){
       game.player.gold=Math.max(0, game.player.gold - lostGold);
       say(`💀 你倒下了……損失 <b>${lostExp} EXP</b> 與 <b>${lostGold} G</b>。`);
       const p=game.player; p.hp=Math.max(10,Math.round(p.maxhp*0.5)); p.mp=Math.max(5,Math.round(p.maxmp*0.5));
+    }
+    if(wasTrial){
+      game.state.zoneId = zoneBeforeTrial || game.state.zoneId;
+      game.state.inTrial = false;
+      game.state.zoneBeforeTrial = null;
+      say("🧭 試煉結束，返回原本的地圖。");
     }
     render(); autosave();
   }
