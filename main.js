@@ -533,6 +533,8 @@ function ensureUniqueName(name){
     "噬血心法": {
       id: "噬血心法",
       type: "passive",
+      acquisition: "trial",
+      trialNote: "挑戰「噬血心法守護者」勝利後自動習得",
       maxLevel: 1,
       levels: [
         { lv: 1, effLifeSteal: 0.02 }
@@ -1257,7 +1259,8 @@ BloodFrenzyBody:{
     id:"BloodDevourDoctrine",
     name:"噬血心法（Blood-Devour Doctrine）",
     desc:"被動：習得後獲得額外實際吸血效果，加成取自血焰專精試煉設定。",
-    acquisition:"point",
+    acquisition:"trial",
+    trialNote:"挑戰「噬血心法守護者」勝利後自動習得",
     maxLv:1, tier:3, tree:"BloodflameReaver", type:"passive"
   },
   WoundMastery:{
@@ -2768,18 +2771,51 @@ function equipRestrictionText(inst){
   return e;
 }
 
+  function startBloodDevourGuardianBattle(){
+    recalcPlayerStats();
+    const p = game.player;
+    const guardian = {
+      name:"噬血心法守護者",
+      lvl:p.lvl,
+      maxhp:p.maxhp, hp:p.maxhp,
+      maxmp:p.maxmp, mp:p.maxmp,
+      atk:p.atk, def:p.def,
+      gold:0, exp:0, drops:[],
+      isBoss:true,
+      guardianMaxHitPct:0.15,
+      trialSkillId:"BloodDevourDoctrine",
+      zoneName:"血焰專精試煉",
+      intro:"🩸 你向噬血心法守護者發起挑戰！"
+    };
+    say("🩸 試煉將鏡像你的能力，守護者的每擊最多造成你上限 15% 的傷害。");
+    startBattle(guardian);
+  }
 
-  function startBattle(){
+  function promptBloodDevourTrial(){
+    if(game.state.inBattle) return say("戰鬥中無法進行試煉。");
+    const ok = confirm("是否挑戰「噬血心法守護者」以習得噬血心法？");
+    if(!ok) return;
+    startBloodDevourGuardianBattle();
+  }
+
+
+
+  function startBattle(customEnemy=null){
     if(game.state.inBattle){ say("你還在戰鬥中！"); return; }
     const z=currentZone();
-    const e=randomEnemy(); game.state.enemy=e; game.state.inBattle=true;
+    const e= customEnemy ? { ...customEnemy } : randomEnemy(); game.state.enemy=e; game.state.inBattle=true;
+    game.state.trialSkill = customEnemy?.trialSkillId || null;
     game.state.guardMitigation={ratio:0,turns:0};
     game.state.counterReady=false;
     game.state.playerShield=0;
     game.state.wildHowl={turns:0};
     game.state.bloodUnleash={turns:0};
     resetWarInstinctStacks();
-    say(`⚔️ 在「${z.name}」遭遇 <b>${e.name}</b>（Lv.${e.lvl}｜HP ${e.hp}｜攻 ${e.atk}｜防 ${e.def}）。`);
+    const zoneName = customEnemy?.zoneName || z.name;
+    if(customEnemy?.intro){
+      say(customEnemy.intro);
+    }
+    say(`⚔️ 在「${zoneName}」遭遇 <b>${e.name}</b>（Lv.${e.lvl}｜HP ${e.hp}｜攻 ${e.atk}｜防 ${e.def}）。`);
     const insLv = game.player.insightLv || 0;
     if(insLv>0 && Array.isArray(e.drops)){
       const peek = e.drops.slice(0, Math.min(e.drops.length, 2 + insLv));
@@ -2939,6 +2975,11 @@ function equipRestrictionText(inst){
     say(`🔷 魔力護盾抵銷 ${reduced} 傷害。`);
   }
 
+  if(e.guardianMaxHitPct){
+    const cap = Math.max(1, Math.floor(p.maxhp * e.guardianMaxHitPct));
+    dmg = Math.min(dmg, cap);
+  }
+
   p.hp=clamp(p.hp-dmg,0,p.maxhp);
   gainWarInstinctStack(1);
   say(`<b>${e.name}</b> 攻擊了你，<span class="bad">-${dmg}</span>。`);
@@ -2960,7 +3001,7 @@ function equipRestrictionText(inst){
   render();
   }
   function endBattle(victory){
-    const e=game.state.enemy; game.state.inBattle=false; game.state.enemy=null; $("#runBtn").disabled=true;
+    const e=game.state.enemy; const trialSkill = game.state.trialSkill; game.state.inBattle=false; game.state.enemy=null; $("#runBtn").disabled=true; game.state.trialSkill=null;
     game.state.wildHowl={turns:0};
     game.state.bloodUnleash={turns:0};
     resetWarInstinctStacks();
@@ -2972,9 +3013,15 @@ function equipRestrictionText(inst){
       game.state.kills[e.name]=(game.state.kills[e.name]||0)+1;
       updatePassivesOnKill();
       handleDrops(e);
-      say(`🏆 勝利！（${z.name}）獲得 <b>${gold}G</b> 與 <b>${finalExp} EXP</b>（加倍層數 ${activeXpBuffs()}）。`);
-      if(Math.random()<0.35){ advanceDay(1); }
-    } else {
+        const victoryZone = e?.zoneName || z.name;
+        say(`🏆 勝利！（${victoryZone}）獲得 <b>${gold}G</b> 與 <b>${finalExp} EXP</b>（加倍層數 ${activeXpBuffs()}）。`);
+        if(trialSkill === "BloodDevourDoctrine" && skillLevel("BloodDevourDoctrine",0) <= 0){
+          if(!game.player.learned) game.player.learned = {};
+          game.player.learned["BloodDevourDoctrine"] = 1;
+          say("🩸 你擊敗了噬血心法守護者，領悟了 <b>噬血心法</b>！");
+        }
+        if(Math.random()<0.35){ advanceDay(1); }
+      } else {
       const lostExp=Math.floor(game.player.exp*0.5), lostGold=Math.floor(game.player.gold*0.2);
       game.player.exp=Math.max(0, game.player.exp - lostExp);
       game.player.gold=Math.max(0, game.player.gold - lostGold);
@@ -5980,6 +6027,7 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
       const statusNotes = [];
       if(!tierAllowed) statusNotes.push("未解鎖該轉職階段");
       if(!treeAllowed) statusNotes.push(`僅限 ${jobName(sk.tree)} 系`);
+      if(lv<=0 && sk.acquisition === "trial" && sk.trialNote) statusNotes.push(sk.trialNote);
       if(lv<=0) statusNotes.push("尚未習得");
 
       const tagParts = [`【${typeLabel}】Lv.${lv}/${max}${qual>=1?`｜${QUALS[qual]}`:""}`];
@@ -6002,6 +6050,11 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
         const upBtn = btn(upLab, ()=> upgradeSkillByPoint(id));
         upBtn.disabled = !canUp;
         right.append(upBtn);
+      } else if(sk.acquisition === "trial"){
+        const lab = lv>0 ? "已習得" : "挑戰守護者";
+        const trialBtn = btn(lab, ()=> promptBloodDevourTrial());
+        trialBtn.disabled = lv>0 || !tierAllowed || !treeAllowed || game.state.inBattle;
+        right.append(trialBtn);
       }
 
       row.append(right); box.appendChild(row);
@@ -6047,14 +6100,15 @@ const m = Math.max(1, Math.floor(game.player.maxmp * pct) + regen);
   function tryRun(){ 
   if(!game.state.inBattle) return say("現在沒有在戰鬥。"); 
   const ok = Math.random() < 0.6; 
-  if(ok){ 
+  if(ok){
     // ✅ 改成單純脫離戰鬥，不結算勝利
     game.state.inBattle = false;
     game.state.enemy = null;
+    game.state.trialSkill = null;
     $("#runBtn").disabled = true;
     say("🏃‍♂️ 你成功脫離了戰鬥。");
     render(); autosave();
-  } else { 
+  } else {
     say("你試圖逃跑，但失敗了！"); 
     enemyTurn(); 
   } 
