@@ -1200,13 +1200,73 @@ BloodFrenzyBody:{
   acquisition:"point",
   maxLv:5, tier:2, tree:"Berserker", type:"passive"
 },
-WarDrivenInstinct:{
-  id:"WarDrivenInstinct",
-  name:"嗜戰本能（War-Driven Instinct）",
-  desc:"被動：同一場戰鬥內造成暴擊、受到傷害或擊殺時獲得 1 層「嗜戰」。每層提高攻擊與行動值，戰鬥結束清空。層數上限：Lv1=5｜Lv2=8｜Lv3=12｜Lv4=16｜Lv5=20。",
-  acquisition:"point",
-  maxLv:5, tier:2, tree:"Berserker", type:"passive"
-}
+  WarDrivenInstinct:{
+    id:"WarDrivenInstinct",
+    name:"嗜戰本能（War-Driven Instinct）",
+    desc:"被動：同一場戰鬥內造成暴擊、受到傷害或擊殺時獲得 1 層「嗜戰」。每層提高攻擊與行動值，戰鬥結束清空。層數上限：Lv1=5｜Lv2=8｜Lv3=12｜Lv4=16｜Lv5=20。",
+    acquisition:"point",
+    maxLv:5, tier:2, tree:"Berserker", type:"passive"
+  },
+  // ==============================
+  // 🟥 血焰狂刃（3 轉）技能列表
+  // 以上方 BLOODFLAME_REAVER_SKILLS 設定為基礎，僅先掛出資訊供 UI 習得
+  // ==============================
+  SoulRendFlurry:{
+    id:"SoulRendFlurry",
+    name:"裂魂連斬（Soul-Rend Flurry）",
+    desc:"主動：多段破甲斬擊，隨等級提升首段/末段倍率與破甲、回合數，並以 HP 轉化攻勢（等級上限 15）。",
+    acquisition:"point",
+    maxLv:15, tier:3, tree:"BloodflameReaver", type:"active"
+  },
+  DeepWoundRend:{
+    id:"DeepWoundRend",
+    name:"深傷撕裂（Deep-Wound Rend）",
+    desc:"主動：單體高傷並附帶撕裂 DOT，對破甲目標追加傷害，等級越高倍率、流血比例與回合數提升（上限 15）。",
+    acquisition:"point",
+    maxLv:15, tier:3, tree:"BloodflameReaver", type:"active"
+  },
+  BloodburnRelease:{
+    id:"BloodburnRelease",
+    name:"燃血解放（Bloodburn Release）",
+    desc:"主動大招：燃燒一定比例 HP 換取高倍率爆發，並在 1 回合內獲得狂怒（攻擊、行動值、爆擊與爆傷提升），等級上限 5。",
+    acquisition:"point",
+    maxLv:5, tier:3, tree:"BloodflameReaver", type:"active"
+  },
+  BloodFervor:{
+    id:"BloodFervor",
+    name:"血性戰意（Blood Fervor）",
+    desc:"開關型 Buff：提升攻擊、行動值、爆擊與爆傷，但每回合損血並提高所受傷害，等級上限 10。",
+    acquisition:"point",
+    maxLv:10, tier:3, tree:"BloodflameReaver", type:"buff"
+  },
+  BloodFrenzyBodyAwakened:{
+    id:"BloodFrenzyBodyAwakened",
+    name:"怒血之軀・解放（Blood-Frenzy Body: Awakened）",
+    desc:"被動：低血時多段提升攻擊/爆擊，受擊累積狂怒層數，且施放血焰技能可疊攻擊力，等級上限 10。",
+    acquisition:"point",
+    maxLv:10, tier:3, tree:"BloodflameReaver", type:"passive"
+  },
+  GauntletGreatswordMastery:{
+    id:"GauntletGreatswordMastery",
+    name:"拳套巨劍熟練（Gauntlet & Greatsword Mastery）",
+    desc:"被動：強化拳套與巨劍武器的熟練度，提供力量、敏捷與爆擊/爆傷加成。",
+    acquisition:"point",
+    maxLv:1, tier:3, tree:"BloodflameReaver", type:"passive"
+  },
+  BloodDevourDoctrine:{
+    id:"BloodDevourDoctrine",
+    name:"噬血心法（Blood-Devour Doctrine）",
+    desc:"被動：習得後獲得額外實際吸血效果，加成取自血焰專精試煉設定。",
+    acquisition:"point",
+    maxLv:1, tier:3, tree:"BloodflameReaver", type:"passive"
+  },
+  WoundMastery:{
+    id:"WoundMastery",
+    name:"裂傷精通（Wound Mastery）",
+    desc:"被動：強化撕裂 DOT，提升倍率、延長回合，且對破甲目標額外增傷，等級上限 5。",
+    acquisition:"point",
+    maxLv:5, tier:3, tree:"BloodflameReaver", type:"passive"
+  }
   };
 
 const SKILL_TIERS = {
@@ -1251,7 +1311,15 @@ const SKILL_TIERS = {
   WildHowl:2,
   BloodUnleash:2,
   BloodFrenzyBody:2,
-  WarDrivenInstinct:2
+  WarDrivenInstinct:2,
+  SoulRendFlurry:3,
+  DeepWoundRend:3,
+  BloodburnRelease:3,
+  BloodFervor:3,
+  BloodFrenzyBodyAwakened:3,
+  GauntletGreatswordMastery:3,
+  BloodDevourDoctrine:3,
+  WoundMastery:3
 };
 
   function skillTier(id){ return SKILL_TIERS[id] ?? 0; }
