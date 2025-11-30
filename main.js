@@ -1145,12 +1145,13 @@ BloodfireCombo:{
       totalDmg += hitDmg;
       totalHpCost += hpCost;
       realHits++;
-      affixOnHit(p, e, hitDmg);
-      hitLogs.push(`第 ${i+1} 段：<span class="hp">-${hitDmg}</span>｜自損 <b>${hpCost}</b> HP`);
+      const perHitLogs = [`・第 ${i+1} 段：<span class="hp">-${hitDmg}</span>｜自損 <b>${hpCost}</b> HP`];
+      affixOnHit(p, e, hitDmg, { log: perHitLogs });
+      hitLogs.push(...perHitLogs);
       if(e.hp<=0) break;
     }
     if(hitLogs.length){
-      say(`🔥 <b>焚血連斬</b>展開 ${realHits} 段攻勢：<br>${hitLogs.map(h=>`・${h}`).join("<br>")}`);
+      say(`🔥 <b>焚血連斬</b>展開 ${realHits} 段攻勢：<br>${hitLogs.join("<br>")}`);
     }
     say(`🩸 本次連斬共消耗 <b>${totalHpCost}</b> HP，總計造成 <span class="hp">-${totalDmg}</span>。`);
     recoverManaOnAction(p);
@@ -2763,7 +2764,8 @@ function equipRestrictionText(inst){
   function randomEnemy(){
     const z=currentZone();
     const pool = Array.isArray(z.pool) && z.pool.length>0 ? z.pool : (zones[0]?.pool || []);
-    const safePool = pool.length>0 ? pool : [{ name:"未知敵人", base: monsterTemplate(z.suggest?.[0]||1,""), isBoss:false }];
+    const fallbackPool = basicMonstersForBand(z.suggest?.[0]||1, z.suggest?.[1]||z.suggest?.[0]||1);
+    const safePool = pool.length>0 ? pool : (fallbackPool.length>0 ? fallbackPool : [{ name:"史萊姆", base: monsterTemplate(z.suggest?.[0]||1,""), isBoss:false }]);
     const bandMid = Math.floor((z.suggest[0]+z.suggest[1])/2);
     const basePick = safePool[rnd(0,safePool.length-1)];
     const base = JSON.parse(JSON.stringify(basePick?.base || monsterTemplate(z.suggest?.[0]||1,"")));
@@ -4914,7 +4916,7 @@ function addRandomAffixN(inst, n){
     return skillCfg?.effLifeSteal || 0;
   }
 
-  function applyBloodDevourLifeSteal(p, damage){
+  function applyBloodDevourLifeSteal(p, damage, logFn){
     const rate = bloodDevourLifeStealRate();
     if(rate <= 0 || damage <= 0) return;
 
@@ -4924,14 +4926,28 @@ function addRandomAffixN(inst, n){
     if(actual <= 0) return;
 
     p.hp = clamp((p.hp || 0) + actual, 0, p.maxhp);
-    say(`🩸 <b>噬血心法</b>吸收了血氣，回復 <b>${actual} HP</b>。`);
+    const msg = `🩸 <b>噬血心法</b>吸收了血氣，回復 <b>${actual} HP</b>。`;
+    if(typeof logFn === "function"){
+      logFn(msg);
+    }else{
+      say(msg);
+    }
   }
 
-  function affixOnHit(p,e,damage){
+  function affixOnHit(p,e,damage,opts={}){
     // ✅ 沒有敵人就別處理詞條
     if(!e) return;
 
-    applyBloodDevourLifeSteal(p, damage);
+    const logArr = Array.isArray(opts.log) ? opts.log : null;
+    const pushLog = (msg)=>{
+      if(logArr){
+        logArr.push(msg);
+      }else{
+        say(msg);
+      }
+    };
+
+    applyBloodDevourLifeSteal(p, damage, pushLog);
 
     const w = getEquippedWithAffix(p);
     if(!w) return;
@@ -4949,7 +4965,7 @@ function addRandomAffixN(inst, n){
 
         if(heal > 0){
           p.hp = clamp(p.hp + heal, 0, p.maxhp);
-          say(`🩸 吸血回復 <b>${heal} HP</b>。`);
+          pushLog(`🩸 吸血回復 <b>${heal} HP</b>。`);
         }
       }
 
@@ -4961,7 +4977,7 @@ function addRandomAffixN(inst, n){
 
         e.dot = dot;
         e.dotTurns = Math.max(3, e.dotTurns || 0); // 至少 3 回合
-        say(`☠️ ${e.name} 中毒了，每回合將損失約 <b>${dot}</b> HP（${e.dotTurns} 回合）。`);
+        pushLog(`☠️ ${e.name} 中毒了，每回合將損失約 <b>${dot}</b> HP（${e.dotTurns} 回合）。`);
       }
     });
   }
