@@ -4834,10 +4834,33 @@ function addRandomAffixN(inst, n){
     }
   }
 
-   function affixOnHit(p,e,damage){
+  function bloodDevourLifeStealRate(){
+    const lv = skillLevel("BloodDevourDoctrine", 0);
+    if(lv <= 0) return 0;
+    const skillCfg = BLOODFLAME_REAVER_SKILLS?.["噬血心法"]?.levels?.[lv-1];
+    return skillCfg?.effLifeSteal || 0;
+  }
+
+  function applyBloodDevourLifeSteal(p, damage){
+    const rate = bloodDevourLifeStealRate();
+    if(rate <= 0 || damage <= 0) return;
+
+    const heal = Math.floor(damage * rate);
+    const missing = Math.max(0, (p.maxhp || 0) - (p.hp || 0));
+    const actual = Math.min(heal, missing);
+    if(actual <= 0) return;
+
+    p.hp = clamp((p.hp || 0) + actual, 0, p.maxhp);
+    say(`🩸 <b>噬血心法</b>吸收了血氣，回復 <b>${actual} HP</b>。`);
+  }
+
+  function affixOnHit(p,e,damage){
     // ✅ 沒有敵人就別處理詞條
     if(!e) return;
-    const w = getEquippedWithAffix(p); 
+
+    applyBloodDevourLifeSteal(p, damage);
+
+    const w = getEquippedWithAffix(p);
     if(!w) return;
 
     w.affix.forEach(a=>{
