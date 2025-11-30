@@ -1853,6 +1853,17 @@ function qualWithStars(inst){
         game.inv=data.inv||game.inv;
         game.state={...game.state, ...(data.state||{})};
         if(!game.state.redeemedSerials) game.state.redeemedSerials = {};
+        // 若敵人資料不完整（舊存檔或手動修改），則重置戰鬥狀態，避免 NaN 顯示
+        const enemy = game.state.enemy;
+        const enemyInvalid = enemy && (
+          !Number.isFinite(enemy.hp) || !Number.isFinite(enemy.maxhp) || enemy.maxhp <= 0 ||
+          !Number.isFinite(enemy.mp) || !Number.isFinite(enemy.maxmp) || enemy.maxmp < 0 ||
+          !Number.isFinite(enemy.atk) || !Number.isFinite(enemy.def)
+        );
+        if(enemyInvalid){
+          game.state.enemy = null;
+          game.state.inBattle = false;
+        }
                 // 任務：舊存檔兼容＆新格式初始化
         game.quests=data.quests||[];
         if(!Array.isArray(game.quests)) game.quests=[];
@@ -2379,18 +2390,20 @@ function recomputeStats(){
     const ui = battleStatusUI;
     if(!ui.ally.lvl || !ui.enemy.name) return;
 
+    const num = (v, fb=0)=> Number.isFinite(v) ? v : fb;
     const p = game.player || {};
     const e = game.state.enemy;
     const pct = (v, max)=>{
-      if(!max || max<=0) return { text:"—", pct:0 };
-      const rate = Math.max(0, Math.min(100, Math.round((v / max) * 100)));
+      const safeMax = num(max, 0);
+      if(!safeMax || safeMax<=0) return { text:"—", pct:0 };
+      const rate = Math.max(0, Math.min(100, Math.round((num(v, 0) / safeMax) * 100)));
       return { text:`${rate}%`, pct:rate };
     };
-    const fmtVal = v => (v || v===0) ? Math.round(v) : "—";
+    const fmtVal = v => Number.isFinite(v) ? Math.round(v) : "—";
     const valTxt = (v, max)=>{
-      if(!max || max<=0) return "—";
-      const safeMax = Math.max(0, Math.round(max));
-      const safeVal = Math.max(0, Math.round(v||0));
+      const safeMax = Math.max(0, Math.round(num(max, 0)));
+      if(!safeMax || safeMax<=0) return "—";
+      const safeVal = Math.max(0, Math.round(num(v, 0)));
       return `${safeVal}/${safeMax}`;
     };
     const fmtLvl = lvl=> lvl ? `Lv.${lvl}` : "—";
@@ -2407,16 +2420,16 @@ function recomputeStats(){
     };
 
     ui.ally.lvl.textContent = fmtLvl(p.lvl);
-    ui.ally.atk.textContent = fmtVal(p.atk);
-    ui.ally.magic.textContent = fmtVal(p.magicAtk || p.atk);
-    updateSide(ui.ally, { hp:p.hp, maxhp:p.maxhp, mp:p.mp, maxmp:p.maxmp });
+    ui.ally.atk.textContent = fmtVal(num(p.atk));
+    ui.ally.magic.textContent = fmtVal(num(p.magicAtk, p.atk));
+    updateSide(ui.ally, { hp:num(p.hp), maxhp:num(p.maxhp), mp:num(p.mp), maxmp:num(p.maxmp) });
 
     ui.enemy.name.textContent = e ? e.name : "—";
     ui.enemy.lvl.textContent = e ? fmtLvl(e.lvl) : "—";
-    ui.enemy.atk.textContent  = e ? fmtVal(e.atk) : "—";   // 🆕 攻擊
-    ui.enemy.def.textContent  = e ? fmtVal(e.def) : "—";   // 🆕 防禦
+    ui.enemy.atk.textContent  = e ? fmtVal(num(e.atk)) : "—";   // 🆕 攻擊
+    ui.enemy.def.textContent  = e ? fmtVal(num(e.def)) : "—";   // 🆕 防禦
     if(e){
-      updateSide(ui.enemy, { hp:e.hp, maxhp:e.maxhp, mp:e.mp, maxmp:e.maxmp });
+      updateSide(ui.enemy, { hp:num(e.hp), maxhp:num(e.maxhp), mp:num(e.mp), maxmp:num(e.maxmp) });
     }else{
       updateSide(ui.enemy, { hp:0, maxhp:0, mp:0, maxmp:0 });
     }
@@ -2425,8 +2438,9 @@ function recomputeStats(){
   function render(){
     refreshSkillPointBuckets();
     const p=game.player, z=currentZone();
-    const hpPct = Math.round((p.hp / p.maxhp) * 100);
-    const mpPct = Math.round((p.mp / p.maxmp) * 100);
+    const safeNum = (v, fb=0)=> Number.isFinite(v)?v:fb;
+    const hpPct = Math.round((safeNum(p.hp) / Math.max(1, safeNum(p.maxhp,1))) * 100);
+    const mpPct = Math.round((safeNum(p.mp) / Math.max(1, safeNum(p.maxmp,1))) * 100);
     $("#shopGold").textContent=p.gold;
     $("#zoneName").textContent = `${z.name}`;
     $("#activeSkillName").textContent = skillNameWithLv(p.activeSkill);
