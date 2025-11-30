@@ -4569,8 +4569,9 @@ function addRandomAffixN(inst, n){
           </div>
         `;
 
-        const buyBtn = btn("購買", ()=>buyFromShop(s));
-        row.appendChild(buyBtn);
+        const buyBtn = btn("購買", ()=>buyFromShop(s,1));
+        const bulkBtn = btn("批量購買", ()=>promptBulkBuyFromShop(s));
+        row.append(buyBtn, bulkBtn);
         buyList.appendChild(row);
       });
     }
@@ -4579,12 +4580,10 @@ function addRandomAffixN(inst, n){
   }
 
   // ✅ 購買時可以輸入數量，不再限制庫存
-  function buyFromShop(s){
+  function buyFromShop(s, qty){
     const price = s.price || 0;
+    let q = qty;
 
-    let q = prompt(`要購買多少個「${s.name}」？`, "1");
-    if(q === null) return;        // 取消
-    q = parseInt(q, 10);
     if(!Number.isFinite(q) || q <= 0){
       alert("數量要是正整數喔。");
       return;
@@ -4598,7 +4597,8 @@ function addRandomAffixN(inst, n){
     }
 
     // 坐騎通常只需要 1 個，這裡限制為 1
-    if(s.type === "mount"){
+    if(s.type === "mount" && q > 1){
+      alert("坐騎一次只能買 1 個喔，已自動調整為 1。");
       q = 1;
     }
 
@@ -4627,6 +4627,13 @@ function addRandomAffixN(inst, n){
     $("#shopGold").textContent = game.player.gold;
     render();
     renderShop();
+  }
+
+  function promptBulkBuyFromShop(s){
+    let q = prompt(`要購買多少個「${s.name}」？`, "1");
+    if(q === null) return;        // 取消
+    q = parseInt(q, 10);
+    buyFromShop(s, q);
   }
 
   // ====== 販售（支援輸入數量＋一鍵賣出） ======
