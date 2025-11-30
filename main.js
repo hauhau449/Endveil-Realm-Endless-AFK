@@ -1514,6 +1514,7 @@ const MOUNTS={
 
   // 小怪（不能無腦，需要補品）
   let hp = 60 + lvl * 25;
+  let mp = 30 + lvl * 10;
   let atk = 7 + lvl * 1.5;
   let def = lvl * 0.8;
   let mdef = lvl * 0.7;
@@ -1522,6 +1523,7 @@ const MOUNTS={
   // 菁英怪（容易死，不注意會翻車）
   if (label === "elite") {
     hp *= 3.0;
+    mp *= 1.6;
     atk *= 1.8;
     def *= 1.3;
   }
@@ -1530,6 +1532,9 @@ const MOUNTS={
   if (label === "boss") {
     // HP 大幅提升：確保戰鬥可以 10~15 分鐘
     hp = lvl * lvl * 120 + 20000;
+
+    // MP 也拉高，避免 MP 顯示為 0/0
+    mp = lvl * lvl * 36 + 6000;
 
     // 攻擊輸出更高：逼玩家開技能＋補品
     atk *= 2.0;
@@ -1542,6 +1547,8 @@ const MOUNTS={
     lvl,
     hp: Math.round(hp),
     maxhp: Math.round(hp),
+    mp: Math.round(mp),
+    maxmp: Math.round(mp),
     atk: Math.round(atk),
     def: Math.round(def),
     mdef: Math.round(mdef),
@@ -2049,6 +2056,7 @@ function bossPoolForTier(t,isFinal=false){
   base.hp  = Math.round(base.hp*3.5);
   base.atk = Math.round(base.atk*1.6);
   base.def = Math.round(base.def*1.4);
+  base.mp  = Math.round(base.mp*1.8);
 
   // 🐎 坐騎掉落
   base.drops.push({ mount: bossMountName(name), rate:0.01 });
@@ -2752,6 +2760,11 @@ function equipRestrictionText(inst){
   const bandMid = Math.floor((z.suggest[0]+z.suggest[1])/2);
   const basePick = safePool[rnd(0,safePool.length-1)];
   const base = JSON.parse(JSON.stringify(basePick?.base || monsterTemplate(z.suggest?.[0]||1,"")));
+  const ensureStat = (v, min=0)=> Number.isFinite(v) ? v : min;
+  base.hp = ensureStat(base.hp, 1);
+  base.mp = ensureStat(base.mp, 0);
+  base.atk = ensureStat(base.atk, 1);
+  base.def = ensureStat(base.def, 0);
   const dayScale=1+(Math.min(60,game.state.day)-1)*0.001;
   const lvl=rnd(z.suggest[0],z.suggest[1]);
   const sc = 1 + (lvl - bandMid)*0.02;
