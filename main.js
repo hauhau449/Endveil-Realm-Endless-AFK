@@ -1217,66 +1217,107 @@ BloodFrenzyBody:{
     acquisition:"point",
     maxLv:5, tier:2, tree:"Berserker", type:"passive"
   },
-  // ==============================
-  // 🟥 血焰狂刃（3 轉）技能列表
-  // 以上方 BLOODFLAME_REAVER_SKILLS 設定為基礎，僅先掛出資訊供 UI 習得
-  // ==============================
-  SoulRendFlurry:{
-    id:"SoulRendFlurry",
-    name:"裂魂連斬（Soul-Rend Flurry）",
-    desc:"主動：多段破甲斬擊，隨等級提升首段/末段倍率與破甲、回合數，並以 HP 轉化攻勢（等級上限 15）。",
+
+// 🛡 Steelheart — 2 轉技能（綱心戰士）
+
+  SteelBulwarkSlash:{
+    id:"SteelBulwarkSlash",
+    name:"堅盾反擊斬（Steel Bulwark Slash）",
+    desc:"單體物理斬擊，造成穩定傷害，並在下一次敵方攻擊前降低所受傷害。Lv.Max 10｜倍率約 1.1→1.8，減傷 18%→30%，持續 1 回合。",
     acquisition:"point",
-    maxLv:15, tier:3, tree:"BloodflameReaver", type:"active"
+    maxLv:10, tier:2, tree:"Steelheart", type:"active", baseMp:8,
+    use(p,e,lv){
+      if(!e) return false;
+      const cost = calcSkillCost(p, this.baseMp);
+      if(p.mp < cost){ say("MP 不足。"); return false; }
+      p.mp -= cost;
+      const dmg = physicalSkillHit(p, e, 1.1, 1.8, lv);
+      e.hp = clamp(e.hp - dmg, 0, e.maxhp);
+      affixOnHit(p, e, dmg);
+
+      const ratio = scaleByLevel(lv, 0.18, 0.30, this.maxLv);
+      game.state.guardMitigation = { ratio, turns:1 };
+
+      say(`🛡️ 你使出 <b>堅盾反擊斬</b>，造成 <span class="hp">-${dmg}</span>，並在下一次攻擊前減傷 ${Math.round(ratio*100)}%。`);
+      recoverManaOnAction(p);
+      recalcPlayerStats();
+      return true;
+    }
   },
-  DeepWoundRend:{
-    id:"DeepWoundRend",
-    name:"深傷撕裂（Deep-Wound Rend）",
-    desc:"主動：單體高傷並附帶撕裂 DOT，對破甲目標追加傷害，等級越高倍率、流血比例與回合數提升（上限 15）。",
+
+  SteelheartFormation:{
+    id:"SteelheartFormation",
+    name:"鋼心迎擊陣（Steelheart Formation）",
+    desc:"自身 Buff：在數回合內，每次觸發【鋼鐵迎擊】時追加 1 次「劍擊追斬」。Lv.Max 5｜持續約 2→4 回合。",
     acquisition:"point",
-    maxLv:15, tier:3, tree:"BloodflameReaver", type:"active"
+    maxLv:5, tier:2, tree:"Steelheart", type:"buff", baseMp:10,
+    use(p){
+      const cost = calcSkillCost(p, this.baseMp);
+      if(p.mp < cost){ say("MP 不足。"); return false; }
+      p.mp -= cost;
+      const lv = skillLevel(this.id,1);
+      const turns = 2 + Math.floor((lv+1)/2); // 2,2,3,3,4
+      game.state.steelFormation = { turns, extraHits:1 };
+      say(`🛡️ 你展開 <b>鋼心迎擊陣</b>（${turns} 回合）：反擊時追加 1 次劍擊追斬。`);
+      recoverManaOnAction(p);
+      recalcPlayerStats();
+      return true;
+    }
   },
-  BloodburnRelease:{
-    id:"BloodburnRelease",
-    name:"燃血解放（Bloodburn Release）",
-    desc:"主動大招：燃燒一定比例 HP 換取高倍率爆發，並在 1 回合內獲得狂怒（攻擊、行動值、爆擊與爆傷提升），等級上限 5。",
+
+  RevengeBattleCry:{
+    id:"RevengeBattleCry",
+    name:"反擊戰吼（Revenge Battle Cry）",
+    desc:"自身 Buff：在數回合內提升反擊傷害。Lv.Max 5｜反擊傷害約 +15%→+35%，持續約 2→4 回合。",
     acquisition:"point",
-    maxLv:5, tier:3, tree:"BloodflameReaver", type:"active"
+    maxLv:5, tier:2, tree:"Steelheart", type:"buff", baseMp:12,
+    use(p){
+      const cost = calcSkillCost(p, this.baseMp);
+      if(p.mp < cost){ say("MP 不足。"); return false; }
+      p.mp -= cost;
+      const lv = skillLevel(this.id,1);
+      const turns = 2 + Math.floor((lv+1)/2); // 2,2,3,3,4
+      const dmgBoost = 0.15 + 0.05*(lv-1);
+      game.state.steelCounterBuff = { turns, dmgBoost };
+      say(`🗣️ 你發出 <b>反擊戰吼</b>（${turns} 回合）：反擊威力 +${Math.round(dmgBoost*100)}%。`);
+      recoverManaOnAction(p);
+      recalcPlayerStats();
+      return true;
+    }
   },
-  BloodFervor:{
-    id:"BloodFervor",
-    name:"血性戰意（Blood Fervor）",
-    desc:"開關型 Buff：提升攻擊、行動值、爆擊與爆傷，但每回合損血並提高所受傷害，等級上限 10。",
+
+  IronWallStance:{
+    id:"IronWallStance",
+    name:"鐵壁守勢（Iron Wall Stance）",
+    desc:"自身 Buff：短時間大幅降低所受傷害，強化防禦穩定性。Lv.Max 5｜減傷約 28%→40%，持續約 1→3 回合。",
     acquisition:"point",
-    maxLv:10, tier:3, tree:"BloodflameReaver", type:"buff"
+    maxLv:5, tier:2, tree:"Steelheart", type:"buff", baseMp:12,
+    use(p){
+      const cost = calcSkillCost(p, this.baseMp);
+      if(p.mp < cost){ say("MP 不足。"); return false; }
+      p.mp -= cost;
+      const lv = skillLevel(this.id,1);
+      const ratio = scaleByLevel(lv, 0.28, 0.40, this.maxLv);
+      const turns = 1 + Math.floor((lv+1)/2); // 1,1,2,2,3
+
+      const guard = game.state.guardMitigation || {ratio:0,turns:0};
+      const newRatio = Math.max(guard.ratio || 0, ratio);
+      const newTurns = Math.max(guard.turns || 0, turns);
+      game.state.guardMitigation = { ratio:newRatio, turns:newTurns };
+
+      say(`🛡️ 你進入 <b>鐵壁守勢</b>：未來 ${newTurns} 回合所受傷害降低 ${Math.round(newRatio*100)}%。`);
+      recoverManaOnAction(p);
+      recalcPlayerStats();
+      return true;
+    }
   },
-  BloodFrenzyBodyAwakened:{
-    id:"BloodFrenzyBodyAwakened",
-    name:"怒血之軀・解放（Blood-Frenzy Body: Awakened）",
-    desc:"被動：低血時多段提升攻擊/爆擊，受擊累積狂怒層數，且施放血焰技能可疊攻擊力，等級上限 10。",
+
+  SteelIronCounter:{
+    id:"SteelIronCounter",
+    name:"鋼鐵迎擊（Steel-Iron Counter）",
+    desc:"被動：裝備帶「盾」武器時，每當受到敵人攻擊，必定觸發盾擊反擊；HP 越低，反擊傷害越高。與【鋼心迎擊陣】、【反擊戰吼】一同發揮最大效果。",
     acquisition:"point",
-    maxLv:10, tier:3, tree:"BloodflameReaver", type:"passive"
-  },
-  GauntletGreatswordMastery:{
-    id:"GauntletGreatswordMastery",
-    name:"拳套巨劍熟練（Gauntlet & Greatsword Mastery）",
-    desc:"被動：強化拳套與巨劍武器的熟練度，提供力量、敏捷與爆擊/爆傷加成。",
-    acquisition:"point",
-    maxLv:1, tier:3, tree:"BloodflameReaver", type:"passive"
-  },
-  BloodDevourDoctrine:{
-    id:"BloodDevourDoctrine",
-    name:"噬血心法（Blood-Devour Doctrine）",
-    desc:"被動：習得後獲得額外實際吸血效果，加成取自血焰專精試煉設定。",
-    acquisition:"trial",
-    trialNote:"挑戰「噬血心法守護者」勝利後自動習得",
-    maxLv:1, tier:3, tree:"BloodflameReaver", type:"passive"
-  },
-  WoundMastery:{
-    id:"WoundMastery",
-    name:"裂傷精通（Wound Mastery）",
-    desc:"被動：強化撕裂 DOT，提升倍率、延長回合，且對破甲目標額外增傷，等級上限 5。",
-    acquisition:"point",
-    maxLv:5, tier:3, tree:"BloodflameReaver", type:"passive"
+    maxLv:5, tier:2, tree:"Steelheart", type:"passive"
   }
   };
 
@@ -1323,14 +1364,11 @@ const SKILL_TIERS = {
   BloodUnleash:2,
   BloodFrenzyBody:2,
   WarDrivenInstinct:2,
-  SoulRendFlurry:3,
-  DeepWoundRend:3,
-  BloodburnRelease:3,
-  BloodFervor:3,
-  BloodFrenzyBodyAwakened:3,
-  GauntletGreatswordMastery:3,
-  BloodDevourDoctrine:3,
-  WoundMastery:3
+  SteelBulwarkSlash:2,
+  SteelheartFormation:2,
+  RevengeBattleCry:2,
+  IronWallStance:2,
+  SteelIronCounter:2
 };
 
   function skillTier(id){ return SKILL_TIERS[id] ?? 0; }
@@ -1657,7 +1695,15 @@ const MOUNTS={
       "小魔力藥水":10,
       "煙霧彈":1,
     },
-    state:{ inBattle:false, enemy:null, kills:{}, zoneId:"z-01", day:1, guardMitigation:{ratio:0,turns:0}, counterReady:false, playerShield:0, wildHowl:{turns:0}, bloodUnleash:{turns:0}, warInstinctStacks:0, redeemedSerials:{}, inTrial:false, zoneBeforeTrial:null },
+    state:{ inBattle:false, enemy:null, kills:{}, zoneId:"z-01", day:1,
+      guardMitigation:{ratio:0,turns:0},
+      counterReady:false,
+      playerShield:0,
+      wildHowl:{turns:0},
+      bloodUnleash:{turns:0},
+      steelCounterBuff:{turns:0,dmgBoost:0},
+      steelFormation:{turns:0,extraHits:0},
+      warInstinctStacks:0, redeemedSerials:{}, inTrial:false, zoneBeforeTrial:null },
     quests:[], shop:{stock:[]},
     buffs:{ xpLayers:[] }, // 多層加倍，每層為剩餘日數
     uiFlags:{ classNotice:{} }
@@ -2969,18 +3015,34 @@ function equipRestrictionText(inst){
         say(`🐺 <b>野性之吼</b>的效果消散。`);
       }
     }
-    if(state?.bloodUnleash?.turns>0){
-      state.bloodUnleash.turns--;
-      if(state.bloodUnleash.turns<=0){
-        const penaltyRate = state.bloodUnleash.hpPenalty || 0;
-        const hpLoss = Math.max(1, Math.floor(p.maxhp * penaltyRate));
-        p.hp = Math.max(1, p.hp - hpLoss);
-        state.bloodUnleash={turns:0};
-        say(`💔 <b>怒血解放</b>反噬，損失 <b>${hpLoss}</b> HP。`);
-        recalcPlayerStats();
-      }
+  if(state?.bloodUnleash?.turns>0){
+    state.bloodUnleash.turns--;
+    if(state.bloodUnleash.turns<=0){
+      const penaltyRate = state.bloodUnleash.hpPenalty || 0;
+      const hpLoss = Math.max(1, Math.floor(p.maxhp * penaltyRate));
+      p.hp = Math.max(1, p.hp - hpLoss);
+      state.bloodUnleash={turns:0};
+      say(`💔 <b>怒血解放</b>反噬，損失 <b>${hpLoss}</b> HP。`);
+      recalcPlayerStats();
     }
   }
+
+  // Steelheart：反擊戰吼＆迎擊陣的回合消耗
+  if(state?.steelCounterBuff?.turns>0){
+    state.steelCounterBuff.turns--;
+    if(state.steelCounterBuff.turns<=0){
+      state.steelCounterBuff = {turns:0,dmgBoost:0};
+      say(`🛡️ <b>反擊戰吼</b>的效果消散。`);
+    }
+  }
+  if(state?.steelFormation?.turns>0){
+    state.steelFormation.turns--;
+    if(state.steelFormation.turns<=0){
+      state.steelFormation = {turns:0,extraHits:0};
+      say(`🛡️ <b>鋼心迎擊陣</b>的效果結束。`);
+    }
+  }
+}
 
   function enemyTurn(){
     const p=game.player, e=game.state.enemy;
@@ -3066,6 +3128,55 @@ function equipRestrictionText(inst){
   say(`<b>${e.name}</b> 攻擊了你，<span class="bad">-${dmg}</span>。`);
   if(p.hp<=0) return endBattle(false);
 
+  // 🛡 鋼鐵迎擊：Steelheart 被動反擊
+  const steelLv = skillLevel("SteelIronCounter",0);
+  if(steelLv > 0 && dmg > 0 && e.hp > 0){
+    // 檢查是否裝備帶「盾」的武器（例：短劍盾、長劍盾）
+    let hasShield = false;
+    const wKey = game.player.equip?.weapon;
+    if(wKey){
+      const inst = getEquipInstance(wKey);
+      if(inst && typeof inst.weapon === "string" && inst.weapon.includes("盾")){
+        hasShield = true;
+      }
+    }
+    if(hasShield){
+      let hits = 1; // 基礎必定反擊 1 次（盾擊）
+
+      const form = game.state.steelFormation;
+      if(form && form.turns > 0 && form.extraHits > 0){
+        hits += form.extraHits; // 鋼心迎擊陣：追加劍擊追斬
+      }
+
+      const roar = game.state.steelCounterBuff;
+      const dmgBoost = (roar && roar.turns > 0) ? (roar.dmgBoost || 0) : 0;
+
+      const hpPct = (p.hp || 0) / Math.max(1, p.maxhp || 1);
+      let baseMul = 0.9 + 0.08*(steelLv-1); // Lv1 約 0.9，Lv5 約 1.22
+      if(hpPct < 0.5) baseMul += 0.15;
+      if(hpPct < 0.3) baseMul += 0.15;
+
+      let total = 0;
+      for(let i=0; i<hits && e.hp>0; i++){
+        const effDef = effectiveEnemyDef(e,p);
+        let out = Math.max(1, Math.floor((rnd(p.atk-2,p.atk+2) - effDef) * baseMul * (1 + dmgBoost)));
+        out = critMaybe(p,out,"physical");
+        out = applySpeedBonus(p,out);
+        e.hp = clamp(e.hp - out, 0, e.maxhp);
+        total += out;
+      }
+
+      if(total > 0){
+        if(hits > 1){
+          say(`🛡️ <b>鋼鐵迎擊</b>與<b>鋼心迎擊陣</b>觸發，反擊造成合計 <span class="hp">-${total}</span>。`);
+        }else{
+          say(`🛡️ <b>鋼鐵迎擊</b>觸發，反擊造成 <span class="hp">-${total}</span>。`);
+        }
+        if(e.hp<=0) return endBattle(true);
+      }
+    }
+  }
+
   if(game.state.counterReady){
     game.state.counterReady=false;
     if(e.hp>0){
@@ -3083,10 +3194,12 @@ function equipRestrictionText(inst){
   }
   function endBattle(victory){
     const e=game.state.enemy; const trialSkill = game.state.trialSkill; const wasTrial = game.state.inTrial; const zoneBeforeTrial = game.state.zoneBeforeTrial;
-    game.state.inBattle=false; game.state.enemy=null; $("#runBtn").disabled=true; game.state.trialSkill=null;
-    game.state.wildHowl={turns:0};
-    game.state.bloodUnleash={turns:0};
-    resetWarInstinctStacks();
+  game.state.inBattle=false; game.state.enemy=null; $("#runBtn").disabled=true; game.state.trialSkill=null;
+  game.state.wildHowl={turns:0};
+  game.state.bloodUnleash={turns:0};
+  game.state.steelCounterBuff={turns:0,dmgBoost:0};
+  game.state.steelFormation={turns:0,extraHits:0};
+  resetWarInstinctStacks();
     if(victory){
       const z=currentZone(); let gold=e.gold, exp=e.exp;
       const mult = 1 + activeXpBuffs(); // 每層 +100%，=1+層數
