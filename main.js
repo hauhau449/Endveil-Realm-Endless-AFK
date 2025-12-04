@@ -556,7 +556,112 @@ function ensureUniqueName(name){
     }
   };
 
-  const SKILL_CONFIG = { ...BLOODFLAME_REAVER_SKILLS };
+  // ==========================================
+  // Stealth RPG KPI - 3轉：鋒壁騎士
+  // 技能等級成長模板
+  // ==========================================
+  const EDGEWALL_KNIGHT_SKILLS = {
+    // 1️⃣ 主動 Buff：鋒刃迎擊陣
+    //
+    // 啟動後，在數回合內：
+    // ．角色自己回合一開始會自動釋放一次「迎擊斬」
+    // ．迎擊斬傷害略高於普通攻擊、提高仇恨
+    // ．本回合下一次受到的物理傷害降低 X%
+    "鋒刃迎擊陣": {
+      id: "鋒刃迎擊陣",
+      type: "active-buff",
+      maxLevel: 15,
+      levels: [
+        { lv:  1, autoHitMul: 1.10, threatMul: 1.20, nextGuardRate: 0.10 },
+        { lv:  2, autoHitMul: 1.12, threatMul: 1.22, nextGuardRate: 0.11 },
+        { lv:  3, autoHitMul: 1.14, threatMul: 1.24, nextGuardRate: 0.12 },
+        { lv:  4, autoHitMul: 1.16, threatMul: 1.26, nextGuardRate: 0.13 },
+        { lv:  5, autoHitMul: 1.18, threatMul: 1.28, nextGuardRate: 0.14 },
+        { lv:  6, autoHitMul: 1.20, threatMul: 1.30, nextGuardRate: 0.15 },
+        { lv:  7, autoHitMul: 1.22, threatMul: 1.32, nextGuardRate: 0.16 },
+        { lv:  8, autoHitMul: 1.24, threatMul: 1.34, nextGuardRate: 0.17 },
+        { lv:  9, autoHitMul: 1.26, threatMul: 1.36, nextGuardRate: 0.18 },
+        { lv: 10, autoHitMul: 1.28, threatMul: 1.38, nextGuardRate: 0.19 },
+        { lv: 11, autoHitMul: 1.30, threatMul: 1.40, nextGuardRate: 0.20 },
+        { lv: 12, autoHitMul: 1.32, threatMul: 1.42, nextGuardRate: 0.21 },
+        { lv: 13, autoHitMul: 1.34, threatMul: 1.44, nextGuardRate: 0.22 },
+        { lv: 14, autoHitMul: 1.36, threatMul: 1.46, nextGuardRate: 0.23 },
+        { lv: 15, autoHitMul: 1.38, threatMul: 1.48, nextGuardRate: 0.25 }
+      ]
+    },
+
+    // 2️⃣ 小大招：城壁不動陣
+    //
+    // 第 1～3 回合：絕對壁陣（守勢）
+    // ．所受傷害 -70%
+    // ．自身攻擊傷害 -60%，無法暴擊（由實作時處理）
+    // ．每次被攻擊 +1 層【壁陣蓄力】，最多 5 層（長劍盾＋劍盾專精時可到 6 層）
+    //
+    // 第 3 回合結束：自動施放《破陣 · 返壁一斬》
+    // ．第一段：反彈壁陣期間累積所受傷害的 70%～110%（依等級）
+    // ．第二段：依蓄力層數給一段固定倍率物傷，可被爆擊
+    "城壁不動陣": {
+      id: "城壁不動陣",
+      type: "active-ultimate",
+      maxLevel: 5,
+      levels: [
+        { lv: 1, damageReduceRate: 0.70, atkPenaltyRate: 0.60, reflectRate: 0.70, wallMaxStacks: 5, finisherBaseMul: 1.20 },
+        { lv: 2, damageReduceRate: 0.70, atkPenaltyRate: 0.60, reflectRate: 0.80, wallMaxStacks: 5, finisherBaseMul: 1.30 },
+        { lv: 3, damageReduceRate: 0.70, atkPenaltyRate: 0.60, reflectRate: 0.90, wallMaxStacks: 5, finisherBaseMul: 1.40 },
+        { lv: 4, damageReduceRate: 0.70, atkPenaltyRate: 0.60, reflectRate: 1.00, wallMaxStacks: 5, finisherBaseMul: 1.50 },
+        { lv: 5, damageReduceRate: 0.70, atkPenaltyRate: 0.60, reflectRate: 1.10, wallMaxStacks: 5, finisherBaseMul: 1.60 }
+      ]
+    },
+
+    // 3️⃣ 被動：劍盾專精
+    //
+    // ．裝備短劍盾：偏向「速度＋爆擊」型，防禦適中
+    // ．裝備長劍盾：偏向「防禦＋格擋」，速度小幅提升，並讓壁陣蓄力上限 +1（可到 6 層）
+    "劍盾專精": {
+      id: "劍盾專精",
+      type: "passive",
+      maxLevel: 1,
+      levels: [
+        {
+          lv: 1,
+          shortSwordShield: {
+            atkUp: 0.06,
+            defUp: 0.10,
+            speedUp: 0.05,
+            critUp: 0.06,
+            critDmgUp: 0.15,
+            blockUp: 0.03
+          },
+          longSwordShield: {
+            atkUp: 0.10,
+            defUp: 0.14,
+            speedUp: 0.02,
+            critUp: 0.05,
+            critDmgUp: 0.12,
+            blockUp: 0.06,
+            wallStackCapBonus: 1   // 壁陣蓄力上限 +1（5→6 層）
+          }
+        }
+      ]
+    },
+
+    // 4️⃣ 試煉被動：壁衛心法
+    //
+    // ．每次受到攻擊後獲得小額護盾（依最大 HP 比例）
+    // ．同場戰鬥中，每次被打都讓「反擊類傷害」累積 +1%（上限 50%）
+    "壁衛心法": {
+      id: "壁衛心法",
+      type: "passive",
+      acquisition: "trial",
+      trialNote: "挑戰「壁衛心法守護者」勝利後自動習得",
+      maxLevel: 1,
+      levels: [
+        { lv: 1, guardPerHitRate: 0.03, counterDamagePerHit: 0.01, counterDamageMax: 0.50 }
+      ]
+    }
+  };
+
+  const SKILL_CONFIG = { ...BLOODFLAME_REAVER_SKILLS, ...EDGEWALL_KNIGHT_SKILLS };
   const SKILL_DATA = { ...SKILL_CONFIG };
 
   const SKILL={
