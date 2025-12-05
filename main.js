@@ -561,6 +561,31 @@ function ensureUniqueName(name){
   // 技能等級成長模板
   // ==========================================
   const EDGEWALL_KNIGHT_SKILLS = {
+    // 0️⃣ 主動技能：破陣壁壓斬
+    // ．單體雙段物理斬擊，附帶破防與「優先反擊標記」
+    "破陣壁壓斬": {
+      id: "破陣壁壓斬",
+      type: "active",
+      maxLevel: 15,
+      levels: [
+        { lv:  1, dmgFirst: 1.00, dmgLast: 1.30, breakRate: 0.10, breakTurns: 2, counterBonus: 0.08 },
+        { lv:  2, dmgFirst: 1.05, dmgLast: 1.35, breakRate: 0.11, breakTurns: 2, counterBonus: 0.09 },
+        { lv:  3, dmgFirst: 1.10, dmgLast: 1.40, breakRate: 0.12, breakTurns: 2, counterBonus: 0.10 },
+        { lv:  4, dmgFirst: 1.15, dmgLast: 1.45, breakRate: 0.13, breakTurns: 2, counterBonus: 0.11 },
+        { lv:  5, dmgFirst: 1.20, dmgLast: 1.50, breakRate: 0.14, breakTurns: 3, counterBonus: 0.12 },
+        { lv:  6, dmgFirst: 1.24, dmgLast: 1.55, breakRate: 0.15, breakTurns: 3, counterBonus: 0.13 },
+        { lv:  7, dmgFirst: 1.28, dmgLast: 1.60, breakRate: 0.16, breakTurns: 3, counterBonus: 0.14 },
+        { lv:  8, dmgFirst: 1.32, dmgLast: 1.65, breakRate: 0.17, breakTurns: 3, counterBonus: 0.15 },
+        { lv:  9, dmgFirst: 1.36, dmgLast: 1.70, breakRate: 0.18, breakTurns: 3, counterBonus: 0.16 },
+        { lv: 10, dmgFirst: 1.40, dmgLast: 1.75, breakRate: 0.19, breakTurns: 4, counterBonus: 0.17 },
+        { lv: 11, dmgFirst: 1.44, dmgLast: 1.80, breakRate: 0.20, breakTurns: 4, counterBonus: 0.18 },
+        { lv: 12, dmgFirst: 1.48, dmgLast: 1.85, breakRate: 0.21, breakTurns: 4, counterBonus: 0.19 },
+        { lv: 13, dmgFirst: 1.52, dmgLast: 1.90, breakRate: 0.22, breakTurns: 4, counterBonus: 0.20 },
+        { lv: 14, dmgFirst: 1.56, dmgLast: 1.95, breakRate: 0.23, breakTurns: 4, counterBonus: 0.21 },
+        { lv: 15, dmgFirst: 1.60, dmgLast: 2.00, breakRate: 0.25, breakTurns: 5, counterBonus: 0.22 }
+      ]
+    },
+
     // 1️⃣ 主動 Buff：鋒刃迎擊陣
     //
     // 啟動後，在數回合內：
@@ -572,21 +597,21 @@ function ensureUniqueName(name){
       type: "active-buff",
       maxLevel: 15,
       levels: [
-        { lv:  1, autoHitMul: 1.10, threatMul: 1.20, nextGuardRate: 0.10 },
-        { lv:  2, autoHitMul: 1.12, threatMul: 1.22, nextGuardRate: 0.11 },
-        { lv:  3, autoHitMul: 1.14, threatMul: 1.24, nextGuardRate: 0.12 },
-        { lv:  4, autoHitMul: 1.16, threatMul: 1.26, nextGuardRate: 0.13 },
-        { lv:  5, autoHitMul: 1.18, threatMul: 1.28, nextGuardRate: 0.14 },
-        { lv:  6, autoHitMul: 1.20, threatMul: 1.30, nextGuardRate: 0.15 },
-        { lv:  7, autoHitMul: 1.22, threatMul: 1.32, nextGuardRate: 0.16 },
-        { lv:  8, autoHitMul: 1.24, threatMul: 1.34, nextGuardRate: 0.17 },
-        { lv:  9, autoHitMul: 1.26, threatMul: 1.36, nextGuardRate: 0.18 },
-        { lv: 10, autoHitMul: 1.28, threatMul: 1.38, nextGuardRate: 0.19 },
-        { lv: 11, autoHitMul: 1.30, threatMul: 1.40, nextGuardRate: 0.20 },
-        { lv: 12, autoHitMul: 1.32, threatMul: 1.42, nextGuardRate: 0.21 },
-        { lv: 13, autoHitMul: 1.34, threatMul: 1.44, nextGuardRate: 0.22 },
-        { lv: 14, autoHitMul: 1.36, threatMul: 1.46, nextGuardRate: 0.23 },
-        { lv: 15, autoHitMul: 1.38, threatMul: 1.48, nextGuardRate: 0.25 }
+        { lv:  1, autoHitMul: 1.10, threatMul: 1.20, nextGuardRate: 0.10, activeAtkPenalty: 0.08, turns: 3 },
+        { lv:  2, autoHitMul: 1.12, threatMul: 1.22, nextGuardRate: 0.11, activeAtkPenalty: 0.085, turns: 3 },
+        { lv:  3, autoHitMul: 1.14, threatMul: 1.24, nextGuardRate: 0.12, activeAtkPenalty: 0.09, turns: 3 },
+        { lv:  4, autoHitMul: 1.16, threatMul: 1.26, nextGuardRate: 0.13, activeAtkPenalty: 0.095, turns: 3 },
+        { lv:  5, autoHitMul: 1.18, threatMul: 1.28, nextGuardRate: 0.14, activeAtkPenalty: 0.10, turns: 3 },
+        { lv:  6, autoHitMul: 1.20, threatMul: 1.30, nextGuardRate: 0.15, activeAtkPenalty: 0.105, turns: 3 },
+        { lv:  7, autoHitMul: 1.22, threatMul: 1.32, nextGuardRate: 0.16, activeAtkPenalty: 0.11, turns: 4 },
+        { lv:  8, autoHitMul: 1.24, threatMul: 1.34, nextGuardRate: 0.17, activeAtkPenalty: 0.115, turns: 4 },
+        { lv:  9, autoHitMul: 1.26, threatMul: 1.36, nextGuardRate: 0.18, activeAtkPenalty: 0.12, turns: 4 },
+        { lv: 10, autoHitMul: 1.28, threatMul: 1.38, nextGuardRate: 0.19, activeAtkPenalty: 0.125, turns: 4 },
+        { lv: 11, autoHitMul: 1.30, threatMul: 1.40, nextGuardRate: 0.20, activeAtkPenalty: 0.13, turns: 4 },
+        { lv: 12, autoHitMul: 1.32, threatMul: 1.42, nextGuardRate: 0.21, activeAtkPenalty: 0.135, turns: 4 },
+        { lv: 13, autoHitMul: 1.34, threatMul: 1.44, nextGuardRate: 0.22, activeAtkPenalty: 0.14, turns: 5 },
+        { lv: 14, autoHitMul: 1.36, threatMul: 1.46, nextGuardRate: 0.23, activeAtkPenalty: 0.145, turns: 5 },
+        { lv: 15, autoHitMul: 1.38, threatMul: 1.48, nextGuardRate: 0.25, activeAtkPenalty: 0.15, turns: 5 }
       ]
     },
 
@@ -605,11 +630,11 @@ function ensureUniqueName(name){
       type: "active-ultimate",
       maxLevel: 5,
       levels: [
-        { lv: 1, damageReduceRate: 0.70, atkPenaltyRate: 0.60, reflectRate: 0.70, wallMaxStacks: 5, finisherBaseMul: 1.20 },
-        { lv: 2, damageReduceRate: 0.70, atkPenaltyRate: 0.60, reflectRate: 0.80, wallMaxStacks: 5, finisherBaseMul: 1.30 },
-        { lv: 3, damageReduceRate: 0.70, atkPenaltyRate: 0.60, reflectRate: 0.90, wallMaxStacks: 5, finisherBaseMul: 1.40 },
-        { lv: 4, damageReduceRate: 0.70, atkPenaltyRate: 0.60, reflectRate: 1.00, wallMaxStacks: 5, finisherBaseMul: 1.50 },
-        { lv: 5, damageReduceRate: 0.70, atkPenaltyRate: 0.60, reflectRate: 1.10, wallMaxStacks: 5, finisherBaseMul: 1.60 }
+        { lv: 1, damageReduceRate: 0.70, atkPenaltyRate: 0.60, reflectRate: 0.70, wallMaxStacks: 5, finisherBaseMul: 1.20, finisherPerStack: 0.18 },
+        { lv: 2, damageReduceRate: 0.70, atkPenaltyRate: 0.60, reflectRate: 0.80, wallMaxStacks: 5, finisherBaseMul: 1.30, finisherPerStack: 0.20 },
+        { lv: 3, damageReduceRate: 0.70, atkPenaltyRate: 0.60, reflectRate: 0.90, wallMaxStacks: 5, finisherBaseMul: 1.40, finisherPerStack: 0.22 },
+        { lv: 4, damageReduceRate: 0.70, atkPenaltyRate: 0.60, reflectRate: 1.00, wallMaxStacks: 5, finisherBaseMul: 1.50, finisherPerStack: 0.24 },
+        { lv: 5, damageReduceRate: 0.70, atkPenaltyRate: 0.60, reflectRate: 1.10, wallMaxStacks: 5, finisherBaseMul: 1.60, finisherPerStack: 0.26 }
       ]
     },
 
@@ -657,6 +682,53 @@ function ensureUniqueName(name){
       maxLevel: 1,
       levels: [
         { lv: 1, guardPerHitRate: 0.03, counterDamagePerHit: 0.01, counterDamageMax: 0.50 }
+      ]
+    },
+
+    // 5️⃣ Buff：壁守戰吼
+    "壁守戰吼": {
+      id: "壁守戰吼",
+      type: "active-buff",
+      maxLevel: 10,
+      levels: [
+        { lv: 1, defUp: 0.08, blockUp: 0.04, shieldRate: 0.05, counterDmgUp: 0.12, hateBonus: 0.08, turns: 3 },
+        { lv: 2, defUp: 0.09, blockUp: 0.05, shieldRate: 0.055, counterDmgUp: 0.14, hateBonus: 0.09, turns: 3 },
+        { lv: 3, defUp: 0.10, blockUp: 0.06, shieldRate: 0.06, counterDmgUp: 0.16, hateBonus: 0.10, turns: 3 },
+        { lv: 4, defUp: 0.11, blockUp: 0.07, shieldRate: 0.065, counterDmgUp: 0.18, hateBonus: 0.11, turns: 4 },
+        { lv: 5, defUp: 0.12, blockUp: 0.08, shieldRate: 0.07, counterDmgUp: 0.20, hateBonus: 0.12, turns: 4 },
+        { lv: 6, defUp: 0.13, blockUp: 0.09, shieldRate: 0.075, counterDmgUp: 0.22, hateBonus: 0.13, turns: 4 },
+        { lv: 7, defUp: 0.14, blockUp: 0.10, shieldRate: 0.08, counterDmgUp: 0.24, hateBonus: 0.14, turns: 5 },
+        { lv: 8, defUp: 0.15, blockUp: 0.11, shieldRate: 0.085, counterDmgUp: 0.26, hateBonus: 0.15, turns: 5 },
+        { lv: 9, defUp: 0.16, blockUp: 0.12, shieldRate: 0.09, counterDmgUp: 0.28, hateBonus: 0.16, turns: 5 },
+        { lv: 10, defUp: 0.18, blockUp: 0.13, shieldRate: 0.10, counterDmgUp: 0.30, hateBonus: 0.18, turns: 5 }
+      ]
+    },
+
+    // 6️⃣ 被動：鋒壁鐵心
+    "鋒壁鐵心": {
+      id: "鋒壁鐵心",
+      type: "passive",
+      maxLevel: 5,
+      levels: [
+        { lv: 1, perHitCounterBonus: 0.05, perHitMaxStacks: 3, shieldCounterBonus: 0.08, blockNextCounterBonus: 0.10, fortressModeBonus: 0.10 },
+        { lv: 2, perHitCounterBonus: 0.06, perHitMaxStacks: 3, shieldCounterBonus: 0.10, blockNextCounterBonus: 0.12, fortressModeBonus: 0.12 },
+        { lv: 3, perHitCounterBonus: 0.07, perHitMaxStacks: 4, shieldCounterBonus: 0.12, blockNextCounterBonus: 0.14, fortressModeBonus: 0.14 },
+        { lv: 4, perHitCounterBonus: 0.08, perHitMaxStacks: 4, shieldCounterBonus: 0.14, blockNextCounterBonus: 0.16, fortressModeBonus: 0.16 },
+        { lv: 5, perHitCounterBonus: 0.10, perHitMaxStacks: 5, shieldCounterBonus: 0.16, blockNextCounterBonus: 0.18, fortressModeBonus: 0.18 }
+      ]
+    },
+
+    // 7️⃣ 被動：迎擊精通
+    "迎擊精通": {
+      id: "迎擊精通",
+      type: "passive",
+      maxLevel: 5,
+      levels: [
+        { lv: 1, counterDmgUp: 0.10, counterCritUp: 3, counterCritDmgUp: 0.05, brokenBonus: 0.08, formationBonus: 0.08 },
+        { lv: 2, counterDmgUp: 0.12, counterCritUp: 4, counterCritDmgUp: 0.07, brokenBonus: 0.10, formationBonus: 0.10 },
+        { lv: 3, counterDmgUp: 0.14, counterCritUp: 5, counterCritDmgUp: 0.09, brokenBonus: 0.12, formationBonus: 0.12 },
+        { lv: 4, counterDmgUp: 0.16, counterCritUp: 6, counterCritDmgUp: 0.11, brokenBonus: 0.14, formationBonus: 0.14 },
+        { lv: 5, counterDmgUp: 0.18, counterCritUp: 7, counterCritDmgUp: 0.13, brokenBonus: 0.16, formationBonus: 0.16 }
       ]
     }
   };
