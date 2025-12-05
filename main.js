@@ -1495,6 +1495,43 @@ BloodFrenzyBody:{
     desc:"被動：裝備帶「盾」武器時，每當受到敵人攻擊，必定觸發盾擊反擊；HP 越低，反擊傷害越高。與【鋼心迎擊陣】、【反擊戰吼】一同發揮最大效果。",
     acquisition:"point",
     maxLv:5, tier:2, tree:"Steelheart", type:"passive"
+  },
+
+// 🛡 Edgewall Knight — 3 轉技能（鋒壁騎士）
+  EdgewallSiegebreak:{
+    id:"EdgewallSiegebreak",
+    name:"破陣壁壓斬（Siegebreak Edge）",
+    desc:"占位：鋒壁騎士的雙段破防斬擊，應用後應降低敵方防禦並強化後續反擊。尚未實作戰鬥效果，僅先提供技能列表與升級入口。",
+    acquisition:"point",
+    maxLv:15, tier:3, tree:"EdgewallKnight", type:"active"
+  },
+  EdgewallRiposteField:{
+    id:"EdgewallRiposteField",
+    name:"鋒刃迎擊陣（Edgewall Riposte Formation）",
+    desc:"占位：鋒壁騎士的迎擊陣列，應在數回合內自動施放迎擊與減傷。尚未實作戰鬥效果，僅先提供技能列表與升級入口。",
+    acquisition:"point",
+    maxLv:15, tier:3, tree:"EdgewallKnight", type:"buff"
+  },
+  EdgewallImmovableWall:{
+    id:"EdgewallImmovableWall",
+    name:"城壁不動陣（Immovable Wall Stance）",
+    desc:"占位：鋒壁騎士的小大招，應在守勢後釋放反擊斬。尚未實作戰鬥效果，僅先提供技能列表與升級入口。",
+    acquisition:"point",
+    maxLv:5, tier:3, tree:"EdgewallKnight", type:"buff"
+  },
+  EdgewallIronHeart:{
+    id:"EdgewallIronHeart",
+    name:"鋒壁鐵心（Edgewall Ironheart）",
+    desc:"占位：鋒壁騎士的核心反擊被動，應提供反擊強化與守勢增益。尚未實作戰鬥效果，僅先提供技能列表與升級入口。",
+    acquisition:"point",
+    maxLv:5, tier:3, tree:"EdgewallKnight", type:"passive"
+  },
+  EdgewallCounterMastery:{
+    id:"EdgewallCounterMastery",
+    name:"迎擊精通（Counter Mastery）",
+    desc:"占位：鋒壁騎士的反擊精通被動，應強化反擊傷害與爆擊。尚未實作戰鬥效果，僅先提供技能列表與升級入口。",
+    acquisition:"point",
+    maxLv:5, tier:3, tree:"EdgewallKnight", type:"passive"
   }
   };
 
@@ -1545,7 +1582,18 @@ const SKILL_TIERS = {
   SteelheartFormation:2,
   RevengeBattleCry:2,
   IronWallStance:2,
-  SteelIronCounter:2
+  SteelIronCounter:2,
+
+  // 3轉（預留：狂刃與鋒壁騎士）
+  BloodRageHeart:3,
+  BloodReaver:3,
+  BloodReaverAwaken:3,
+  BloodOath:3,
+  EdgewallSiegebreak:3,
+  EdgewallRiposteField:3,
+  EdgewallImmovableWall:3,
+  EdgewallIronHeart:3,
+  EdgewallCounterMastery:3
 };
 
   function skillTier(id){ return SKILL_TIERS[id] ?? 0; }
