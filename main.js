@@ -400,6 +400,9 @@ function ensureUniqueName(name){
     dmg = critMaybe(p, dmg, "physical");
     dmg = applySpeedBonus(p, dmg);
     dmg = Math.floor(dmg * berserkerAtkBuffMultiplier());
+    if(p === game.player){
+      dmg = Math.floor(dmg * edgewallActiveAttackMultiplier());
+    }
     return Math.max(1, dmg);
   }
   function magicSkillHit(p,e,min,max,lv){
@@ -1501,23 +1504,81 @@ BloodFrenzyBody:{
   EdgewallSiegebreak:{
     id:"EdgewallSiegebreak",
     name:"破陣壁壓斬（Siegebreak Edge）",
-    desc:"占位：鋒壁騎士的雙段破防斬擊，應用後應降低敵方防禦並強化後續反擊。尚未實作戰鬥效果，僅先提供技能列表與升級入口。",
+    desc:"雙段破防斬擊：先以盾壓制再以劍斬，造成 2～3 段傷害，降低防禦並對目標貼上反擊易傷。Lv.Max 15。",
     acquisition:"point",
-    maxLv:15, tier:3, tree:"EdgewallKnight", type:"active"
+    maxLv:15, tier:3, tree:"EdgewallKnight", type:"active", baseMp:12,
+    use(p,e,lv){
+      if(!e) return false;
+      const cost = calcSkillCost(p, this.baseMp);
+      if(p.mp < cost){ say("MP 不足。"); return false; }
+      p.mp -= cost;
+      const tpl = EDGEWALL_KNIGHT_SKILLS["破陣壁壓斬"].levels[lv-1];
+      const hit1 = physicalSkillHit(p, e, tpl.dmgFirst, tpl.dmgFirst, lv);
+      e.hp = clamp(e.hp - hit1, 0, e.maxhp);
+      affixOnHit(p, e, hit1);
+      let total = hit1;
+      if(e.hp>0){
+        const hit2 = physicalSkillHit(p, e, tpl.dmgLast, tpl.dmgLast, lv);
+        e.hp = clamp(e.hp - hit2, 0, e.maxhp);
+        affixOnHit(p, e, hit2);
+        total += hit2;
+      }
+      e.defDown = Math.max(e.defDown || 0, tpl.breakRate || 0);
+      e.defDownTurns = Math.max(e.defDownTurns || 0, tpl.breakTurns || 2);
+      e.edgewallCounterMark = { bonus: tpl.counterBonus || 0, turns: tpl.breakTurns || 2 };
+      say(`🗡️ 你以<b>破陣壁壓斬</b>轟擊 <b>${e.name}</b>：共造成 <span class="hp">-${total}</span>，防禦 -${Math.round((tpl.breakRate||0)*100)}%（${tpl.breakTurns} 回合），並貼上反擊易傷。`);
+      recoverManaOnAction(p);
+      return true;
+    }
   },
   EdgewallRiposteField:{
     id:"EdgewallRiposteField",
     name:"鋒刃迎擊陣（Edgewall Riposte Formation）",
-    desc:"占位：鋒壁騎士的迎擊陣列，應在數回合內自動施放迎擊與減傷。尚未實作戰鬥效果，僅先提供技能列表與升級入口。",
+    desc:"自身 Buff：啟動迎擊陣，持續數回合。每回合開始自動斬擊主目標並啟動一次性減傷，期間反擊增傷、主動攻擊傷害略降。Lv.Max 15。",
     acquisition:"point",
-    maxLv:15, tier:3, tree:"EdgewallKnight", type:"buff"
+    maxLv:15, tier:3, tree:"EdgewallKnight", type:"buff", baseMp:12,
+    use(p){
+      const cost = calcSkillCost(p, this.baseMp);
+      if(p.mp < cost){ say("MP 不足。"); return false; }
+      p.mp -= cost;
+      const lv = skillLevel(this.id,1);
+      const tpl = EDGEWALL_KNIGHT_SKILLS["鋒刃迎擊陣"].levels[lv-1];
+      const counterBonus = 0.12 + 0.01*(lv-1);
+      game.state.riposteField = { ...tpl, counterBonus };
+      say(`🛡️ 你展開<b>鋒刃迎擊陣</b>（${tpl.turns} 回合）：每回合自動迎擊斬（x${tpl.autoHitMul.toFixed(2)}）、下一次傷害減少 ${Math.round(tpl.nextGuardRate*100)}%，反擊傷害提高，主動攻擊傷害 -${Math.round(tpl.activeAtkPenalty*100)}%。`);
+      recoverManaOnAction(p);
+      return true;
+    }
   },
   EdgewallImmovableWall:{
     id:"EdgewallImmovableWall",
     name:"城壁不動陣（Immovable Wall Stance）",
-    desc:"占位：鋒壁騎士的小大招，應在守勢後釋放反擊斬。尚未實作戰鬥效果，僅先提供技能列表與升級入口。",
+    desc:"特殊循環技：3 回合內所受傷害 -70%，主動攻擊傷害 -60%、無法暴擊，每被打一次蓄力 1 層；結束時反彈累積傷害並施放蓄力反擊斬。",
     acquisition:"point",
-    maxLv:5, tier:3, tree:"EdgewallKnight", type:"buff"
+    maxLv:5, tier:3, tree:"EdgewallKnight", type:"buff", baseMp:16,
+    use(p){
+      const cost = calcSkillCost(p, this.baseMp);
+      if(p.mp < cost){ say("MP 不足。"); return false; }
+      p.mp -= cost;
+      const lv = skillLevel(this.id,1);
+      const tpl = EDGEWALL_KNIGHT_SKILLS["城壁不動陣"].levels[lv-1];
+      game.state.immovableWall = {
+        turns:3,
+        skipFirst:true,
+        damageReduceRate: tpl.damageReduceRate,
+        atkPenaltyRate: tpl.atkPenaltyRate,
+        reflectRate: tpl.reflectRate,
+        maxStacks: tpl.wallMaxStacks + (getEquipInstance(p.equip?.weapon)?.weapon?.includes("長劍盾") ? 1 : 0),
+        finisherBaseMul: tpl.finisherBaseMul,
+        finisherPerStack: tpl.finisherPerStack,
+        stacks:0,
+        takenTotal:0
+      };
+      game.state.guardMitigation = {ratio:0, turns:0};
+      say(`🧱 你進入<b>城壁不動陣</b>（3 回合）：所受傷害 -${Math.round(tpl.damageReduceRate*100)}%、主動攻擊 -${Math.round(tpl.atkPenaltyRate*100)}%，每受擊蓄力，結束反彈與重斬。`);
+      recoverManaOnAction(p);
+      return true;
+    }
   },
   EdgewallIronHeart:{
     id:"EdgewallIronHeart",
@@ -1926,6 +1987,9 @@ const MOUNTS={
       playerShield:0,
       wildHowl:{turns:0},
       bloodUnleash:{turns:0},
+      riposteField:{turns:0},
+      immovableWall:{turns:0},
+      edgewallCounterStacks:0,
       steelCounterBuff:{turns:0,dmgBoost:0},
       steelFormation:{turns:0,extraHits:0},
       warInstinctStacks:0, redeemedSerials:{}, inTrial:false, zoneBeforeTrial:null },
@@ -2438,6 +2502,148 @@ function berserkerAtkBuffMultiplier(){
   const unleash = activeBloodUnleash();
   if(unleash) return 1 + (unleash.atkBoost || 0);
   return 1;
+}
+function startPlayerTurnTick(){
+  resetEdgewallCounterStacks();
+  const p = game.player, e = game.state.enemy;
+  const field = game.state?.riposteField;
+  if(field && field.turns>0 && e){
+    const dmg = physicalSkillHit(p, e, field.autoHitMul, field.autoHitMul, 1);
+    e.hp = clamp(e.hp - dmg, 0, e.maxhp);
+    affixOnHit(p, e, dmg);
+    const guard = game.state.guardMitigation || {ratio:0, turns:0};
+    const ratio = Math.max(guard.ratio || 0, field.nextGuardRate || 0);
+    const turns = Math.max(guard.turns || 0, 1);
+    game.state.guardMitigation = { ratio, turns };
+    say(`⚔️ <b>鋒刃迎擊陣</b>自動觸發迎擊斬，造成 <span class="hp">-${dmg}</span> 並啟動 ${Math.round((field.nextGuardRate||0)*100)}% 減傷。`);
+    field.turns--;
+    if(field.turns<=0){
+      game.state.riposteField = {turns:0};
+      say(`🌀 <b>鋒刃迎擊陣</b>結束。`);
+    }
+    if(e.hp<=0){
+      endBattle(true);
+      return true;
+    }
+  }
+
+  const wall = game.state?.immovableWall;
+  if(wall && wall.turns>0){
+    if(wall.skipFirst){
+      wall.skipFirst = false;
+    }else{
+      wall.turns--;
+    }
+    if(wall.turns<=0){
+      triggerImmovableFinisher();
+      return true;
+    }
+  }
+  return false;
+}
+function edgewallActiveAttackMultiplier(){
+  let mul = 1;
+  const form = game.state?.riposteField;
+  if(form && form.turns>0){
+    mul *= 1 - (form.activeAtkPenalty || 0);
+  }
+  const wall = game.state?.immovableWall;
+  if(wall && wall.turns>0){
+    mul *= 1 - (wall.atkPenaltyRate || 0);
+  }
+  return mul;
+}
+function edgewallCounterStacksCap(){
+  const ironLv = skillLevel("EdgewallIronHeart",0);
+  if(ironLv<=0) return 0;
+  const tpl = EDGEWALL_KNIGHT_SKILLS["鋒壁鐵心"].levels[ironLv-1];
+  return tpl?.perHitMaxStacks || 0;
+}
+function resetEdgewallCounterStacks(){
+  game.state.edgewallCounterStacks = 0;
+}
+function counterCritMaybe(p, base){
+  const w = getEquippedWithAffix(p);
+  const masteryLv = skillLevel("EdgewallCounterMastery",0);
+  const mastery = masteryLv>0 ? EDGEWALL_KNIGHT_SKILLS["迎擊精通"].levels[masteryLv-1] : null;
+  const baseRate = (p?.physCritRate || 0) + (mastery?.counterCritUp || 0);
+  let critRate = baseRate;
+  if(w?.affix?.some(a=>a.key==="crit")) critRate+=5;
+  let critDmg = (p?.physCritDmg || 1.8) + (mastery?.counterCritDmgUp || 0);
+  const howl = activeWildHowl();
+  if(howl){
+    critRate += howl.critRate || 0;
+    critDmg += howl.critDmg || 0;
+  }
+  const isCrit = Math.random()*100 < critRate;
+  if(isCrit && p === game.player){
+    gainWarInstinctStack(1);
+  }
+  return isCrit ? Math.floor(base*critDmg) : base;
+}
+function edgewallCounterMultiplier(e){
+  let mul = 1;
+  const ironLv = skillLevel("EdgewallIronHeart",0);
+  if(ironLv>0){
+    const tpl = EDGEWALL_KNIGHT_SKILLS["鋒壁鐵心"].levels[ironLv-1];
+    const stacks = Math.min(edgewallCounterStacksCap(), game.state.edgewallCounterStacks || 0);
+    mul *= 1 + stacks * (tpl.perHitCounterBonus || 0);
+    if(game.state.playerShield>0){
+      mul *= 1 + (tpl.shieldCounterBonus || 0);
+    }
+    if(game.state.immovableWall?.turns>0){
+      mul *= 1 + (tpl.fortressModeBonus || 0);
+    }
+  }
+  const masteryLv = skillLevel("EdgewallCounterMastery",0);
+  if(masteryLv>0){
+    const tpl = EDGEWALL_KNIGHT_SKILLS["迎擊精通"].levels[masteryLv-1];
+    mul *= 1 + (tpl.counterDmgUp || 0);
+    if(e?.defDown && e.defDown>0){
+      mul *= 1 + (tpl.brokenBonus || 0);
+    }
+    if(game.state.riposteField?.turns>0){
+      mul *= 1 + (tpl.formationBonus || 0);
+    }
+  }
+  const mark = e?.edgewallCounterMark;
+  if(mark && mark.turns>0){
+    mul *= 1 + (mark.bonus || 0);
+  }
+  const field = game.state?.riposteField;
+  if(field && field.turns>0){
+    mul *= 1 + (field.counterBonus || 0);
+  }
+  const roar = game.state.steelCounterBuff;
+  if(roar && roar.turns>0){
+    mul *= 1 + (roar.dmgBoost || 0);
+  }
+  return mul;
+}
+function triggerImmovableFinisher(){
+  const wall = game.state?.immovableWall;
+  const p = game.player, e = game.state.enemy;
+  if(!wall || wall.turns<=0 || !e) return;
+  const reflect = Math.floor((wall.takenTotal || 0) * (wall.reflectRate || 0));
+  let logs = [];
+  if(reflect>0){
+    e.hp = clamp(e.hp - reflect, 0, e.maxhp);
+    logs.push(`反彈累積傷害 <span class="hp">-${reflect}</span>`);
+  }
+  const multi = (wall.finisherBaseMul || 1) + (wall.finisherPerStack || 0) * (wall.stacks || 0);
+  game.state.immovableWall = {turns:0};
+  if(e.hp>0){
+    let dmg = physicalSkillHit(p, e, multi, multi, 1);
+    e.hp = clamp(e.hp - dmg, 0, e.maxhp);
+    affixOnHit(p, e, dmg);
+    logs.push(`蓄力反擊斬 <span class="hp">-${dmg}</span>（蓄力 ${wall.stacks||0} 層）`);
+  }
+  if(logs.length){
+    say(`🧱 <b>破陣・返壁一斬</b>爆發：${logs.join("，")}。`);
+  }
+  if(e.hp<=0){
+    endBattle(true);
+  }
 }
 
 // 被動技能（白板層）
@@ -3162,6 +3368,9 @@ function equipRestrictionText(inst){
     game.state.playerShield=0;
     game.state.wildHowl={turns:0};
     game.state.bloodUnleash={turns:0};
+    game.state.riposteField={turns:0};
+    game.state.immovableWall={turns:0};
+    game.state.edgewallCounterStacks=0;
     resetWarInstinctStacks();
     const zoneName = customEnemy?.zoneName || z.name;
     if(customEnemy?.intro){
@@ -3181,9 +3390,11 @@ function equipRestrictionText(inst){
   function playerAttack(){
     if(!game.state.inBattle){ say("現在沒有在戰鬥。"); return; }
     recalcPlayerStats();
+    if(startPlayerTurnTick()) return;
     const p=game.player, e=game.state.enemy;
     const effDef=effectiveEnemyDef(e,p);
     let out=Math.max(1, rnd(p.atk-2,p.atk+2)-effDef);
+    out = Math.floor(out * edgewallActiveAttackMultiplier());
     out=critMaybe(p,out,"physical");
     out=applySpeedBonus(p,out);
     out = Math.floor(out * berserkerAtkBuffMultiplier());
@@ -3209,6 +3420,7 @@ function equipRestrictionText(inst){
   }
 
   recalcPlayerStats();
+  if(startPlayerTurnTick()) return false;
 
   const lv = skillLevel(id, 0);
   if(lv <= 0){
@@ -3296,6 +3508,13 @@ function equipRestrictionText(inst){
       say(`🛡️ <b>${e.name}</b> 的防禦恢復了。`);
     }
   }
+  if(e.edgewallCounterMark && e.edgewallCounterMark.turns>0){
+    e.edgewallCounterMark.turns--;
+    if(e.edgewallCounterMark.turns<=0){
+      e.edgewallCounterMark=null;
+      say(`🎯 <b>${e.name}</b> 的反擊易傷解除。`);
+    }
+  }
   if(e.hitDown && e.hitDownTurns > 0){
     const missRate = e.hitDown;
     e.hitDownTurns--;
@@ -3318,6 +3537,13 @@ function equipRestrictionText(inst){
   const dmgTakenBonus = berserkerDamageTakenBonus();
   if(dmgTakenBonus>0){
     dmg = Math.max(1, Math.floor(dmg * (1 + dmgTakenBonus)));
+  }
+  const wall = game.state?.immovableWall;
+  const originalDmg = dmg;
+  if(wall && wall.turns>0){
+    wall.stacks = Math.min((wall.stacks||0)+1, wall.maxStacks || 5);
+    wall.takenTotal = (wall.takenTotal || 0) + originalDmg;
+    dmg = Math.max(0, Math.floor(dmg * (1 - (wall.damageReduceRate || 0))));
   }
   const guard = game.state.guardMitigation || {ratio:0,turns:0};
   if(guard.ratio>0){
@@ -3353,6 +3579,11 @@ function equipRestrictionText(inst){
   say(`<b>${e.name}</b> 攻擊了你，<span class="bad">-${dmg}</span>。`);
   if(p.hp<=0) return endBattle(false);
 
+  const ironCap = edgewallCounterStacksCap();
+  if(ironCap>0){
+    game.state.edgewallCounterStacks = Math.min(ironCap, (game.state.edgewallCounterStacks||0) + 1);
+  }
+
   // 🛡 鋼鐵迎擊：Steelheart 被動反擊
   const steelLv = skillLevel("SteelIronCounter",0);
   if(steelLv > 0 && dmg > 0 && e.hp > 0){
@@ -3384,8 +3615,8 @@ function equipRestrictionText(inst){
       let total = 0;
       for(let i=0; i<hits && e.hp>0; i++){
         const effDef = effectiveEnemyDef(e,p);
-        let out = Math.max(1, Math.floor((rnd(p.atk-2,p.atk+2) - effDef) * baseMul * (1 + dmgBoost)));
-        out = critMaybe(p,out,"physical");
+        let out = Math.max(1, Math.floor((rnd(p.atk-2,p.atk+2) - effDef) * baseMul * (1 + dmgBoost) * edgewallCounterMultiplier(e)));
+        out = counterCritMaybe(p,out);
         out = applySpeedBonus(p,out);
         e.hp = clamp(e.hp - out, 0, e.maxhp);
         total += out;
@@ -3406,8 +3637,8 @@ function equipRestrictionText(inst){
     game.state.counterReady=false;
     if(e.hp>0){
       const effDef=effectiveEnemyDef(e,p);
-      let out=Math.max(1, Math.floor((rnd(p.atk-2,p.atk+2)-effDef) * 1.1));
-      out = critMaybe(p,out,"physical");
+      let out=Math.max(1, Math.floor((rnd(p.atk-2,p.atk+2)-effDef) * 1.1 * edgewallCounterMultiplier(e)));
+      out = counterCritMaybe(p,out);
       out = applySpeedBonus(p,out);
       e.hp = clamp(e.hp - out, 0, e.maxhp);
       say(`🛡️ 你趁勢反擊，造成 <span class="hp">-${out}</span>。`);
@@ -3424,6 +3655,9 @@ function equipRestrictionText(inst){
   game.state.bloodUnleash={turns:0};
   game.state.steelCounterBuff={turns:0,dmgBoost:0};
   game.state.steelFormation={turns:0,extraHits:0};
+  game.state.riposteField={turns:0};
+  game.state.immovableWall={turns:0};
+  game.state.edgewallCounterStacks=0;
   resetWarInstinctStacks();
     if(victory){
       const z=currentZone(); let gold=e.gold, exp=e.exp;
