@@ -6693,7 +6693,7 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
     const rangeInfo = skillPointRangeInfo(currentSkillTierTab);
     const rangeText = rangeInfo ? `（${rangeInfo.label}技能點來源：Lv.${rangeInfo.start}-${rangeInfo.end}｜共 ${rangeInfo.total} 點）` : "";
     const tip=document.createElement("div");
-    tip.className="row";
+    tip.className="row skill-points-sticky";
     tip.innerHTML = `<span class="muted">${tierLabel(currentSkillTierTab)}剩餘技能點數：<b>${points}</b>${rangeText}</span>`;
     box.appendChild(tip);
 
