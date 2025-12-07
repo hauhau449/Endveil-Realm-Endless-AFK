@@ -60,6 +60,8 @@
   .actions{display:flex;flex-wrap:wrap;gap:8px}
   .log{height:260px;overflow:auto;background:#0b0f16;border:1px dashed var(--dash);padding:10px;border-radius:8px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
   .log p{margin:.35em 0}
+  .log .turn-divider{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--muted);letter-spacing:.2px;text-transform:uppercase;font-size:12px}
+  .log .turn-divider::before,.log .turn-divider::after{content:"";flex:1;border-bottom:1px dashed #1f2937;opacity:.72}
   .battle-status{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:10px 0}
   .battle-side{background:var(--panel);border:1px dashed var(--dash);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px;position:relative}
   .battle-side .status-head{font-weight:700;display:flex;align-items:center;gap:6px;color:var(--muted)}
