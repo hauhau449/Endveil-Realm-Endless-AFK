@@ -2217,9 +2217,9 @@ const MOUNTS={
   // 小怪（不能無腦，需要補品）
   let hp = 60 + lvl * 25;
   let mp = 30 + lvl * 10;
-  let atk = 7 + lvl * 1.5;
-  let def = lvl * 0.8;
-  let mdef = lvl * 0.7;
+  let atk = 7 + lvl * 2;
+  let def = lvl * 1;
+  let mdef = lvl * 1;
   let speed = lvl * 0.25;
 
   // 菁英怪（容易死，不注意會翻車）
@@ -3762,7 +3762,7 @@ function equipRestrictionText(inst){
 
     if (basePick.isBoss) {
       const playerMaxHp = Math.max(1, game.player?.maxhp || 0);
-      base.hp = Math.max(1, Math.round(playerMaxHp * 50));
+      base.hp = Math.max(1, Math.round(playerMaxHp * 20));
     }
 
     const e = {
