@@ -56,6 +56,8 @@ function toggleUpdateLog(){
   let skillDlg, settingsDlg;
   let classNoticeDlg, classNoticeText;
   let serialInput;
+  let afkUseHpPotionInput, afkUseMpPotionInput, afkHpThresholdInput, afkMpThresholdInput;
+  let afkSkillGrid, afkStatusLabel, afkToggleInSettingsBtn, saveAfkSettingsBtn;
   let currentSkillTierTab=0;
   const enemyUI={name:$("#eName"),lvl:$("#eLvl"),atk:$("#eAtk"),def:$("#eDef"),hpTxt:$("#eHpTxt"),mpTxt:$("#eMpTxt"),hpBar:$("#eHpBar"),mpBar:$("#eMpBar")};
   const battleStatusUI={
@@ -2330,6 +2332,14 @@ const MOUNTS={
 
   /* ========= 狀態 ========= */
 
+  const DEFAULT_AFK_SETTINGS = {
+    useHpPotion: true,
+    useMpPotion: true,
+    hpThreshold: 60,
+    mpThreshold: 35,
+    skillOrder: ["","","","",""]
+  };
+
   const game = {
     player:{
       name:"你", job:"Novice", tier:0, lvl:1, exp:0,
@@ -2364,10 +2374,11 @@ const MOUNTS={
       edgewallCounterStacks:0,
       steelCounterBuff:{turns:0,dmgBoost:0},
       steelFormation:{turns:0,extraHits:0},
-      warInstinctStacks:0, redeemedSerials:{}, inTrial:false, zoneBeforeTrial:null },
+      warInstinctStacks:0, redeemedSerials:{}, inTrial:false, zoneBeforeTrial:null, afkSkillCursor:0 },
     quests:[], shop:{stock:[]},
     buffs:{ xpLayers:[] }, // 多層加倍，每層為剩餘日數
-    uiFlags:{ classNotice:{} }
+    uiFlags:{ classNotice:{} },
+    settings:{ afk: { ...DEFAULT_AFK_SETTINGS } }
   };
 
   /* ========= 工具 ========= */
@@ -2417,21 +2428,40 @@ const AUTO_POTION = {
   mp: { threshold: 0.35, minMissing: 8,  cooldownMs: 800 }   // 低於35%且至少少8MP才喝
 };
 
+function ensureAfkSettings(){
+  if(!game.settings) game.settings = { afk: { ...DEFAULT_AFK_SETTINGS } };
+  if(!game.settings.afk) game.settings.afk = { ...DEFAULT_AFK_SETTINGS };
+  const afk = game.settings.afk;
+  if(!Array.isArray(afk.skillOrder)) afk.skillOrder = [...DEFAULT_AFK_SETTINGS.skillOrder];
+  while(afk.skillOrder.length < DEFAULT_AFK_SETTINGS.skillOrder.length) afk.skillOrder.push("");
+  if(afk.skillOrder.length > DEFAULT_AFK_SETTINGS.skillOrder.length) afk.skillOrder = afk.skillOrder.slice(0, DEFAULT_AFK_SETTINGS.skillOrder.length);
+  if(typeof afk.hpThreshold !== "number") afk.hpThreshold = DEFAULT_AFK_SETTINGS.hpThreshold;
+  if(typeof afk.mpThreshold !== "number") afk.mpThreshold = DEFAULT_AFK_SETTINGS.mpThreshold;
+  if(typeof afk.useHpPotion !== "boolean") afk.useHpPotion = DEFAULT_AFK_SETTINGS.useHpPotion;
+  if(typeof afk.useMpPotion !== "boolean") afk.useMpPotion = DEFAULT_AFK_SETTINGS.useMpPotion;
+  return afk;
+}
+
 // ✅ 自動治療（HP）
 function autoUseHeal(){
   const p = game.player, inv = game.inv || {};
   if(!p || p.maxhp<=0) return false;
 
   // 滿血、缺血不足、不在冷卻 → 直接退出
+  const afk = ensureAfkSettings();
+
   const missing = p.maxhp - p.hp;
   if(missing <= 0) return false;
   if(missing < AUTO_POTION.hp.minMissing) return false;
+
+  if(!afk.useHpPotion) return false;
 
   const now = Date.now();
   if(p._healCD && now - p._healCD < AUTO_POTION.hp.cooldownMs) return false;
 
   const hpRate = p.hp / p.maxhp;
-  if(hpRate >= AUTO_POTION.hp.threshold) return false;
+  const hpThreshold = clamp((afk.hpThreshold ?? DEFAULT_AFK_SETTINGS.hpThreshold)/100, 0, 1);
+  if(hpRate >= hpThreshold) return false;
 
   // 依血量挑藥：特→大→中→小
   const tryList =
@@ -2453,15 +2483,20 @@ function autoUseMana(){
   const p = game.player, inv = game.inv || {};
   if(!p || p.maxmp<=0) return false;
 
+  const afk = ensureAfkSettings();
+
   const missing = p.maxmp - p.mp;
   if(missing <= 0) return false;
   if(missing < AUTO_POTION.mp.minMissing) return false;
+
+  if(!afk.useMpPotion) return false;
 
   const now = Date.now();
   if(p._manaCD && now - p._manaCD < AUTO_POTION.mp.cooldownMs) return false;
 
   const mpRate = p.mp / p.maxmp;
-  if(mpRate >= AUTO_POTION.mp.threshold) return false;
+  const mpThreshold = clamp((afk.mpThreshold ?? DEFAULT_AFK_SETTINGS.mpThreshold)/100, 0, 1);
+  if(mpRate >= mpThreshold) return false;
 
   const tryList =
     mpRate < 0.20 ? ["特級魔力藥水","大魔力藥水","中魔力藥水","小魔力藥水"] :
@@ -2620,6 +2655,8 @@ function qualWithStars(inst){
         game.buffs=data.buffs||{xpLayers:[]};
         game.uiFlags=data.uiFlags||{classNotice:{}};
         if(!game.uiFlags.classNotice) game.uiFlags.classNotice = {};
+        game.settings = data.settings || { afk: { ...DEFAULT_AFK_SETTINGS } };
+        ensureAfkSettings();
         // 反序列化 DB
         Object.assign(EQUIP_DB, data._eqdb||{});
         Object.assign(MOUNT_DB, data._mddb||{});
@@ -2627,6 +2664,7 @@ function qualWithStars(inst){
         recomputeStats(true);
       } else {
         seedQuests();
+        ensureAfkSettings();
       }
     }catch(e){}
   }
@@ -3940,14 +3978,14 @@ function equipRestrictionText(inst){
     // 中毒DOT在回合終結時生效
     enemyTurn();
   }
- function useActiveSkill(){
+function useActiveSkill(idOverride){
   // 不在戰鬥中 → 不算施放
   if(!game.state.inBattle){
     say("不在戰鬥中。");
     return false;
   }
 
-  const id = game.player.activeSkill;
+  const id = idOverride || game.player.activeSkill;
   const sk = SKILL[id];
   if(!sk || typeof sk.use !== "function"){
     say("沒有可施放的主動技能。");
@@ -5207,8 +5245,79 @@ function upgradeSkillByPoint(id){
   function openSettings(){
     if(!settingsDlg) return;
     if(serialInput) serialInput.value = "";
+    renderAfkSettingsUI();
     settingsDlg.showModal();
     if(serialInput) serialInput.focus();
+  }
+
+  function learnedActiveSkills(){
+    return Object.keys(SKILL).filter(id=>{
+      const sk = SKILL[id];
+      return sk && typeof sk.use === "function" && skillLevel(id,0) > 0;
+    });
+  }
+
+  function renderAfkSettingsUI(){
+    const afk = ensureAfkSettings();
+    if(afkUseHpPotionInput) afkUseHpPotionInput.checked = !!afk.useHpPotion;
+    if(afkUseMpPotionInput) afkUseMpPotionInput.checked = !!afk.useMpPotion;
+    if(afkHpThresholdInput) afkHpThresholdInput.value = Math.round(afk.hpThreshold ?? DEFAULT_AFK_SETTINGS.hpThreshold);
+    if(afkMpThresholdInput) afkMpThresholdInput.value = Math.round(afk.mpThreshold ?? DEFAULT_AFK_SETTINGS.mpThreshold);
+    if(afkStatusLabel) afkStatusLabel.textContent = game.player.afk? "目前：掛機中" : "目前：未掛機";
+
+    if(afkSkillGrid){
+      afkSkillGrid.innerHTML = "";
+      const ids = learnedActiveSkills();
+      const hasSkills = ids.length>0;
+      for(let i=0;i<DEFAULT_AFK_SETTINGS.skillOrder.length;i++){
+        const wrap=document.createElement("label");
+        wrap.className="afk-skill-item";
+        const lab=document.createElement("span");
+        lab.textContent = `#${i+1}`;
+        const sel=document.createElement("select");
+        sel.className="text-input";
+        sel.dataset.slot=String(i);
+        const emptyOpt=document.createElement("option");
+        emptyOpt.value="";
+        emptyOpt.textContent = "（空白）";
+        sel.append(emptyOpt);
+        ids.forEach(id=>{
+          const opt=document.createElement("option");
+          opt.value=id;
+          opt.textContent=skillNameWithLv(id);
+          if(afk.skillOrder[i]===id) opt.selected=true;
+          sel.append(opt);
+        });
+        wrap.append(lab, sel);
+        afkSkillGrid.append(wrap);
+      }
+      if(!hasSkills){
+        const tip=document.createElement("div");
+        tip.className="hint";
+        tip.textContent="尚未習得主動技能，將使用當前技能。";
+        afkSkillGrid.append(tip);
+      }
+    }
+  }
+
+  function saveAfkSettings(){
+    const afk = ensureAfkSettings();
+    if(afkUseHpPotionInput) afk.useHpPotion = !!afkUseHpPotionInput.checked;
+    if(afkUseMpPotionInput) afk.useMpPotion = !!afkUseMpPotionInput.checked;
+    const hpVal = clamp(Number(afkHpThresholdInput?.value)||DEFAULT_AFK_SETTINGS.hpThreshold, 1, 100);
+    const mpVal = clamp(Number(afkMpThresholdInput?.value)||DEFAULT_AFK_SETTINGS.mpThreshold, 1, 100);
+    afk.hpThreshold = hpVal;
+    afk.mpThreshold = mpVal;
+    if(afkSkillGrid){
+      const arr=[...afkSkillGrid.querySelectorAll("select")]
+        .sort((a,b)=>Number(a.dataset.slot||0)-Number(b.dataset.slot||0))
+        .map(sel=>sel.value||"");
+      afk.skillOrder = arr.slice(0, DEFAULT_AFK_SETTINGS.skillOrder.length);
+    }
+    game.state.afkSkillCursor = 0;
+    autosave();
+    say("⚙️ 掛機設定已儲存。");
+    renderAfkSettingsUI();
   }
 
   function redeemSerial(codeRaw){
@@ -6885,14 +6994,38 @@ function refreshQuestsIfAllRewarded(){
   function toggleAFK(){
     game.player.afk=!game.player.afk;
     $("#afkBtn").textContent = game.player.afk? "🤖 掛機：開" : "🤖 掛機：關";
+    if(afkStatusLabel) afkStatusLabel.textContent = game.player.afk? "目前：掛機中" : "目前：未掛機";
     if(game.player.afk){
       if(afkTimer) clearInterval(afkTimer);
+      game.state.afkSkillCursor = 0;
       afkTimer=setInterval(()=>afkTick(), 1000);
       say("🤖 掛機已開啟。");
     }else{
       if(afkTimer) clearInterval(afkTimer), afkTimer=null;
       say("🛑 掛機已關閉。");
     }
+  }
+  function validAfkSkill(id){
+    if(!id) return false;
+    const sk = SKILL[id];
+    if(!sk || typeof sk.use !== "function") return false;
+    return skillLevel(id, 0) > 0;
+  }
+  function useAfkSkillOrder(){
+    const afk = ensureAfkSettings();
+    const order = (afk.skillOrder||[]).filter(Boolean);
+    if(order.length===0) return false;
+    if(!game.state) game.state = {};
+    if(typeof game.state.afkSkillCursor !== "number") game.state.afkSkillCursor = 0;
+    for(let i=0;i<order.length;i++){
+      const idx = (game.state.afkSkillCursor + i) % order.length;
+      const id = order[idx];
+      if(!validAfkSkill(id)) continue;
+      const ok = useActiveSkill(id);
+      game.state.afkSkillCursor = (idx + 1) % order.length;
+      if(ok) return true;
+    }
+    return false;
   }
 // [FIX] 掛機主迴圈：不在戰鬥時要主動探索；在戰鬥時才打與判定
 function afkTick(){
@@ -6924,7 +7057,7 @@ function afkTick(){
   if( autoUseMana() ) return;
 
   // ✅ 自動釋放主動技能：失敗時改用普通攻擊
-  const usedSkill = useActiveSkill();   // 會回傳 true / false
+  const usedSkill = useAfkSkillOrder() || useActiveSkill();   // 會回傳 true / false
 
   if(!usedSkill){
     // MP 不足 / 沒有技能可用 → 用普通攻擊頂上，避免掛機卡死
@@ -7022,6 +7155,14 @@ function doRebirth(){
 
   settingsDlg = $("#settingsDlg");
   serialInput = $("#serialInput");
+  afkUseHpPotionInput = $("#afkUseHpPotion");
+  afkUseMpPotionInput = $("#afkUseMpPotion");
+  afkHpThresholdInput = $("#afkHpThreshold");
+  afkMpThresholdInput = $("#afkMpThreshold");
+  afkSkillGrid = $("#afkSkillGrid");
+  afkStatusLabel = $("#afkStatusLabel");
+  afkToggleInSettingsBtn = $("#afkToggleInSettings");
+  saveAfkSettingsBtn = $("#saveAfkSettings");
 
   classNoticeDlg = $("#classNoticeDlg");
   classNoticeText = $("#classNoticeText");
@@ -7054,6 +7195,12 @@ const doRebirthBtn = $("#doRebirthBtn");
   $("#mapBtn").onclick=()=>openMap();
   $("#skillBookBtn").onclick=()=>{ renderSkillList(); skillDlg.showModal(); };
   $("#settingsBtn").onclick=()=>openSettings();
+  if(afkToggleInSettingsBtn){
+    afkToggleInSettingsBtn.onclick = ()=>{ toggleAFK(); renderAfkSettingsUI(); };
+  }
+  if(saveAfkSettingsBtn){
+    saveAfkSettingsBtn.onclick = ()=>saveAfkSettings();
+  }
   skillTabButtons.forEach(btn=>{
     btn.onclick=()=>{
       currentSkillTierTab = Number(btn.dataset.tier||0);
