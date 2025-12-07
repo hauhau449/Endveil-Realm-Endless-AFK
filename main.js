@@ -2504,7 +2504,17 @@ function nextPotionName(name){
     }
   }
 
+  let logMuteDepth = 0;
+
+  function withLogMuted(fn){
+    logMuteDepth++;
+    try{ return fn(); }
+    finally{ logMuteDepth = Math.max(0, logMuteDepth - 1); }
+  }
+
   function appendLog(html, {save=true} = {}){
+    if(logMuteDepth > 0) return;
+
     const p=document.createElement("p");
     p.innerHTML=html;
     log.appendChild(p);
@@ -4851,12 +4861,22 @@ function rollArtifactStatsForSlot() {
           }
 
           const times = Math.min(n, have);
-          for(let i = 0; i < times; i++){
-            if((game.inv[name] || 0) <= 0) break; // 用到沒了就停
+          if(times === 1){
             useItem(name);
+            renderInventoryList();
+            return;
           }
 
+          withLogMuted(()=>{
+            for(let i = 0; i < times; i++){
+              if((game.inv[name] || 0) <= 0) break; // 用到沒了就停
+              useItem(name, {skipRender:true});
+            }
+          });
+
+          render();
           renderInventoryList();
+          say(`🎒 使用 <b>${displayInvName(name)}</b> ×${times}`);
         }));
 
         // 藥水 2 合 1（只對治療藥水鏈）
@@ -4987,13 +5007,13 @@ function rollArtifactStatsForSlot() {
     if(ref){ return {type: ref.type, ref:key}; }
     return {type:"misc"};
   }
- function useItem(key){
+ function useItem(key, {skipRender=false} = {}){
   const p = game.player;
   const meta = invMeta(key);
-  if (meta.type !== "consum") return;
+  if (meta.type !== "consum") return false;
 
   const def = itemDefs[meta.ref];
-  if (!def) return;
+  if (!def) return false;
 
   // 先執行道具本身的效果
   def.use(p, game.state.enemy, game.state.inBattle);
@@ -5011,8 +5031,12 @@ function rollArtifactStatsForSlot() {
     decInv(key, 1);
   }
 
-  render();
-  if (game.state.inBattle) enemyTurn();
+  if (!skipRender) {
+    render();
+    if (game.state.inBattle) enemyTurn();
+  }
+
+  return true;
 }
 
 
