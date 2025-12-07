@@ -22,7 +22,52 @@
       <button class="btn small primary-btn" id="skillBookBtn">📚 技能庫</button>
       <button class="btn small primary-btn" id="questBtn">📜 任務</button>
       <button class="btn small primary-btn" id="classBtn" disabled>🏷️ 轉職</button>
-      <button class="btn small primary-btn" id="afkBtn">🤖 掛機：關</button>
+      <div class="afk-menu-wrap">
+        <button class="btn small primary-btn" id="afkBtn" aria-expanded="false">🤖 掛機：關</button>
+        <div class="afk-menu" id="afkMenu" aria-hidden="true">
+          <div class="afk-menu-header">
+            <div class="settings-meta">
+              <div class="setting-title">🤖 掛機控制台</div>
+              <div class="hint">自訂藥水比例、技能順序，並可開啟/關閉掛機。</div>
+            </div>
+            <div class="row" style="margin-left:auto;gap:8px;align-items:center">
+              <button class="btn small" id="afkToggleInSettings">開啟掛機</button>
+              <span id="afkStatusLabel" class="hint"></span>
+            </div>
+          </div>
+          <div class="settings-block compact">
+            <div class="settings-meta">
+              <div class="setting-title">🧪 自動吃藥</div>
+              <div class="hint">血魔低於多少百分比才喝藥水。</div>
+            </div>
+            <div class="afk-potion-grid">
+              <label class="afk-control">
+                <input type="checkbox" id="afkUseHpPotion" /> 自動治療
+              </label>
+              <label class="afk-control">
+                HP 低於 <input id="afkHpThreshold" type="number" min="1" max="100" class="text-input mini" /> %
+              </label>
+              <label class="afk-control">
+                <input type="checkbox" id="afkUseMpPotion" /> 自動回魔
+              </label>
+              <label class="afk-control">
+                MP 低於 <input id="afkMpThreshold" type="number" min="1" max="100" class="text-input mini" /> %
+              </label>
+            </div>
+          </div>
+          <div class="settings-block compact">
+            <div class="settings-meta">
+              <div class="setting-title">🎯 掛機技能順序</div>
+              <div class="hint">設定最多 5 招輪替施放的技能，未填則沿用當前技能。</div>
+            </div>
+            <div class="afk-skill-grid" id="afkSkillGrid"></div>
+          </div>
+          <div class="row afk-menu-actions">
+            <button class="btn small secondary-btn" id="saveAfkSettings">儲存設定</button>
+            <button class="btn small ghost" id="closeAfkMenu">關閉</button>
+          </div>
+        </div>
+      </div>
 
       <!-- 👇 更多功能：排在掛機右邊 -->
       <select id="moreMenu" class="more-menu">
@@ -754,46 +799,15 @@
           <button class="btn small" id="serialSubmitBtn">兌換</button>
         </div>
       </div>
-      <div class="row settings-row afk-settings">
-        <div class="settings-meta">
-          <div class="setting-title">🤖 掛機開關</div>
-          <div class="hint">原掛機快捷鍵維持不變，亦可在此開/關。</div>
-        </div>
-        <div class="row" style="margin-left:auto;gap:6px;align-items:center">
-          <button class="btn small" id="afkToggleInSettings">切換掛機</button>
-          <span id="afkStatusLabel" class="hint"></span>
-        </div>
-      </div>
       <div class="settings-block">
         <div class="settings-meta">
-          <div class="setting-title">🧪 自動吃藥</div>
-          <div class="hint">自訂掛機時血魔低於多少百分比才喝藥水。</div>
+          <div class="setting-title">🤖 掛機設定</div>
+          <div class="hint">掛機按鈕現在內建自動吃藥、技能順序、開關與儲存功能。</div>
         </div>
-        <div class="afk-potion-grid">
-          <label class="afk-control">
-            <input type="checkbox" id="afkUseHpPotion" /> 自動治療
-          </label>
-          <label class="afk-control">
-            HP 低於 <input id="afkHpThreshold" type="number" min="1" max="100" class="text-input mini" /> %
-          </label>
-          <label class="afk-control">
-            <input type="checkbox" id="afkUseMpPotion" /> 自動回魔
-          </label>
-          <label class="afk-control">
-            MP 低於 <input id="afkMpThreshold" type="number" min="1" max="100" class="text-input mini" /> %
-          </label>
-        </div>
-      </div>
-      <div class="settings-block">
-        <div class="settings-meta">
-          <div class="setting-title">🎯 掛機技能順序</div>
-          <div class="hint">設定最多 5 招輪替施放的技能，未填則沿用當前技能。</div>
-        </div>
-        <div class="afk-skill-grid" id="afkSkillGrid"></div>
+        <div class="hint" style="font-weight:700">點擊上方「🤖 掛機」即可快速展開控制台。</div>
       </div>
     </div>
     <div class="row" style="justify-content:flex-end;margin-top:8px">
-      <button class="btn small secondary-btn" id="saveAfkSettings">儲存設定</button>
       <button class="btn small" id="closeSettings">關閉</button>
     </div>
   </div>
