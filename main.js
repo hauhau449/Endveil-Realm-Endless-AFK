@@ -57,7 +57,7 @@ function toggleUpdateLog(){
   let classNoticeDlg, classNoticeText;
   let serialInput;
   let afkUseHpPotionInput, afkUseMpPotionInput, afkHpThresholdInput, afkMpThresholdInput;
-  let afkSkillGrid, afkStatusLabel, afkToggleInSettingsBtn, saveAfkSettingsBtn;
+  let afkSkillGrid, afkStatusLabel, afkToggleInSettingsBtn, saveAfkSettingsBtn, closeAfkMenuBtn, afkMenu;
   let currentSkillTierTab=0;
   const enemyUI={name:$("#eName"),lvl:$("#eLvl"),atk:$("#eAtk"),def:$("#eDef"),hpTxt:$("#eHpTxt"),mpTxt:$("#eMpTxt"),hpBar:$("#eHpBar"),mpBar:$("#eMpBar")};
   const battleStatusUI={
@@ -5264,6 +5264,7 @@ function upgradeSkillByPoint(id){
     if(afkHpThresholdInput) afkHpThresholdInput.value = Math.round(afk.hpThreshold ?? DEFAULT_AFK_SETTINGS.hpThreshold);
     if(afkMpThresholdInput) afkMpThresholdInput.value = Math.round(afk.mpThreshold ?? DEFAULT_AFK_SETTINGS.mpThreshold);
     if(afkStatusLabel) afkStatusLabel.textContent = game.player.afk? "目前：掛機中" : "目前：未掛機";
+    if(afkToggleInSettingsBtn) afkToggleInSettingsBtn.textContent = game.player.afk? "關閉掛機" : "開啟掛機";
 
     if(afkSkillGrid){
       afkSkillGrid.innerHTML = "";
@@ -5318,6 +5319,27 @@ function upgradeSkillByPoint(id){
     autosave();
     say("⚙️ 掛機設定已儲存。");
     renderAfkSettingsUI();
+  }
+
+  function openAfkMenu(){
+    if(!afkMenu) return;
+    renderAfkSettingsUI();
+    afkMenu.classList.add("open");
+    afkMenu.setAttribute("aria-hidden","false");
+    $("#afkBtn")?.setAttribute("aria-expanded","true");
+  }
+
+  function closeAfkMenu(){
+    if(!afkMenu) return;
+    afkMenu.classList.remove("open");
+    afkMenu.setAttribute("aria-hidden","true");
+    $("#afkBtn")?.setAttribute("aria-expanded","false");
+  }
+
+  function toggleAfkMenu(){
+    if(!afkMenu) return;
+    const isOpen = afkMenu.classList.contains("open");
+    if(isOpen) closeAfkMenu(); else openAfkMenu();
   }
 
   function redeemSerial(codeRaw){
@@ -7163,6 +7185,8 @@ function doRebirth(){
   afkStatusLabel = $("#afkStatusLabel");
   afkToggleInSettingsBtn = $("#afkToggleInSettings");
   saveAfkSettingsBtn = $("#saveAfkSettings");
+  closeAfkMenuBtn = $("#closeAfkMenu");
+  afkMenu = $("#afkMenu");
 
   classNoticeDlg = $("#classNoticeDlg");
   classNoticeText = $("#classNoticeText");
@@ -7195,11 +7219,18 @@ const doRebirthBtn = $("#doRebirthBtn");
   $("#mapBtn").onclick=()=>openMap();
   $("#skillBookBtn").onclick=()=>{ renderSkillList(); skillDlg.showModal(); };
   $("#settingsBtn").onclick=()=>openSettings();
+  const afkBtn = $("#afkBtn");
   if(afkToggleInSettingsBtn){
     afkToggleInSettingsBtn.onclick = ()=>{ toggleAFK(); renderAfkSettingsUI(); };
   }
   if(saveAfkSettingsBtn){
     saveAfkSettingsBtn.onclick = ()=>saveAfkSettings();
+  }
+  if(closeAfkMenuBtn){
+    closeAfkMenuBtn.onclick = ()=>closeAfkMenu();
+  }
+  if(afkBtn){
+    afkBtn.onclick = ()=>toggleAfkMenu();
   }
   skillTabButtons.forEach(btn=>{
     btn.onclick=()=>{
@@ -7208,7 +7239,13 @@ const doRebirthBtn = $("#doRebirthBtn");
     };
   });
   $("#helpBtn").onclick=()=>openHelp();
-  $("#afkBtn").onclick=()=>toggleAFK();
+
+  document.addEventListener("click", e=>{
+    if(!afkMenu) return;
+    if(afkMenu.contains(e.target)) return;
+    if(afkBtn && afkBtn.contains(e.target)) return;
+    closeAfkMenu();
+  });
 
   $("#closeInv").onclick=()=>invDlg.close();
   $("#closeQuest").onclick=()=>questDlg.close();
