@@ -56,7 +56,7 @@ function toggleUpdateLog(){
   let skillDlg, settingsDlg;
   let classNoticeDlg, classNoticeText;
   let serialInput;
-  let afkUseHpPotionInput, afkUseMpPotionInput, afkHpThresholdInput, afkMpThresholdInput;
+  let afkUseHpPotionInput, afkUseMpPotionInput, afkHpThresholdInput, afkMpThresholdInput, afkHpPotionChoiceInput, afkMpPotionChoiceInput;
   let afkSkillGrid, afkStatusLabel, afkToggleInSettingsBtn, saveAfkSettingsBtn, closeAfkMenuBtn, afkMenu;
   let currentSkillTierTab=0;
   const enemyUI={name:$("#eName"),lvl:$("#eLvl"),atk:$("#eAtk"),def:$("#eDef"),hpTxt:$("#eHpTxt"),mpTxt:$("#eMpTxt"),hpBar:$("#eHpBar"),mpBar:$("#eMpBar")};
@@ -2337,6 +2337,8 @@ const MOUNTS={
     useMpPotion: true,
     hpThreshold: 60,
     mpThreshold: 35,
+    hpPotionChoice: "auto",
+    mpPotionChoice: "auto",
     skillOrder: ["","","","",""]
   };
 
@@ -2422,11 +2424,29 @@ const POTION_CHAINS = [
   ["小治療藥水","中治療藥水","大治療藥水","特級治療藥水"],
   ["小魔力藥水","中魔力藥水","大魔力藥水","特級魔力藥水"],
 ];
+const AFK_POTION_CHOICES = {
+  hp: ["auto", ...POTION_CHAINS[0].slice().reverse()],
+  mp: ["auto", ...POTION_CHAINS[1].slice().reverse()]
+};
 // ===== 自動用藥參數（可自行調整） =====
 const AUTO_POTION = {
   hp: { threshold: 0.60, minMissing: 10, cooldownMs: 800 },  // 低於60%且至少少10HP才喝
   mp: { threshold: 0.35, minMissing: 8,  cooldownMs: 800 }   // 低於35%且至少少8MP才喝
 };
+
+function normalizePotionChoice(choice, type){
+  const list = AFK_POTION_CHOICES[type] || ["auto"];
+  if(list.includes(choice)) return choice;
+  return "auto";
+}
+
+function buildPotionPriority(choice, chain, autoList){
+  if(choice !== "auto" && chain.includes(choice)){
+    const idx = chain.indexOf(choice);
+    return [choice, ...chain.slice(0, idx).reverse()];
+  }
+  return autoList;
+}
 
 function ensureAfkSettings(){
   if(!game.settings) game.settings = { afk: { ...DEFAULT_AFK_SETTINGS } };
@@ -2439,6 +2459,8 @@ function ensureAfkSettings(){
   if(typeof afk.mpThreshold !== "number") afk.mpThreshold = DEFAULT_AFK_SETTINGS.mpThreshold;
   if(typeof afk.useHpPotion !== "boolean") afk.useHpPotion = DEFAULT_AFK_SETTINGS.useHpPotion;
   if(typeof afk.useMpPotion !== "boolean") afk.useMpPotion = DEFAULT_AFK_SETTINGS.useMpPotion;
+  afk.hpPotionChoice = normalizePotionChoice(afk.hpPotionChoice, "hp");
+  afk.mpPotionChoice = normalizePotionChoice(afk.mpPotionChoice, "mp");
   return afk;
 }
 
@@ -2464,10 +2486,11 @@ function autoUseHeal(){
   if(hpRate >= hpThreshold) return false;
 
   // 依血量挑藥：特→大→中→小
-  const tryList =
+  const autoList =
     hpRate < 0.20 ? ["特級治療藥水","大治療藥水","中治療藥水","小治療藥水"] :
     hpRate < 0.40 ? ["大治療藥水","中治療藥水","小治療藥水"] :
                     ["中治療藥水","小治療藥水"];
+  const tryList = buildPotionPriority(afk.hpPotionChoice, POTION_CHAINS[0], autoList);
 
   for(const name of tryList){
     if((inv[name]||0) > 0){
@@ -2498,10 +2521,11 @@ function autoUseMana(){
   const mpThreshold = clamp((afk.mpThreshold ?? DEFAULT_AFK_SETTINGS.mpThreshold)/100, 0, 1);
   if(mpRate >= mpThreshold) return false;
 
-  const tryList =
+  const autoList =
     mpRate < 0.20 ? ["特級魔力藥水","大魔力藥水","中魔力藥水","小魔力藥水"] :
     mpRate < 0.40 ? ["大魔力藥水","中魔力藥水","小魔力藥水"] :
                     ["中魔力藥水","小魔力藥水"];
+  const tryList = buildPotionPriority(afk.mpPotionChoice, POTION_CHAINS[1], autoList);
 
   for(const name of tryList){
     if((inv[name]||0) > 0){
@@ -5263,6 +5287,8 @@ function upgradeSkillByPoint(id){
     if(afkUseMpPotionInput) afkUseMpPotionInput.checked = !!afk.useMpPotion;
     if(afkHpThresholdInput) afkHpThresholdInput.value = Math.round(afk.hpThreshold ?? DEFAULT_AFK_SETTINGS.hpThreshold);
     if(afkMpThresholdInput) afkMpThresholdInput.value = Math.round(afk.mpThreshold ?? DEFAULT_AFK_SETTINGS.mpThreshold);
+    if(afkHpPotionChoiceInput) afkHpPotionChoiceInput.value = afk.hpPotionChoice || "auto";
+    if(afkMpPotionChoiceInput) afkMpPotionChoiceInput.value = afk.mpPotionChoice || "auto";
     if(afkStatusLabel) afkStatusLabel.textContent = game.player.afk? "目前：掛機中" : "目前：未掛機";
     if(afkToggleInSettingsBtn) afkToggleInSettingsBtn.textContent = game.player.afk? "關閉掛機" : "開啟掛機";
 
@@ -5309,6 +5335,8 @@ function upgradeSkillByPoint(id){
     const mpVal = clamp(Number(afkMpThresholdInput?.value)||DEFAULT_AFK_SETTINGS.mpThreshold, 1, 100);
     afk.hpThreshold = hpVal;
     afk.mpThreshold = mpVal;
+    if(afkHpPotionChoiceInput) afk.hpPotionChoice = normalizePotionChoice(afkHpPotionChoiceInput.value, "hp");
+    if(afkMpPotionChoiceInput) afk.mpPotionChoice = normalizePotionChoice(afkMpPotionChoiceInput.value, "mp");
     if(afkSkillGrid){
       const arr=[...afkSkillGrid.querySelectorAll("select")]
         .sort((a,b)=>Number(a.dataset.slot||0)-Number(b.dataset.slot||0))
@@ -7181,6 +7209,8 @@ function doRebirth(){
   afkUseMpPotionInput = $("#afkUseMpPotion");
   afkHpThresholdInput = $("#afkHpThreshold");
   afkMpThresholdInput = $("#afkMpThreshold");
+  afkHpPotionChoiceInput = $("#afkHpPotionChoice");
+  afkMpPotionChoiceInput = $("#afkMpPotionChoice");
   afkSkillGrid = $("#afkSkillGrid");
   afkStatusLabel = $("#afkStatusLabel");
   afkToggleInSettingsBtn = $("#afkToggleInSettings");
