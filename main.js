@@ -4091,7 +4091,10 @@ function equipRestrictionText(inst){
     if(e.atkDownTurns <= 0){ e.atkDown = 0; say(`💢 <b>${e.name}</b> 的攻勢恢復。`); }
   }
 
-  let dmg=Math.max(1, rnd(enemyAtk-1,enemyAtk+3)-p.def);
+  const atkRoll = Math.max(1, Math.floor(enemyAtk * rnd(90, 110) / 100));
+  const baseMitigation = (p.def || 0) / Math.max(1, (p.def || 0) + enemyAtk * 1.35);
+  const cappedMitigation = clampValue(baseMitigation, 0, 0.7);
+  let dmg = Math.max(1, Math.floor(atkRoll * (1 - cappedMitigation)));
   const dmgTakenBonus = berserkerDamageTakenBonus();
   if(dmgTakenBonus>0){
     dmg = Math.max(1, Math.floor(dmg * (1 + dmgTakenBonus)));
