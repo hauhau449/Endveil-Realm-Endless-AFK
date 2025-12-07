@@ -3945,7 +3945,7 @@ function equipRestrictionText(inst){
 
   // 🛡 鋼鐵迎擊：Steelheart 被動反擊
   const steelLv = skillLevel("SteelIronCounter",0);
-  if(steelLv > 0 && dmg > 0 && e.hp > 0){
+  if(steelLv > 0 && e.hp > 0){
     // 檢查是否裝備帶「盾」的武器（例：短劍盾、長劍盾）
     let hasShield = false;
     const wKey = game.player.equip?.weapon;
