@@ -6943,12 +6943,16 @@ function doRebirth(){
 
   p.rebirths = (p.rebirths||0) + 1;
   const rebirthPoints = Math.max(1, p.rebirths);
-  // 重置等級，基礎屬性保留，僅新增轉生額外獲得的配點
+  // 重置等級與基礎屬性回到 Lv1（5/5/5/5），只保留轉生額外獲得的配點
   p.lvl = 1;
   p.exp = 0;
   p.job = "Novice";
   p.tier = 0;
-  p.freeStatPoints = (p.freeStatPoints || 0) + rebirthPoints;
+  p.baseStr = 5;
+  p.baseAgi = 5;
+  p.baseInt = 5;
+  p.baseSpi = 5;
+  p.freeStatPoints = rebirthPoints;
 
   game.state.inBattle = false;
   game.state.enemy = null;
@@ -6957,7 +6961,7 @@ function doRebirth(){
   p.hp = p.maxhp;
   p.mp = p.maxmp;
 
-  say(`♻️ <b>轉生成功！</b>（第 ${p.rebirths} 次）獲得額外屬性點 +${rebirthPoints}（可累計），基礎屬性保留，職業重置為初心者，其他數值已依新屬性公式重算。`);
+  say(`♻️ <b>轉生成功！</b>（第 ${p.rebirths} 次）獲得額外屬性點 +${rebirthPoints}（可累計），基礎屬性已重置為 Lv.1，職業重置為初心者，其他數值已依新屬性公式重算。`);
   $("#rebirthBtn").disabled = true;
   rebirthDlg.close();
   render(); autosave();
