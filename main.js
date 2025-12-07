@@ -736,7 +736,119 @@ function ensureUniqueName(name){
     }
   };
 
-  const SKILL_CONFIG = { ...BLOODFLAME_REAVER_SKILLS, ...EDGEWALL_KNIGHT_SKILLS };
+  // ==========================================
+  // Shadowblade（影刃者）技能模組
+  // ==========================================
+  const SHADOWBLADE_SKILLS = {
+    "影襲連斬": {
+      id: "影襲連斬",
+      type: "active",
+      maxLevel: 20,
+      target: "single",
+      tags: ["physical", "multi_hit", "combo"],
+      levels: [
+        { lv: 1,  damageMulPerHit: 0.50, hitCount: 3, mpCost: 6 },
+        { lv: 2,  damageMulPerHit: 0.55, hitCount: 3, mpCost: 6 },
+        { lv: 3,  damageMulPerHit: 0.60, hitCount: 3, mpCost: 6 },
+        { lv: 4,  damageMulPerHit: 0.65, hitCount: 3, mpCost: 6 },
+        { lv: 5,  damageMulPerHit: 0.70, hitCount: 3, mpCost: 7 },
+        { lv: 6,  damageMulPerHit: 0.75, hitCount: 3, mpCost: 7 },
+        { lv: 7,  damageMulPerHit: 0.80, hitCount: 3, mpCost: 7 },
+        { lv: 8,  damageMulPerHit: 0.85, hitCount: 3, mpCost: 7 },
+        { lv: 9,  damageMulPerHit: 0.90, hitCount: 3, mpCost: 8 },
+        { lv: 10, damageMulPerHit: 0.95, hitCount: 3, mpCost: 8 },
+        { lv: 11, damageMulPerHit: 1.00, hitCount: 3, mpCost: 8 },
+        { lv: 12, damageMulPerHit: 1.05, hitCount: 3, mpCost: 8 },
+        { lv: 13, damageMulPerHit: 1.10, hitCount: 3, mpCost: 9 },
+        { lv: 14, damageMulPerHit: 1.15, hitCount: 3, mpCost: 9 },
+        { lv: 15, damageMulPerHit: 1.20, hitCount: 3, mpCost: 9 },
+        { lv: 16, damageMulPerHit: 1.25, hitCount: 3, mpCost: 9 },
+        { lv: 17, damageMulPerHit: 1.30, hitCount: 3, mpCost: 10 },
+        { lv: 18, damageMulPerHit: 1.35, hitCount: 3, mpCost: 10 },
+        { lv: 19, damageMulPerHit: 1.40, hitCount: 3, mpCost: 10 },
+        { lv: 20, damageMulPerHit: 1.45, hitCount: 3, mpCost: 10 }
+      ]
+    },
+
+    "絕脈終刺": {
+      id: "絕脈終刺",
+      type: "active",
+      maxLevel: 10,
+      target: "single",
+      tags: ["physical", "finisher", "combo_scaling"],
+      levels: [
+        { lv: 1,  baseMul: 2.00, comboScalePerStack: 0.050, hpThreshold: 0.40, finisherBonus: 0.20, mpCost: 12 },
+        { lv: 2,  baseMul: 2.20, comboScalePerStack: 0.055, hpThreshold: 0.40, finisherBonus: 0.22, mpCost: 13 },
+        { lv: 3,  baseMul: 2.40, comboScalePerStack: 0.060, hpThreshold: 0.40, finisherBonus: 0.24, mpCost: 14 },
+        { lv: 4,  baseMul: 2.60, comboScalePerStack: 0.065, hpThreshold: 0.40, finisherBonus: 0.26, mpCost: 15 },
+        { lv: 5,  baseMul: 2.80, comboScalePerStack: 0.070, hpThreshold: 0.40, finisherBonus: 0.28, mpCost: 16 },
+        { lv: 6,  baseMul: 3.00, comboScalePerStack: 0.075, hpThreshold: 0.40, finisherBonus: 0.30, mpCost: 17 },
+        { lv: 7,  baseMul: 3.20, comboScalePerStack: 0.080, hpThreshold: 0.40, finisherBonus: 0.32, mpCost: 18 },
+        { lv: 8,  baseMul: 3.40, comboScalePerStack: 0.085, hpThreshold: 0.40, finisherBonus: 0.34, mpCost: 19 },
+        { lv: 9,  baseMul: 3.60, comboScalePerStack: 0.090, hpThreshold: 0.40, finisherBonus: 0.36, mpCost: 20 },
+        { lv: 10, baseMul: 3.80, comboScalePerStack: 0.095, hpThreshold: 0.40, finisherBonus: 0.38, mpCost: 21 }
+      ]
+    },
+
+    "影遁步伐": {
+      id: "影遁步伐",
+      type: "buff",
+      maxLevel: 5,
+      target: "self",
+      tags: ["buff", "evade", "crit"],
+      levels: [
+        { lv: 1, durationTurns: 2, evadeBonus: 0.15, speedOrAction: 0.10, nextSkillCrit: 0.25, nextSkillExtraHits: 0, mpCost: 10 },
+        { lv: 2, durationTurns: 2, evadeBonus: 0.18, speedOrAction: 0.12, nextSkillCrit: 0.30, nextSkillExtraHits: 0, mpCost: 10 },
+        { lv: 3, durationTurns: 3, evadeBonus: 0.21, speedOrAction: 0.15, nextSkillCrit: 0.35, nextSkillExtraHits: 1, mpCost: 11 },
+        { lv: 4, durationTurns: 3, evadeBonus: 0.24, speedOrAction: 0.18, nextSkillCrit: 0.40, nextSkillExtraHits: 1, mpCost: 11 },
+        { lv: 5, durationTurns: 3, evadeBonus: 0.27, speedOrAction: 0.20, nextSkillCrit: 0.50, nextSkillExtraHits: 1, mpCost: 12 }
+      ]
+    },
+
+    "連鎖步法": {
+      id: "連鎖步法",
+      type: "passive",
+      maxLevel: 5,
+      tags: ["passive", "evade"],
+      levels: [
+        { lv: 1, baseEvadeBonus: 0.02, perHitStack: 0.005, stackEvadeCap: 0.10 },
+        { lv: 2, baseEvadeBonus: 0.04, perHitStack: 0.005, stackEvadeCap: 0.10 },
+        { lv: 3, baseEvadeBonus: 0.06, perHitStack: 0.005, stackEvadeCap: 0.10 },
+        { lv: 4, baseEvadeBonus: 0.08, perHitStack: 0.005, stackEvadeCap: 0.10 },
+        { lv: 5, baseEvadeBonus: 0.10, perHitStack: 0.005, stackEvadeCap: 0.10 }
+      ]
+    },
+
+    "影刃專精": {
+      id: "影刃專精",
+      type: "passive",
+      maxLevel: 5,
+      tags: ["passive", "multi_hit", "damage_boost"],
+      levels: [
+        { lv: 1, multiHitDamageBonus: 0.05, extraMaxHits: 0 },
+        { lv: 2, multiHitDamageBonus: 0.10, extraMaxHits: 0 },
+        { lv: 3, multiHitDamageBonus: 0.15, extraMaxHits: 1 },
+        { lv: 4, multiHitDamageBonus: 0.20, extraMaxHits: 1 },
+        { lv: 5, multiHitDamageBonus: 0.25, extraMaxHits: 2 }
+      ]
+    },
+
+    "影之殺意": {
+      id: "影之殺意",
+      type: "passive",
+      maxLevel: 5,
+      tags: ["passive", "finisher", "execute_boost"],
+      levels: [
+        { lv: 1, lowHpThreshold: 0.50, lowHpDamageBonus: 0.10, multiHitCountForBonus: 3, multiHitDamageBonus: 0.05 },
+        { lv: 2, lowHpThreshold: 0.50, lowHpDamageBonus: 0.15, multiHitCountForBonus: 3, multiHitDamageBonus: 0.07 },
+        { lv: 3, lowHpThreshold: 0.50, lowHpDamageBonus: 0.20, multiHitCountForBonus: 3, multiHitDamageBonus: 0.09 },
+        { lv: 4, lowHpThreshold: 0.50, lowHpDamageBonus: 0.25, multiHitCountForBonus: 3, multiHitDamageBonus: 0.11 },
+        { lv: 5, lowHpThreshold: 0.50, lowHpDamageBonus: 0.30, multiHitCountForBonus: 3, multiHitDamageBonus: 0.13 }
+      ]
+    }
+  };
+
+  const SKILL_CONFIG = { ...BLOODFLAME_REAVER_SKILLS, ...EDGEWALL_KNIGHT_SKILLS, ...SHADOWBLADE_SKILLS };
   const SKILL_DATA = { ...SKILL_CONFIG };
 
   const SKILL={
@@ -929,6 +1041,50 @@ BreakForm: {
     recoverManaOnAction(p);
     return true;
   }
+},
+
+// 🗡 Shadowblade — 2 轉技能
+ShadowRush: {
+  id:"ShadowRush",
+  name:"影襲連斬（Shadow Rush）",
+  desc:"高速多段單體攻擊，疊加影刃連擊層數供處決與增傷效果讀取。",
+  acquisition:"point",
+  maxLv:20, tier:2, tree:"Shadowblade", type:"active"
+},
+FinalSever: {
+  id:"FinalSever",
+  name:"絕脈終刺（Final Sever）",
+  desc:"消耗當回合連擊層數的處決一擊，對殘血敵人有額外加成。",
+  acquisition:"point",
+  maxLv:10, tier:2, tree:"Shadowblade", type:"active"
+},
+ShadowStepAdvance: {
+  id:"ShadowStepAdvance",
+  name:"影遁步伐（Shadow Step）",
+  desc:"自我強化：短時間提升迴避與速度，下一次攻擊技能獲得爆擊與額外段數。",
+  acquisition:"point",
+  maxLv:5, tier:2, tree:"Shadowblade", type:"buff"
+},
+ChainFootwork: {
+  id:"ChainFootwork",
+  name:"連鎖步法（Chain Footwork）",
+  desc:"常駐提升閃避，戰鬥中命中時再逐層疊加額外閃避。",
+  acquisition:"point",
+  maxLv:5, tier:2, tree:"Shadowblade", type:"passive"
+},
+ShadowbladeMastery: {
+  id:"ShadowbladeMastery",
+  name:"影刃專精（Shadowblade Mastery）",
+  desc:"強化多段攻擊的單段傷害並提升可解鎖的段數上限。",
+  acquisition:"point",
+  maxLv:5, tier:2, tree:"Shadowblade", type:"passive"
+},
+ShadowKillIntent: {
+  id:"ShadowKillIntent",
+  name:"影之殺意（Shadow Kill Intent）",
+  desc:"對低血或本回合已多次命中的敵人提高最終輸出與爆傷。",
+  acquisition:"point",
+  maxLv:5, tier:2, tree:"Shadowblade", type:"passive"
 },
 BladeMastery: {
   id:"BladeMastery",
@@ -1612,6 +1768,12 @@ const SKILL_TIERS = {
   BladeMastery:1,
   AgilityTraining:1,
   SilentFocus:1,
+  ShadowRush:2,
+  FinalSever:2,
+  ShadowStepAdvance:2,
+  ChainFootwork:2,
+  ShadowbladeMastery:2,
+  ShadowKillIntent:2,
   QuickShot:1,
   ChargedShot:1,
   SoftSpotShot:1,
