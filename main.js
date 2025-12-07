@@ -4026,6 +4026,7 @@ function equipRestrictionText(inst){
   if(game.state.inBattle){
     game.state.turn = (game.state.turn || 1) + 1;
     game.state.turnStarted = false;
+    markTurnStart();
   }
   }
   function endBattle(victory){
