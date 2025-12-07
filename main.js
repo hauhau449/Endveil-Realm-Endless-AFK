@@ -92,7 +92,8 @@ function toggleUpdateLog(){
 
 
   /* ========= 常數與資料 ========= */
-  const REBIRTH_LVL = 200;
+  const LEVEL_CAP = 200;
+  const REBIRTH_LVL = LEVEL_CAP;
  // 正式品階：白>綠>藍>黃>橘>紫（神器獨立）
 // 品質階級：多一階「神器」
 const QUALS=["白","綠","藍","黃","橘","紫","神器"];
@@ -3311,10 +3312,13 @@ function recomputeStats(){
 
 
   function expNeedForLevel(lvl){
+    if(lvl >= LEVEL_CAP) return Infinity;
     let base = Math.floor(20 + Math.pow(lvl, 1.4)*3);
     const tier = game.player.tier || 0;
-    base = base * Math.max(1, Math.pow(2, tier));
-    return base;
+    const rebirths = game.player.rebirths || 0;
+    const tierMultiplier = Math.max(1, Math.pow(2, tier));
+    const rebirthMultiplier = rebirths >= 1 ? 1.2 : 1;
+    return Math.floor(base * tierMultiplier * rebirthMultiplier);
   }
 
   function renderCritPanel(p){
@@ -3432,12 +3436,15 @@ function recomputeStats(){
     renderBattleStatus();
     const critPanel = renderCritPanel(p);
     const attrPanel = renderAttributePanel(p);
+    const expNeed = expNeedForLevel(p.lvl);
+    const expText = p.lvl >= LEVEL_CAP ? "（已達上限）" : `（EXP ${p.exp}/${expNeed}）`;
+
     statsBox.innerHTML=`
     <div class="stat hp">HP：${p.hp} / ${p.maxhp} <span class="pct ${hpPct<=35?'low':hpPct<=60?'mid':''}">（${hpPct}%）</span></div>
     <div class="stat mp">MP：${p.mp} / ${p.maxmp} <span class="pct ${mpPct<=25?'low':mpPct<=60?'mid':''}">（${mpPct}%）</span></div>
       <div class="stat atk">攻擊：${p.atk}｜魔傷：${p.magicAtk||p.atk}</div>
       <div class="stat def">防禦：${p.def}</div>
-      <div class="stat lvl">等級：${p.lvl}（EXP ${p.exp}/${expNeedForLevel(p.lvl)}）</div>
+      <div class="stat lvl">等級：${p.lvl}${expText}</div>
       <div class="stat">技能點：${totalFreeSkillPoints()}｜屬性點：${p.freeStatPoints||0}</div>
       ${critPanel}
       ${attrPanel}
@@ -4271,9 +4278,13 @@ function equipRestrictionText(inst){
     const add  = Math.floor(v * rate);
 
     const p = game.player;
+    if(p.lvl >= LEVEL_CAP){
+      p.exp = 0;
+      return;
+    }
     p.exp += add;
 
-    while(p.exp >= expNeedForLevel(p.lvl)){
+    while(p.lvl < LEVEL_CAP && p.exp >= expNeedForLevel(p.lvl)){
       p.exp -= expNeedForLevel(p.lvl);
 
       const before = {
@@ -4305,6 +4316,11 @@ function equipRestrictionText(inst){
 
       checkUnlocks();
       if(p.lvl % 10 === 0) refreshQuestsForLevel(p.lvl);
+
+      if(p.lvl >= LEVEL_CAP){
+        p.exp = 0;
+        break;
+      }
     }
   }
 
@@ -4313,11 +4329,12 @@ function equipRestrictionText(inst){
     if(!p) return 0;
 
     const before = p.lvl;
+    const target = Math.min(targetLv, LEVEL_CAP);
     let safety = 0;
-    while(p.lvl < targetLv && safety < 500){
+    while(p.lvl < target && safety < 500){
       const need = expNeedForLevel(p.lvl);
       if(!need || need <= 0){
-        p.lvl = targetLv;
+        p.lvl = target;
         p.exp = 0;
         recalcPlayerStats();
         break;
@@ -6921,7 +6938,7 @@ function afkTick(){
 // ==========================
 function doRebirth(){
   const p = game.player;
-  if(p.lvl < 200){ say("尚未達到 200 等，不能轉生。"); return; }
+  if(p.lvl < REBIRTH_LVL){ say(`尚未達到 ${REBIRTH_LVL} 等，不能轉生。`); return; }
   if(game.state.inBattle){ say("戰鬥中不可轉生。"); return; }
 
   p.rebirths = (p.rebirths||0) + 1;
