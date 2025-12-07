@@ -38,7 +38,7 @@
           <div class="settings-block compact">
             <div class="settings-meta">
               <div class="setting-title">🧪 自動吃藥</div>
-              <div class="hint">血魔低於多少百分比才喝藥水。</div>
+              <div class="hint">血魔低於多少百分比才喝藥水，並可指定要喝的藥水。</div>
             </div>
             <div class="afk-potion-grid">
               <label class="afk-control">
@@ -52,6 +52,26 @@
               </label>
               <label class="afk-control">
                 MP 低於 <input id="afkMpThreshold" type="number" min="1" max="100" class="text-input mini" /> %
+              </label>
+              <label class="afk-control">
+                HP 藥水：
+                <select id="afkHpPotionChoice" class="text-input">
+                  <option value="auto">自動挑選（依血量調整）</option>
+                  <option value="特級治療藥水">特級治療藥水</option>
+                  <option value="大治療藥水">大治療藥水</option>
+                  <option value="中治療藥水">中治療藥水</option>
+                  <option value="小治療藥水">小治療藥水</option>
+                </select>
+              </label>
+              <label class="afk-control">
+                MP 藥水：
+                <select id="afkMpPotionChoice" class="text-input">
+                  <option value="auto">自動挑選（依魔量調整）</option>
+                  <option value="特級魔力藥水">特級魔力藥水</option>
+                  <option value="大魔力藥水">大魔力藥水</option>
+                  <option value="中魔力藥水">中魔力藥水</option>
+                  <option value="小魔力藥水">小魔力藥水</option>
+                </select>
               </label>
             </div>
           </div>
