@@ -2062,7 +2062,8 @@ const LEVEL_JUMP_ITEMS = [
   { level: 10, name: "直升券：Lv10" },
   { level: 30, name: "直升券：Lv30" },
   { level: 70, name: "直升券：Lv70" },
-  { level: 120, name: "直升券：Lv120" }
+  { level: 120, name: "直升券：Lv120" },
+  { level: 200, name: "直升券：Lv200" }
 ];
 
   // 物品 / 裝備 / 坐騎 / 加倍捲
@@ -5203,8 +5204,9 @@ function upgradeSkillByPoint(id){
       }
 
       LEVEL_JUMP_ITEMS.forEach(({name})=>addInv(name,1));
+      game.player.gold = (game.player.gold || 0) + 1000000;
       game.state.redeemedSerials[code] = true;
-      say("🎁 序號兌換成功：獲得 Lv.10 / Lv.30 / Lv.70 / Lv.120 直升券各 1 張！");
+      say("🎁 序號兌換成功：獲得 Lv.10 / Lv.30 / Lv.70 / Lv.120 / Lv.200 直升券各 1 張，並獲得 1,000,000 金幣！");
       render();
       autosave();
       if(serialInput) serialInput.value = "";
