@@ -6899,9 +6899,14 @@ function doRebirth(){
   if(game.state.inBattle){ say("戰鬥中不可轉生。"); return; }
 
   p.rebirths = (p.rebirths||0) + 1;
+  // 重置等級與基礎屬性，保留轉生額外獲得的配點
   p.lvl = 1;
   p.exp = 0;
-  p.freeStatPoints = (p.freeStatPoints||0) + 2;
+  p.baseStr = 5;
+  p.baseAgi = 5;
+  p.baseInt = 5;
+  p.baseSpi = 5;
+  p.freeStatPoints = 2;
 
   game.state.inBattle = false;
   game.state.enemy = null;
