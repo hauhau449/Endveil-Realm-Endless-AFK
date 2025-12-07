@@ -857,6 +857,63 @@ function ensureUniqueName(name){
   const SKILL_CONFIG = { ...BLOODFLAME_REAVER_SKILLS, ...EDGEWALL_KNIGHT_SKILLS, ...SHADOWBLADE_SKILLS };
   const SKILL_DATA = { ...SKILL_CONFIG };
 
+  function shadowbladeSkillLevel(key, lv){
+    if(!key || lv<=0) return null;
+    const cfg = SHADOWBLADE_SKILLS[key];
+    return cfg?.levels?.[lv-1] || null;
+  }
+
+  function activeShadowStepBuff(){
+    const buff = game.state?.shadowStepBuff;
+    if(buff && buff.turns>0){
+      return buff;
+    }
+    return null;
+  }
+
+  function consumeShadowStepOneShot(){
+    const buff = activeShadowStepBuff();
+    if(!buff) return;
+    buff.oneShotCrit = 0;
+    buff.oneShotExtraHits = 0;
+  }
+
+  function gainShadowFootworkStack(){
+    const lv = skillLevel("ChainFootwork",0);
+    if(lv<=0) return;
+    const tpl = shadowbladeSkillLevel("連鎖步法", lv);
+    if(!tpl) return;
+    const perStack = tpl.perHitStack || 0;
+    const cap = perStack>0 ? Math.round((tpl.stackEvadeCap || 0) / perStack) : 0;
+    const cur = game.state.shadowFootworkStacks || 0;
+    game.state.shadowFootworkStacks = Math.min(cap, cur + 1);
+  }
+
+  function decayShadowFootworkStack(){
+    const cur = game.state.shadowFootworkStacks || 0;
+    if(cur>0){
+      game.state.shadowFootworkStacks = cur - 1;
+    }
+  }
+
+  function playerEvadeChance(){
+    let chance = 0;
+    const lv = skillLevel("ChainFootwork",0);
+    if(lv>0){
+      const tpl = shadowbladeSkillLevel("連鎖步法", lv);
+      if(tpl){
+        const stacks = game.state.shadowFootworkStacks || 0;
+        const stacked = Math.min(tpl.stackEvadeCap || 0, stacks * (tpl.perHitStack || 0));
+        chance += (tpl.baseEvadeBonus || 0) + stacked;
+      }
+    }
+    const buff = activeShadowStepBuff();
+    if(buff){
+      chance += buff.evadeBonus || 0;
+    }
+    return Math.min(0.6, chance);
+  }
+
   const SKILL={
  // ===== 初心者：主動技能 =====
     basicSlash:{
@@ -1055,21 +1112,115 @@ ShadowRush: {
   name:"影襲連斬（Shadow Rush）",
   desc:"高速多段單體攻擊，疊加影刃連擊層數供處決與增傷效果讀取。",
   acquisition:"point",
-  maxLv:20, tier:2, tree:"Shadowblade", type:"active"
+  maxLv:20, tier:2, tree:"Shadowblade", type:"active",
+  use(p,e,lv){
+    if(!e) return false;
+    const tpl = shadowbladeSkillLevel("影襲連斬", lv);
+    if(!tpl) return false;
+    const cost = calcSkillCost(p, tpl.mpCost || 0);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
+
+    const masteryLv = skillLevel("ShadowbladeMastery",0);
+    const mastery = shadowbladeSkillLevel("影刃專精", masteryLv);
+    const killIntentLv = skillLevel("ShadowKillIntent",0);
+    const killIntent = shadowbladeSkillLevel("影之殺意", killIntentLv);
+    const buff = activeShadowStepBuff();
+
+    let hits = tpl.hitCount || 1;
+    if(buff?.oneShotExtraHits){ hits += buff.oneShotExtraHits; }
+    if(mastery?.extraMaxHits){ hits = Math.min(hits, (tpl.hitCount||0) + (mastery.extraMaxHits||0)); }
+
+    let total=0;
+    for(let i=0;i<hits && e.hp>0;i++){
+      let mul = tpl.damageMulPerHit || 1;
+      if(mastery?.multiHitDamageBonus){
+        mul *= (1 + mastery.multiHitDamageBonus);
+      }
+      if(killIntent && hits >= (killIntent.multiHitCountForBonus || 0)){
+        mul *= (1 + (killIntent.multiHitDamageBonus || 0));
+      }
+      let dmg = physicalSkillHit(p, e, mul, mul, lv);
+      if(buff?.oneShotCrit){
+        dmg = Math.floor(dmg * (1 + buff.oneShotCrit));
+      }
+      e.hp = clamp(e.hp - dmg, 0, e.maxhp);
+      total += dmg;
+      affixOnHit(p, e, dmg);
+      gainShadowFootworkStack();
+      game.state.shadowComboStacks = Math.min(99, (game.state.shadowComboStacks || 0) + 1);
+    }
+
+    if(buff?.oneShotCrit || buff?.oneShotExtraHits){
+      consumeShadowStepOneShot();
+    }
+
+    say(`🗡️ 你施展<b>影襲連斬</b>（${hits} 段），合計 <span class="hp">-${total}</span>。`);
+    recoverManaOnAction(p);
+    return true;
+  }
 },
 FinalSever: {
   id:"FinalSever",
   name:"絕脈終刺（Final Sever）",
   desc:"消耗當回合連擊層數的處決一擊，對殘血敵人有額外加成。",
   acquisition:"point",
-  maxLv:10, tier:2, tree:"Shadowblade", type:"active"
+  maxLv:10, tier:2, tree:"Shadowblade", type:"active",
+  use(p,e,lv){
+    if(!e) return false;
+    const tpl = shadowbladeSkillLevel("絕脈終刺", lv);
+    if(!tpl) return false;
+    const cost = calcSkillCost(p, tpl.mpCost || 0);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
+
+    const combo = game.state.shadowComboStacks || 0;
+    const comboBonus = tpl.comboScalePerStack ? combo * tpl.comboScalePerStack : 0;
+    let mul = (tpl.baseMul || 1) * (1 + comboBonus);
+
+    const killIntentLv = skillLevel("ShadowKillIntent",0);
+    const killIntent = shadowbladeSkillLevel("影之殺意", killIntentLv);
+    const enemyHpPct = (e.hp || 0) / Math.max(1, e.maxhp || 1);
+    if(enemyHpPct <= (tpl.hpThreshold || 0)){
+      mul *= (1 + (tpl.finisherBonus || 0));
+      if(killIntent){
+        mul *= (1 + (killIntent.lowHpDamageBonus || 0));
+      }
+    }
+
+    let dmg = physicalSkillHit(p, e, mul, mul, lv);
+    e.hp = clamp(e.hp - dmg, 0, e.maxhp);
+    affixOnHit(p, e, dmg);
+    say(`⚔️ 你以<b>絕脈終刺</b>斬殺，造成 <span class="hp">-${dmg}</span>（連擊層數 ${combo}）。`);
+    game.state.shadowComboStacks = 0;
+    gainShadowFootworkStack();
+    recoverManaOnAction(p);
+    return true;
+  }
 },
 ShadowStepAdvance: {
   id:"ShadowStepAdvance",
   name:"影遁步伐（Shadow Step）",
   desc:"自我強化：短時間提升迴避與速度，下一次攻擊技能獲得爆擊與額外段數。",
   acquisition:"point",
-  maxLv:5, tier:2, tree:"Shadowblade", type:"buff"
+  maxLv:5, tier:2, tree:"Shadowblade", type:"buff",
+  use(p,e,lv){
+    const tpl = shadowbladeSkillLevel("影遁步伐", lv);
+    if(!tpl) return false;
+    const cost = calcSkillCost(p, tpl.mpCost || 0);
+    if(p.mp < cost){ say("MP 不足。"); return false; }
+    p.mp -= cost;
+    game.state.shadowStepBuff = {
+      turns: tpl.durationTurns || 1,
+      evadeBonus: tpl.evadeBonus || 0,
+      speedBonus: tpl.speedOrAction || 0,
+      oneShotCrit: tpl.nextSkillCrit || 0,
+      oneShotExtraHits: tpl.nextSkillExtraHits || 0
+    };
+    say(`💨 你啟動<b>影遁步伐</b>，行動更快並提高閃避，下一個攻擊技能獲得強化。`);
+    recoverManaOnAction(p);
+    return true;
+  }
 },
 ChainFootwork: {
   id:"ChainFootwork",
@@ -2969,6 +3120,11 @@ function passiveFromSkills(p){
   misc.insight = insightLv;
   misc.actionSpeed = insightLv * 0.02;
 
+  const stepBuff = activeShadowStepBuff();
+  if(stepBuff){
+    misc.actionSpeed += stepBuff.speedBonus || 0;
+  }
+
   const frenzyLv = skillLevel("BloodFrenzyBody",0);
   if(frenzyLv>0){
     const hpPct = (p.hp || 0) / Math.max(1, p.maxhp || 1);
@@ -3718,6 +3874,9 @@ function equipRestrictionText(inst){
     game.state.guardMitigation={ratio:0,turns:0};
     game.state.counterReady=false;
     game.state.playerShield=0;
+    game.state.shadowComboStacks=0;
+    game.state.shadowStepBuff={turns:0, evadeBonus:0, speedBonus:0, oneShotCrit:0, oneShotExtraHits:0};
+    game.state.shadowFootworkStacks=0;
     game.state.turn=1;
     game.state.turnStarted=false;
     game.state.wildHowl={turns:0};
@@ -3757,6 +3916,7 @@ function equipRestrictionText(inst){
     out = Math.floor(out * berserkerAtkBuffMultiplier());
     e.hp=clamp(e.hp-out,0,e.maxhp); affixOnHit(p,e,out);
     say(`你進行普通攻擊，造成 <span class="hp">-${out}</span>。`);
+    gainShadowFootworkStack();
     recoverManaOnAction(p);
     if(e.hp<=0) return endBattle(true);
     // 中毒DOT在回合終結時生效
@@ -3844,6 +4004,15 @@ function equipRestrictionText(inst){
       say(`🛡️ <b>鋼心迎擊陣</b>的效果結束。`);
     }
   }
+  const step = activeShadowStepBuff();
+  if(step){
+    step.turns--;
+    if(step.turns<=0){
+      state.shadowStepBuff={turns:0, evadeBonus:0, speedBonus:0, oneShotCrit:0, oneShotExtraHits:0};
+      say(`💤 <b>影遁步伐</b>的效果消散。`);
+    }
+  }
+  decayShadowFootworkStack();
 }
 
   function enemyTurn(){
@@ -3889,6 +4058,12 @@ function equipRestrictionText(inst){
       return;
     }
     if(e.hitDownTurns <= 0){ e.hitDown = 0; say(`🎯 <b>${e.name}</b> 的命中恢復正常。`); }
+  }
+
+  const evade = playerEvadeChance();
+  if(evade>0 && Math.random() < evade){
+    say(`💨 你身形一閃，躲開了 <b>${e.name}</b> 的攻擊！`);
+    return;
   }
 
   let enemyAtk = e.atk;
