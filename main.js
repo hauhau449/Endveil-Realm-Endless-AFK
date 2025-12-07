@@ -2363,6 +2363,19 @@ function nextPotionName(name){
   }
 
   const say=html=> appendLog(html);
+
+  function markTurnStart(){
+    if(!game?.state) return;
+
+    if(!game.state.turn || game.state.turn < 1){
+      game.state.turn = 1;
+    }
+
+    if(game.state.turnStarted) return;
+
+    game.state.turnStarted = true;
+    say(`<span class="turn-divider"><span>第 ${game.state.turn} 回合</span></span>`);
+  }
 /* ================2合1藥水鏈=============== */
   /* =============================== */
   /* [ADD] 全域錯誤寫入冒險日誌（排錯用） */
@@ -2730,6 +2743,7 @@ function berserkerAtkBuffMultiplier(){
 }
 function startPlayerTurnTick(){
   resetEdgewallCounterStacks();
+  markTurnStart();
   const p = game.player, e = game.state.enemy;
   const wallBuff = activeWallGuard();
   if(wallBuff){
@@ -3704,6 +3718,8 @@ function equipRestrictionText(inst){
     game.state.guardMitigation={ratio:0,turns:0};
     game.state.counterReady=false;
     game.state.playerShield=0;
+    game.state.turn=1;
+    game.state.turnStarted=false;
     game.state.wildHowl={turns:0};
     game.state.bloodUnleash={turns:0};
     game.state.riposteField={turns:0};
@@ -3725,6 +3741,7 @@ function equipRestrictionText(inst){
         say(`👀 洞察 Lv.${insLv}：可能掉落 <b>${names.join("、")}</b>。`);
       }
     }
+    markTurnStart();
     render();
   }
   function playerAttack(){
@@ -4006,10 +4023,15 @@ function equipRestrictionText(inst){
   }
 
   render();
+  if(game.state.inBattle){
+    game.state.turn = (game.state.turn || 1) + 1;
+    game.state.turnStarted = false;
+  }
   }
   function endBattle(victory){
     const e=game.state.enemy; const trialSkill = game.state.trialSkill; const wasTrial = game.state.inTrial; const zoneBeforeTrial = game.state.zoneBeforeTrial;
   game.state.inBattle=false; game.state.enemy=null; $("#runBtn").disabled=true; game.state.trialSkill=null;
+  game.state.turn=0; game.state.turnStarted=false;
   game.state.wildHowl={turns:0};
   game.state.bloodUnleash={turns:0};
   game.state.steelCounterBuff={turns:0,dmgBoost:0};
