@@ -565,11 +565,12 @@ function ensureUniqueName(name){
   // ==========================================
   const EDGEWALL_KNIGHT_SKILLS = {
     // 0️⃣ 主動技能：破陣壁壓斬
-    // ．單體雙段物理斬擊，附帶破防與「優先反擊標記」
+    // ．單體 2～3 段物理斬擊，附帶破防與「反擊易傷標記」
     "破陣壁壓斬": {
       id: "破陣壁壓斬",
       type: "active",
       maxLevel: 15,
+      extraHitChance: 0.35,
       levels: [
         { lv:  1, dmgFirst: 1.00, dmgLast: 1.30, breakRate: 0.10, breakTurns: 2, counterBonus: 0.08 },
         { lv:  2, dmgFirst: 1.05, dmgLast: 1.35, breakRate: 0.11, breakTurns: 2, counterBonus: 0.09 },
@@ -585,7 +586,7 @@ function ensureUniqueName(name){
         { lv: 12, dmgFirst: 1.48, dmgLast: 1.85, breakRate: 0.21, breakTurns: 4, counterBonus: 0.19 },
         { lv: 13, dmgFirst: 1.52, dmgLast: 1.90, breakRate: 0.22, breakTurns: 4, counterBonus: 0.20 },
         { lv: 14, dmgFirst: 1.56, dmgLast: 1.95, breakRate: 0.23, breakTurns: 4, counterBonus: 0.21 },
-        { lv: 15, dmgFirst: 1.60, dmgLast: 2.00, breakRate: 0.25, breakTurns: 5, counterBonus: 0.22 }
+        { lv: 15, dmgFirst: 1.60, dmgLast: 2.00, breakRate: 0.25, breakTurns: 4, counterBonus: 0.22 }
       ]
     },
 
@@ -600,21 +601,21 @@ function ensureUniqueName(name){
       type: "active-buff",
       maxLevel: 15,
       levels: [
-        { lv:  1, autoHitMul: 1.10, threatMul: 1.20, nextGuardRate: 0.10, activeAtkPenalty: 0.08, turns: 3 },
-        { lv:  2, autoHitMul: 1.12, threatMul: 1.22, nextGuardRate: 0.11, activeAtkPenalty: 0.085, turns: 3 },
-        { lv:  3, autoHitMul: 1.14, threatMul: 1.24, nextGuardRate: 0.12, activeAtkPenalty: 0.09, turns: 3 },
-        { lv:  4, autoHitMul: 1.16, threatMul: 1.26, nextGuardRate: 0.13, activeAtkPenalty: 0.095, turns: 3 },
+        { lv:  1, autoHitMul: 1.10, threatMul: 1.20, nextGuardRate: 0.10, activeAtkPenalty: 0.10, turns: 3 },
+        { lv:  2, autoHitMul: 1.12, threatMul: 1.22, nextGuardRate: 0.11, activeAtkPenalty: 0.10, turns: 3 },
+        { lv:  3, autoHitMul: 1.14, threatMul: 1.24, nextGuardRate: 0.12, activeAtkPenalty: 0.10, turns: 3 },
+        { lv:  4, autoHitMul: 1.16, threatMul: 1.26, nextGuardRate: 0.13, activeAtkPenalty: 0.10, turns: 3 },
         { lv:  5, autoHitMul: 1.18, threatMul: 1.28, nextGuardRate: 0.14, activeAtkPenalty: 0.10, turns: 3 },
-        { lv:  6, autoHitMul: 1.20, threatMul: 1.30, nextGuardRate: 0.15, activeAtkPenalty: 0.105, turns: 3 },
-        { lv:  7, autoHitMul: 1.22, threatMul: 1.32, nextGuardRate: 0.16, activeAtkPenalty: 0.11, turns: 4 },
-        { lv:  8, autoHitMul: 1.24, threatMul: 1.34, nextGuardRate: 0.17, activeAtkPenalty: 0.115, turns: 4 },
-        { lv:  9, autoHitMul: 1.26, threatMul: 1.36, nextGuardRate: 0.18, activeAtkPenalty: 0.12, turns: 4 },
-        { lv: 10, autoHitMul: 1.28, threatMul: 1.38, nextGuardRate: 0.19, activeAtkPenalty: 0.125, turns: 4 },
-        { lv: 11, autoHitMul: 1.30, threatMul: 1.40, nextGuardRate: 0.20, activeAtkPenalty: 0.13, turns: 4 },
-        { lv: 12, autoHitMul: 1.32, threatMul: 1.42, nextGuardRate: 0.21, activeAtkPenalty: 0.135, turns: 4 },
-        { lv: 13, autoHitMul: 1.34, threatMul: 1.44, nextGuardRate: 0.22, activeAtkPenalty: 0.14, turns: 5 },
-        { lv: 14, autoHitMul: 1.36, threatMul: 1.46, nextGuardRate: 0.23, activeAtkPenalty: 0.145, turns: 5 },
-        { lv: 15, autoHitMul: 1.38, threatMul: 1.48, nextGuardRate: 0.25, activeAtkPenalty: 0.15, turns: 5 }
+        { lv:  6, autoHitMul: 1.20, threatMul: 1.30, nextGuardRate: 0.15, activeAtkPenalty: 0.10, turns: 3 },
+        { lv:  7, autoHitMul: 1.22, threatMul: 1.32, nextGuardRate: 0.16, activeAtkPenalty: 0.10, turns: 4 },
+        { lv:  8, autoHitMul: 1.24, threatMul: 1.34, nextGuardRate: 0.17, activeAtkPenalty: 0.10, turns: 4 },
+        { lv:  9, autoHitMul: 1.26, threatMul: 1.36, nextGuardRate: 0.18, activeAtkPenalty: 0.10, turns: 4 },
+        { lv: 10, autoHitMul: 1.28, threatMul: 1.38, nextGuardRate: 0.19, activeAtkPenalty: 0.10, turns: 4 },
+        { lv: 11, autoHitMul: 1.30, threatMul: 1.40, nextGuardRate: 0.20, activeAtkPenalty: 0.10, turns: 4 },
+        { lv: 12, autoHitMul: 1.32, threatMul: 1.42, nextGuardRate: 0.21, activeAtkPenalty: 0.10, turns: 4 },
+        { lv: 13, autoHitMul: 1.34, threatMul: 1.44, nextGuardRate: 0.22, activeAtkPenalty: 0.10, turns: 5 },
+        { lv: 14, autoHitMul: 1.36, threatMul: 1.46, nextGuardRate: 0.23, activeAtkPenalty: 0.10, turns: 5 },
+        { lv: 15, autoHitMul: 1.38, threatMul: 1.48, nextGuardRate: 0.25, activeAtkPenalty: 0.10, turns: 5 }
       ]
     },
 
@@ -711,13 +712,18 @@ function ensureUniqueName(name){
     "鋒壁鐵心": {
       id: "鋒壁鐵心",
       type: "passive",
-      maxLevel: 5,
+      maxLevel: 10,
       levels: [
         { lv: 1, perHitCounterBonus: 0.05, perHitMaxStacks: 3, shieldCounterBonus: 0.08, blockNextCounterBonus: 0.10, fortressModeBonus: 0.10 },
         { lv: 2, perHitCounterBonus: 0.06, perHitMaxStacks: 3, shieldCounterBonus: 0.10, blockNextCounterBonus: 0.12, fortressModeBonus: 0.12 },
         { lv: 3, perHitCounterBonus: 0.07, perHitMaxStacks: 4, shieldCounterBonus: 0.12, blockNextCounterBonus: 0.14, fortressModeBonus: 0.14 },
         { lv: 4, perHitCounterBonus: 0.08, perHitMaxStacks: 4, shieldCounterBonus: 0.14, blockNextCounterBonus: 0.16, fortressModeBonus: 0.16 },
-        { lv: 5, perHitCounterBonus: 0.10, perHitMaxStacks: 5, shieldCounterBonus: 0.16, blockNextCounterBonus: 0.18, fortressModeBonus: 0.18 }
+        { lv: 5, perHitCounterBonus: 0.10, perHitMaxStacks: 5, shieldCounterBonus: 0.16, blockNextCounterBonus: 0.18, fortressModeBonus: 0.18 },
+        { lv: 6, perHitCounterBonus: 0.11, perHitMaxStacks: 5, shieldCounterBonus: 0.18, blockNextCounterBonus: 0.20, fortressModeBonus: 0.20 },
+        { lv: 7, perHitCounterBonus: 0.12, perHitMaxStacks: 6, shieldCounterBonus: 0.20, blockNextCounterBonus: 0.22, fortressModeBonus: 0.22 },
+        { lv: 8, perHitCounterBonus: 0.13, perHitMaxStacks: 6, shieldCounterBonus: 0.22, blockNextCounterBonus: 0.24, fortressModeBonus: 0.24 },
+        { lv: 9, perHitCounterBonus: 0.14, perHitMaxStacks: 7, shieldCounterBonus: 0.24, blockNextCounterBonus: 0.26, fortressModeBonus: 0.26 },
+        { lv: 10, perHitCounterBonus: 0.15, perHitMaxStacks: 7, shieldCounterBonus: 0.26, blockNextCounterBonus: 0.28, fortressModeBonus: 0.28 }
       ]
     },
 
@@ -1660,7 +1666,7 @@ BloodFrenzyBody:{
   EdgewallSiegebreak:{
     id:"EdgewallSiegebreak",
     name:"破陣壁壓斬（Siegebreak Edge）",
-    desc:"雙段破防斬擊：先以盾壓制再以劍斬，造成 2～3 段傷害，降低防禦並對目標貼上反擊易傷。Lv.Max 15。",
+    desc:"破防起手：盾壓破防後以劍斬擊，造成 2～3 段物理傷害並施加破防與反擊易傷標記。Lv.Max 15。",
     acquisition:"point",
     maxLv:15, tier:3, tree:"EdgewallKnight", type:"active", baseMp:12,
     use(p,e,lv){
@@ -1673,16 +1679,28 @@ BloodFrenzyBody:{
       e.hp = clamp(e.hp - hit1, 0, e.maxhp);
       affixOnHit(p, e, hit1);
       let total = hit1;
-      if(e.hp>0){
-        const hit2 = physicalSkillHit(p, e, tpl.dmgLast, tpl.dmgLast, lv);
+      const hitParts = [];
+      if(hit1>0) hitParts.push(hit1);
+      const hit2 = e.hp>0 ? physicalSkillHit(p, e, tpl.dmgLast, tpl.dmgLast, lv) : 0;
+      if(hit2>0){
         e.hp = clamp(e.hp - hit2, 0, e.maxhp);
         affixOnHit(p, e, hit2);
+        hitParts.push(hit2);
         total += hit2;
+      }
+      const extraChance = EDGEWALL_KNIGHT_SKILLS["破陣壁壓斬"].extraHitChance || 0;
+      if(e.hp>0 && Math.random() < extraChance){
+        const hit3 = physicalSkillHit(p, e, tpl.dmgLast, tpl.dmgLast, lv);
+        e.hp = clamp(e.hp - hit3, 0, e.maxhp);
+        affixOnHit(p, e, hit3);
+        hitParts.push(hit3);
+        total += hit3;
       }
       e.defDown = Math.max(e.defDown || 0, tpl.breakRate || 0);
       e.defDownTurns = Math.max(e.defDownTurns || 0, tpl.breakTurns || 2);
       e.edgewallCounterMark = { bonus: tpl.counterBonus || 0, turns: tpl.breakTurns || 2 };
-      say(`🗡️ 你以<b>破陣壁壓斬</b>轟擊 <b>${e.name}</b>：共造成 <span class="hp">-${total}</span>，防禦 -${Math.round((tpl.breakRate||0)*100)}%（${tpl.breakTurns} 回合），並貼上反擊易傷。`);
+      const hitTxt = hitParts.length>=3 ? `${hitParts.length} 連斬` : `${hitParts.length} 段`;
+      say(`🗡️ 你以<b>破陣壁壓斬</b>${hitTxt}轟擊 <b>${e.name}</b>：共造成 <span class="hp">-${total}</span>，防禦 -${Math.round((tpl.breakRate||0)*100)}%（${tpl.breakTurns} 回合），並貼上反擊易傷。`);
       recoverManaOnAction(p);
       return true;
     }
@@ -1690,7 +1708,7 @@ BloodFrenzyBody:{
   EdgewallRiposteField:{
     id:"EdgewallRiposteField",
     name:"鋒刃迎擊陣（Edgewall Riposte Formation）",
-    desc:"自身 Buff：啟動迎擊陣，持續數回合。每回合開始自動斬擊主目標並啟動一次性減傷，期間反擊增傷、主動攻擊傷害略降。Lv.Max 15。",
+    desc:"自身 Buff：啟動迎擊陣，每回合開始自動迎擊斬並啟動一次性減傷；期間反擊增傷，主動攻擊傷害 -10%。Lv.Max 15。",
     acquisition:"point",
     maxLv:15, tier:3, tree:"EdgewallKnight", type:"buff", baseMp:12,
     use(p){
@@ -1709,7 +1727,7 @@ BloodFrenzyBody:{
   EdgewallImmovableWall:{
     id:"EdgewallImmovableWall",
     name:"城壁不動陣（Immovable Wall Stance）",
-    desc:"特殊循環技：3 回合內所受傷害 -70%，主動攻擊傷害 -60%、無法暴擊，每被打一次蓄力 1 層；結束時反彈累積傷害並施放蓄力反擊斬。",
+    desc:"終極守陣：3 回合內所受傷害 -70%，主動攻擊傷害 -60%、無法暴擊，每被打一次蓄力 1 層；結束時反彈累積傷害並施放蓄力反擊斬。",
     acquisition:"point",
     maxLv:5, tier:3, tree:"EdgewallKnight", type:"buff", baseMp:16,
     use(p){
@@ -1724,7 +1742,7 @@ BloodFrenzyBody:{
         damageReduceRate: tpl.damageReduceRate,
         atkPenaltyRate: tpl.atkPenaltyRate,
         reflectRate: tpl.reflectRate,
-        maxStacks: tpl.wallMaxStacks + (getEquipInstance(p.equip?.weapon)?.weapon?.includes("長劍盾") ? 1 : 0),
+        maxStacks: tpl.wallMaxStacks + edgewallWallStackBonus(),
         finisherBaseMul: tpl.finisherBaseMul,
         finisherPerStack: tpl.finisherPerStack,
         stacks:0,
@@ -1739,16 +1757,50 @@ BloodFrenzyBody:{
   EdgewallIronHeart:{
     id:"EdgewallIronHeart",
     name:"鋒壁鐵心（Edgewall Ironheart）",
-    desc:"占位：鋒壁騎士的核心反擊被動，應提供反擊強化與守勢增益。尚未實作戰鬥效果，僅先提供技能列表與升級入口。",
+    desc:"核心被動：同回合被攻擊越多次，反擊越痛；身上有護盾或格擋後再出手時進一步強化，城壁不動陣期間再獲額外倍率。",
     acquisition:"point",
-    maxLv:5, tier:3, tree:"EdgewallKnight", type:"passive"
+    maxLv:10, tier:3, tree:"EdgewallKnight", type:"passive"
   },
   EdgewallCounterMastery:{
     id:"EdgewallCounterMastery",
     name:"迎擊精通（Counter Mastery）",
-    desc:"占位：鋒壁騎士的反擊精通被動，應強化反擊傷害與爆擊。尚未實作戰鬥效果，僅先提供技能列表與升級入口。",
+    desc:"迎擊／反擊成長被動：提升反擊傷害與暴擊，對破防目標與鋒刃迎擊陣期間獲額外加成。",
     acquisition:"point",
     maxLv:5, tier:3, tree:"EdgewallKnight", type:"passive"
+  },
+  EdgewallSwordShieldMastery:{
+    id:"EdgewallSwordShieldMastery",
+    name:"劍盾專精（Sword & Shield Mastery）",
+    desc:"風格分流：短劍盾提升速度與爆擊、反擊節奏更快；長劍盾提升格擋與爆傷並讓城壁不動陣蓄力上限 +1。",
+    acquisition:"point",
+    maxLv:1, tier:3, tree:"EdgewallKnight", type:"passive"
+  },
+  EdgewallBulwarkHowl:{
+    id:"EdgewallBulwarkHowl",
+    name:"壁守戰吼（Bulwark Warcry）",
+    desc:"自身 Buff：提高防禦與格擋率、每回合獲得小額護盾並提升反擊傷害與仇恨。城壁不動陣期間暫停效果。",
+    acquisition:"point",
+    maxLv:10, tier:3, tree:"EdgewallKnight", type:"buff", baseMp:12,
+    use(p){
+      const cost = calcSkillCost(p, this.baseMp);
+      if(p.mp < cost){ say("MP 不足。"); return false; }
+      p.mp -= cost;
+      const lv = skillLevel(this.id,1);
+      const tpl = EDGEWALL_KNIGHT_SKILLS["壁守戰吼"].levels[lv-1];
+      const turns = tpl.turns || 3;
+      game.state.wallGuardBuff = { ...tpl, turns };
+      say(`🧭 你高聲<b>壁守戰吼</b>（${turns} 回合）：防禦 +${Math.round(tpl.defUp*100)}%、格擋率 +${Math.round(tpl.blockUp*100)}%、每回合護盾 ${Math.round(tpl.shieldRate*100)}%，反擊 +${Math.round(tpl.counterDmgUp*100)}%，仇恨上升。`);
+      recoverManaOnAction(p);
+      recalcPlayerStats();
+      return true;
+    }
+  },
+  EdgewallGuardianDoctrine:{
+    id:"EdgewallGuardianDoctrine",
+    name:"壁衛心法（Guardian Doctrine）",
+    desc:"試煉被動：每次受擊獲得護衛盾並累積反擊增傷（每場戰鬥最多 +50%），戰後清空。",
+    acquisition:"trial",
+    maxLv:1, tier:3, tree:"EdgewallKnight", type:"passive"
   }
   };
 
@@ -1816,7 +1868,10 @@ const SKILL_TIERS = {
   EdgewallRiposteField:3,
   EdgewallImmovableWall:3,
   EdgewallIronHeart:3,
-  EdgewallCounterMastery:3
+  EdgewallCounterMastery:3,
+  EdgewallSwordShieldMastery:3,
+  EdgewallBulwarkHowl:3,
+  EdgewallGuardianDoctrine:3
 };
 
   function skillTier(id){ return SKILL_TIERS[id] ?? 0; }
@@ -2151,6 +2206,8 @@ const MOUNTS={
       bloodUnleash:{turns:0},
       riposteField:{turns:0},
       immovableWall:{turns:0},
+      wallGuardBuff:{turns:0},
+      guardianCounterBonus:0,
       edgewallCounterStacks:0,
       steelCounterBuff:{turns:0,dmgBoost:0},
       steelFormation:{turns:0,extraHits:0},
@@ -2633,6 +2690,12 @@ function activeWildHowl(){
   if(b && b.turns>0) return b;
   return null;
 }
+function activeWallGuard(){
+  const b = game.state?.wallGuardBuff;
+  const wall = game.state?.immovableWall;
+  if(b && b.turns>0 && !(wall && wall.turns>0)) return b;
+  return null;
+}
 function activeBloodUnleash(){
   const b = game.state?.bloodUnleash;
   if(b && b.turns>0) return b;
@@ -2668,6 +2731,14 @@ function berserkerAtkBuffMultiplier(){
 function startPlayerTurnTick(){
   resetEdgewallCounterStacks();
   const p = game.player, e = game.state.enemy;
+  const wallBuff = activeWallGuard();
+  if(wallBuff){
+    const gain = Math.max(0, Math.floor(p.maxhp * (wallBuff.shieldRate || 0)));
+    if(gain>0){
+      game.state.playerShield = (game.state.playerShield||0) + gain;
+      say(`🛡️ <b>壁守戰吼</b>提供護盾 <b>${gain}</b>。`);
+    }
+  }
   const field = game.state?.riposteField;
   if(field && field.turns>0 && e){
     const dmg = physicalSkillHit(p, e, field.autoHitMul, field.autoHitMul, 1);
@@ -2715,14 +2786,43 @@ function edgewallActiveAttackMultiplier(){
   }
   return mul;
 }
+function edgewallWallStackBonus(){
+  const masteryLv = skillLevel("EdgewallSwordShieldMastery",0);
+  if(masteryLv<=0) return 0;
+  const tpl = EDGEWALL_KNIGHT_SKILLS["劍盾專精"].levels[0];
+  const w = getEquipInstance(game.player?.equip?.weapon);
+  if(w?.weapon?.includes("長劍盾")) return tpl?.longSwordShield?.wallStackCapBonus || 0;
+  return 0;
+}
 function edgewallCounterStacksCap(){
   const ironLv = skillLevel("EdgewallIronHeart",0);
   if(ironLv<=0) return 0;
   const tpl = EDGEWALL_KNIGHT_SKILLS["鋒壁鐵心"].levels[ironLv-1];
   return tpl?.perHitMaxStacks || 0;
 }
+function wallDoctrineCap(){
+  const lv = skillLevel("EdgewallGuardianDoctrine",0);
+  if(lv<=0) return 0;
+  const tpl = EDGEWALL_KNIGHT_SKILLS["壁衛心法"].levels[lv-1];
+  return tpl?.counterDamageMax || 0;
+}
 function resetEdgewallCounterStacks(){
   game.state.edgewallCounterStacks = 0;
+}
+function applyGuardianShield(){
+  const lv = skillLevel("EdgewallGuardianDoctrine",0);
+  if(lv<=0) return 0;
+  const tpl = EDGEWALL_KNIGHT_SKILLS["壁衛心法"].levels[lv-1];
+  const gain = Math.max(0, Math.floor((game.player?.maxhp||0) * (tpl.guardPerHitRate || 0)));
+  if(gain>0){
+    game.state.playerShield = (game.state.playerShield||0) + gain;
+  }
+  const cap = wallDoctrineCap();
+  if(cap>0){
+    const bonus = tpl.counterDamagePerHit || 0;
+    game.state.guardianCounterBonus = Math.min(cap, (game.state.guardianCounterBonus||0) + bonus);
+  }
+  return gain;
 }
 function counterCritMaybe(p, base){
   const w = getEquippedWithAffix(p);
@@ -2753,6 +2853,9 @@ function edgewallCounterMultiplier(e){
     if(game.state.playerShield>0){
       mul *= 1 + (tpl.shieldCounterBonus || 0);
     }
+    if(game.state.edgewallBlockedHit){
+      mul *= 1 + (tpl.blockNextCounterBonus || 0);
+    }
     if(game.state.immovableWall?.turns>0){
       mul *= 1 + (tpl.fortressModeBonus || 0);
     }
@@ -2780,7 +2883,29 @@ function edgewallCounterMultiplier(e){
   if(roar && roar.turns>0){
     mul *= 1 + (roar.dmgBoost || 0);
   }
+  const wallBuff = activeWallGuard();
+  if(wallBuff){
+    mul *= 1 + (wallBuff.counterDmgUp || 0);
+  }
+  if(game.state.guardianCounterBonus){
+    mul *= 1 + Math.min(wallDoctrineCap(), game.state.guardianCounterBonus);
+  }
   return mul;
+}
+function edgewallBlockRate(){
+  let rate = 0;
+  const masteryLv = skillLevel("EdgewallSwordShieldMastery",0);
+  if(masteryLv>0){
+    const tpl = EDGEWALL_KNIGHT_SKILLS["劍盾專精"].levels[masteryLv-1];
+    const w = getEquipInstance(game.player?.equip?.weapon);
+    if(w?.weapon?.includes("短劍盾")) rate += tpl?.shortSwordShield?.blockUp || 0;
+    if(w?.weapon?.includes("長劍盾")) rate += tpl?.longSwordShield?.blockUp || 0;
+  }
+  const wallBuff = activeWallGuard();
+  if(wallBuff){
+    rate += wallBuff.blockUp || 0;
+  }
+  return rate;
 }
 function triggerImmovableFinisher(){
   const wall = game.state?.immovableWall;
@@ -2812,7 +2937,7 @@ function triggerImmovableFinisher(){
 function passiveFromSkills(p){
   const add={atk:0,def:0,hp:0,mp:0};
   const mul={atk:0,def:0,hp:0,mp:0};
-  const misc={critRate:0, defPierce:0, insight:0, actionSpeed:0};
+  const misc={critRate:0, defPierce:0, insight:0, actionSpeed:0, critDmgBonus:0};
 
   const powerLv = skillLevel("powerFundamentals",0);
   add.atk += powerLv;
@@ -2855,6 +2980,30 @@ function passiveFromSkills(p){
     const spdPer = [0.01,0.015,0.02,0.025,0.03][instinctLv-1];
     mul.atk += stacks * atkPer;
     misc.actionSpeed += stacks * spdPer;
+  }
+
+  const swordLv = skillLevel("EdgewallSwordShieldMastery",0);
+  if(swordLv>0){
+    const tpl = EDGEWALL_KNIGHT_SKILLS["劍盾專精"].levels[swordLv-1];
+    const w = getEquipInstance(game.player?.equip?.weapon);
+    if(w?.weapon?.includes("短劍盾")){
+      mul.atk += tpl?.shortSwordShield?.atkUp || 0;
+      mul.def += tpl?.shortSwordShield?.defUp || 0;
+      misc.actionSpeed += tpl?.shortSwordShield?.speedUp || 0;
+      misc.critRate += Math.round((tpl?.shortSwordShield?.critUp || 0) * 100);
+      misc.critDmgBonus += tpl?.shortSwordShield?.critDmgUp || 0;
+    }else if(w?.weapon?.includes("長劍盾")){
+      mul.atk += tpl?.longSwordShield?.atkUp || 0;
+      mul.def += tpl?.longSwordShield?.defUp || 0;
+      misc.actionSpeed += tpl?.longSwordShield?.speedUp || 0;
+      misc.critRate += Math.round((tpl?.longSwordShield?.critUp || 0) * 100);
+      misc.critDmgBonus += tpl?.longSwordShield?.critDmgUp || 0;
+    }
+  }
+
+  const wallBuff = activeWallGuard();
+  if(wallBuff){
+    mul.def += wallBuff.defUp || 0;
   }
 
   return { add, mul, misc };
@@ -2965,7 +3114,7 @@ function recalcPlayerStats(){
 
   p.physCritRate = 5 + (attrStats.physCritRate || 0) + (p.bonusCritRate || 0);
   p.magicCritRate = 5 + (attrStats.magicCritRate || 0);
-  p.physCritDmg = 1.8 + (attrStats.physCritDmg || 0);
+  p.physCritDmg = 1.8 + (attrStats.physCritDmg || 0) + (pas.misc?.critDmgBonus || 0);
   p.magicCritDmg = 1.8 + (attrStats.magicCritDmg || 0);
   p.manaRegen = attrStats.manaRegen || 0;
   p.skillCostReduce = attrStats.skillCostReduce || 0;
@@ -3512,6 +3661,33 @@ function equipRestrictionText(inst){
     startBloodDevourGuardianBattle();
   }
 
+  function startEdgewallGuardianBattle(){
+    recalcPlayerStats();
+    const p = game.player;
+    const guardian = {
+      name:"壁衛心法守護者",
+      lvl:p.lvl,
+      maxhp:p.maxhp, hp:p.maxhp,
+      maxmp:p.maxmp, mp:p.maxmp,
+      atk:p.atk, def:p.def,
+      gold:0, exp:0, drops:[],
+      isBoss:true,
+      guardianMaxHitPct:0.12,
+      trialSkillId:"EdgewallGuardianDoctrine",
+      zoneName:"鋒壁迎擊試煉",
+      intro:"🛡️ 你向壁衛心法守護者發起挑戰！"
+    };
+    say("🛡️ 試煉將鏡像你的能力，守護者的每擊最多造成你上限 12% 的傷害。");
+    startBattle(guardian);
+  }
+
+  function promptEdgewallGuardianTrial(){
+    if(game.state.inBattle) return say("戰鬥中無法進行試煉。");
+    const ok = confirm("是否挑戰「壁衛心法守護者」以習得壁衛心法？");
+    if(!ok) return;
+    startEdgewallGuardianBattle();
+  }
+
 
 
   function startBattle(customEnemy=null){
@@ -3532,6 +3708,8 @@ function equipRestrictionText(inst){
     game.state.bloodUnleash={turns:0};
     game.state.riposteField={turns:0};
     game.state.immovableWall={turns:0};
+    game.state.wallGuardBuff={turns:0};
+    game.state.guardianCounterBonus=0;
     game.state.edgewallCounterStacks=0;
     resetWarInstinctStacks();
     const zoneName = customEnemy?.zoneName || z.name;
@@ -3625,6 +3803,14 @@ function equipRestrictionText(inst){
       recalcPlayerStats();
     }
   }
+  if(state?.wallGuardBuff?.turns>0){
+    state.wallGuardBuff.turns--;
+    if(state.wallGuardBuff.turns<=0){
+      state.wallGuardBuff = {turns:0};
+      say(`📢 <b>壁守戰吼</b>的加持已結束。`);
+      recalcPlayerStats();
+    }
+  }
 
   // Steelheart：反擊戰吼＆迎擊陣的回合消耗
   if(state?.steelCounterBuff?.turns>0){
@@ -3699,6 +3885,17 @@ function equipRestrictionText(inst){
   const dmgTakenBonus = berserkerDamageTakenBonus();
   if(dmgTakenBonus>0){
     dmg = Math.max(1, Math.floor(dmg * (1 + dmgTakenBonus)));
+  }
+  const guardianGain = applyGuardianShield();
+  if(guardianGain>0){
+    say(`🛡️ <b>壁衛心法</b>形成護衛盾 <b>${guardianGain}</b>。`);
+  }
+  game.state.edgewallBlockedHit = false;
+  const blockRate = edgewallBlockRate();
+  if(blockRate>0 && Math.random() < blockRate){
+    dmg = Math.max(0, Math.floor(dmg * 0.6));
+    game.state.edgewallBlockedHit = true;
+    say("🛡️ 你格擋了部分攻擊。");
   }
   const wall = game.state?.immovableWall;
   const originalDmg = dmg;
@@ -3819,6 +4016,8 @@ function equipRestrictionText(inst){
   game.state.steelFormation={turns:0,extraHits:0};
   game.state.riposteField={turns:0};
   game.state.immovableWall={turns:0};
+  game.state.wallGuardBuff={turns:0};
+  game.state.guardianCounterBonus=0;
   game.state.edgewallCounterStacks=0;
   resetWarInstinctStacks();
     if(victory){
@@ -3835,6 +4034,11 @@ function equipRestrictionText(inst){
           if(!game.player.learned) game.player.learned = {};
           game.player.learned["BloodDevourDoctrine"] = 1;
           say("🩸 你擊敗了噬血心法守護者，領悟了 <b>噬血心法</b>！");
+        }
+        if(trialSkill === "EdgewallGuardianDoctrine" && skillLevel("EdgewallGuardianDoctrine",0) <= 0){
+          if(!game.player.learned) game.player.learned = {};
+          game.player.learned["EdgewallGuardianDoctrine"] = 1;
+          say("🛡️ 你擊敗了壁衛心法守護者，領悟了 <b>壁衛心法</b>！");
         }
         if(Math.random()<0.35){ advanceDay(1); }
       } else {
@@ -5606,6 +5810,9 @@ function addRandomAffixN(inst, n){
     }
   }
   function critMaybe(p,base,type="physical"){
+    if(p === game.player && game.state?.immovableWall?.turns>0){
+      return Math.floor(base);
+    }
     const w = getEquippedWithAffix(p);
     const baseRate = type === "magic" ? (p?.magicCritRate || 0) : (p?.physCritRate || 0);
     let critRate=baseRate;
@@ -6913,7 +7120,10 @@ doRebirthBtn.onclick = ()=>{ doRebirth(); };
         right.append(upBtn);
       } else if(sk.acquisition === "trial"){
         const lab = lv>0 ? "已習得" : "挑戰守護者";
-        const trialBtn = btn(lab, ()=> promptBloodDevourTrial());
+        const trialBtn = btn(lab, ()=> {
+          if(id === "EdgewallGuardianDoctrine") return promptEdgewallGuardianTrial();
+          return promptBloodDevourTrial();
+        });
         trialBtn.disabled = lv>0 || !tierAllowed || !treeAllowed || game.state.inBattle;
         right.append(trialBtn);
       }
