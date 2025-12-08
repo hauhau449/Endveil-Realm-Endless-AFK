@@ -7140,6 +7140,20 @@ function doRebirth(){
   p.baseSpi = 5;
   p.freeStatPoints = rebirthPoints;
 
+  // 技能與技能點全面重置
+  p.learned = {
+    basicSlash: 1,
+    manaSpark: 0,
+    powerFundamentals: 0,
+    agilityFundamentals: 0,
+    accuracyFundamentals: 0,
+    arcaneFundamentals: 0,
+    insight: 0
+  };
+  p.activeSkill = "basicSlash";
+  p.skillQual = {};
+  refreshSkillPointBuckets();
+
   game.state.inBattle = false;
   game.state.enemy = null;
 
@@ -7147,7 +7161,7 @@ function doRebirth(){
   p.hp = p.maxhp;
   p.mp = p.maxmp;
 
-  say(`♻️ <b>轉生成功！</b>（第 ${p.rebirths} 次）獲得額外屬性點 +${rebirthPoints}（可累計），基礎屬性已重置為 Lv.1，職業重置為初心者，其他數值已依新屬性公式重算。`);
+  say(`♻️ <b>轉生成功！</b>（第 ${p.rebirths} 次）獲得額外屬性點 +${rebirthPoints}（可累計），基礎屬性已重置為 Lv.1，職業與技能點及技能已重置為初心者狀態，其他數值已依新屬性公式重算。`);
   $("#rebirthBtn").disabled = true;
   rebirthDlg.close();
   render(); autosave();
