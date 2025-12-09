@@ -2699,12 +2699,30 @@ function ensureNoviceSkillDefaults(){
     ["basicSlash","manaSpark","powerFundamentals","agilityFundamentals","accuracyFundamentals","arcaneFundamentals","insight"].forEach(id=>{
       if(typeof p.learned[id] !== "number") p.learned[id] = id==="basicSlash" ? 1 : 0;
     });
-    if(!p.activeSkill || !SKILL[p.activeSkill]){
-      p.activeSkill = "basicSlash";
-    }
+
+    ensureUsableActiveSkill();
 
     ensurePlayerStatDefaults();
     refreshSkillPointBuckets();
+  }
+
+  function ensureUsableActiveSkill(){
+    const p = game.player;
+    const isUsable = id => {
+      const sk = SKILL[id];
+      return sk && typeof sk.use === "function";
+    };
+
+    if(!isUsable(p.activeSkill)){
+      const learnedActives = Object.keys(p.learned||{})
+        .filter(id => (p.learned[id]||0) > 0 && isUsable(id));
+      p.activeSkill = learnedActives[0] || "basicSlash";
+    }
+
+    const activeName = $("#activeSkillName");
+    if(activeName){
+      activeName.textContent = skillNameWithLv(p.activeSkill);
+    }
   }
 
 function ensurePlayerStatDefaults(){
@@ -4009,11 +4027,20 @@ function useActiveSkill(idOverride){
     return false;
   }
 
-  const id = idOverride || game.player.activeSkill;
-  const sk = SKILL[id];
+  let id = idOverride || game.player.activeSkill;
+  let sk = SKILL[id];
   if(!sk || typeof sk.use !== "function"){
-    say("沒有可施放的主動技能。");
-    return false;
+    const prevId = id;
+    ensureUsableActiveSkill();
+    id = game.player.activeSkill;
+    sk = SKILL[id];
+    if(!sk || typeof sk.use !== "function"){
+      say("沒有可施放的主動技能。");
+      return false;
+    }
+    if(id !== prevId){
+      say(`沒有可施放的主動技能，已切換至「${skillNameWithLv(id)}」。`);
+    }
   }
 
   recalcPlayerStats();
