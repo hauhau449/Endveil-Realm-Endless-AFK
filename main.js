@@ -7245,7 +7245,7 @@ function doRebirth(){
   // 造成敵人名稱顯示為「未知」。改用包裝函式確保不帶任何參數。
   $("#battleBtn").onclick=()=>startBattle();
   $("#attackBtn").onclick=playerAttack;
-  $("#skillBtn").onclick=useActiveSkill;
+  $("#skillBtn").onclick=()=>useActiveSkill();
   $("#invBtn").onclick=()=>openInventory();
   $("#runBtn").onclick=tryRun;
 
